@@ -1,0 +1,51 @@
+{
+    "PR": {
+        "process_code": "PR",
+        "process_name": "Product Inspect Camera (iTrak Poucher)",
+        "machine_type": "iTrak",
+        "maximum_cycle_time": 1.2,
+        "recipe": {
+            "1": {
+                "maximum_rate": 140,
+                "minimum_rate": 120,
+                "product_type": "Sofia/QuickVue GIII"
+                },
+            "2": {
+                "maximum_rate": 80,
+                "minimum_rate": 60,
+                "product_type": "Sofia/QuickVue GIII"
+                },
+            "3": {
+                "maximum_rate": 61,
+                "minimum_rate": 60,
+                "product_type": "Sofia/QuickVue GIII"
+                },
+            "4": {
+                "maximum_rate": 80,
+                "minimum_rate": 60,
+                "product_type": "QuickVue Strep Inline"
+                },
+            "5": {
+                "maximum_rate": 61,
+                "minimum_rate": 60,
+                "product_type": "QuickVue Strep Inline"
+                }
+            },
+        "process_data_headers": [
+            "item_number", "lot_number", "serial_number", "part_present", "cognex_timestamp"
+            ],
+        "production_headers":[
+            "parts_pouched", "first_part_pouched", "last_part_pouched", "duration",
+            "empty_count", "empty_rate", "rework_parts", "first_pass_yield"
+            ],
+        "downtime_headers":[
+            "total_run_time", "net_run_time", "total_run_perc",
+            "total_stop_time", "total_stop_perc",
+            "short_stop_time", "medium_stop_time", "long_stop_time", "extra_long_stop_time",
+            "short_stop_%", "medium_stop_%", "long_stop_%", "extra_long_stop_%"
+            ],
+        "oee_headers":[
+            "availability_loss_time", "availability_rate_%", "performance_rate_%", "oee_noQR"
+            ]
+        }
+    }
