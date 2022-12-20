@@ -3,20 +3,21 @@ from datetime import datetime as dt
 
 import pandas as pd
 
+from cameras import Camera
 from datafiles import DataBlock
 
 
-@dataclass
-class ProductInspectCamera:
+class ProductInspectCamera(Camera):
     """
     Poucher Product Inspect Camera (iTrak Poucher)
     """
-    machine_info: dict
-    
+
     PROCESS_CODE = 'PR'
+    MAX_CYCLE_TIME = 1.2
 
 
-    def __post_init__(self):
+    def __init__(self, machine_info: dict) -> None:
+        self.machine_info = machine_info
         self.data_folder = self.machine_info.get('data_folder')
 
     def load_data(self, start_datetime: dt, end_datetime: dt) -> DataBlock:
@@ -27,8 +28,6 @@ class ProductInspectCamera:
             self.data_folder, ProductInspectCamera.PROCESS_CODE,
             start_datetime, end_datetime
             )
-            
-    
 
     @staticmethod
     def parts(data: pd.DataFrame) -> pd.DataFrame:
@@ -45,7 +44,7 @@ class ProductInspectCamera:
         return data['part_present'].cumsum()
 
     @staticmethod
-    def empties(data: pd.DataFrame) -> pd.DataFrame:
+    def empty_cycles(data: pd.DataFrame) -> pd.DataFrame:
         """
         Returns all cycles with no part present.
         """
@@ -71,3 +70,12 @@ class ProductInspectCamera:
         Returns time of last part made.
         """
         return max(data[data['part_present'] == 1].index)
+
+    @staticmethod
+    def stops(data: pd.DataFrame) -> pd.DataFrame:
+        """
+        Returns all cycles which exceed maximum cycle time.
+        """
+        return data[
+            data['cycle_time'] > ProductInspectCamera.MAX_CYCLE_TIME
+            ]

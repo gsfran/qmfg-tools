@@ -5,14 +5,12 @@ import pandas as pd
 from .poucher import Poucher
 
 
-@dataclass
 class iTrakLine: 
     """
     iTrak Production Line object.
     """
-    machine_info: dict
-
-    def __post_init__(self):
+    def __init__(self, machine_info: dict) -> None:
+        self.machine_info = machine_info
         self.data_folder = self.machine_info.get('data_folder')
         self.poucher = Poucher(self.machine_info)
         

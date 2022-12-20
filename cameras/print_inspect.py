@@ -1,20 +1,22 @@
 from dataclasses import dataclass
 from datetime import datetime as dt
 
+from cameras import Camera
 from datafiles import DataBlock
 
 
 @dataclass
-class PrintInspectCamera:
+class PrintInspectCamera(Camera):
     """
     Poucher Print Inspect Camera (iTrak Poucher)
     """
-    machine_info: dict
 
     PROCESS_CODE = 'PP'
+    MAX_CYCLE_TIME = 1.2
     
 
-    def __post_init__(self):
+    def __init__(self, machine_info: dict) -> None:
+        self.machine_info = machine_info
         self.data_folder = self.machine_info.get('data_folder')
 
     def load_data(self, start_datetime: dt, end_datetime: dt) -> DataBlock:
