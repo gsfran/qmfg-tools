@@ -1,8 +1,8 @@
+from datetime import date
+
 import machines
 from datafiles import *
 from workday import *
-
-from datetime import date
 
 
 def main():
