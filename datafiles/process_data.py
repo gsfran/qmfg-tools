@@ -105,3 +105,14 @@ class ProcessData:
 
         # self.process_info = process_info[process_code]
         return process_info[process_code]
+
+    @staticmethod
+    def slice(
+            data: pd.DataFrame, start_datetime: dt, end_datetime: dt
+        ) -> pd.DataFrame:
+        """
+        Slices the given data into the given timespan.
+        """
+        return data[
+            (data.index > start_datetime) and (data.index < end_datetime)
+            ]
