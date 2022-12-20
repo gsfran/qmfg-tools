@@ -14,12 +14,12 @@ class WorkDay:
     start_time: time = time(6)
     end_time: time = time(6)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.load_machines()
 
     ## ADD SHIFT_TIMES.JSON AND __POST_INIT__()
     
-    def load_machines(self):
+    def load_machines(self) -> None:
 
         file = './machines/machines.json'
 
