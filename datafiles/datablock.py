@@ -4,6 +4,7 @@ import datetime
 from dataclasses import dataclass
 from datetime import datetime as dt
 
+import numpy as np
 import pandas as pd
 
 from datafiles import ProcessData
@@ -38,6 +39,8 @@ class DataBlock:
             self.data, start_datetime, end_datetime
             )
 
+        ## NEED TO IMPLEMENT CHECKS FOR TIME VALIDITY
+
         return new_block
 
 
@@ -52,12 +55,9 @@ class DataBlock:
             ).to_pydatetime()
         time_delta = pd.Timedelta(1, freq)
 
-        for _, start_datetime in enumerate(times):
+        for start_datetime in np.delete(times, -1):
             end_datetime = start_datetime + time_delta
-            blocks.append(
-                DataBlock(self.machine_name, self.process_code,
-                start_datetime, end_datetime)
-            )
+            blocks.append(DataBlock.sliced(start_datetime, end_datetime))
         
         return blocks
 
