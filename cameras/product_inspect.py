@@ -4,7 +4,7 @@ from datetime import datetime as dt
 import pandas as pd
 
 from cameras import Camera
-from datafiles import DataBlock
+from datafiles import *
 
 
 class ProductInspectCamera(Camera):
@@ -79,3 +79,26 @@ class ProductInspectCamera(Camera):
         return data[
             data['cycle_time'] > ProductInspectCamera.MAX_CYCLE_TIME
             ]
+
+    @staticmethod
+    def stats(data: pd.DataFrame) -> pd.DataFrame:
+        """
+        Returns run statistics for the given data.
+        """
+        column_headers = ProcessData.info(
+            ProductInspectCamera.PROCESS_CODE
+            ).get('production_headers')
+        
+        stats = pd.Series(columns=column_headers)
+
+        stats[0] = data.__len__()
+        stats[1] = ProductInspectCamera.parts(data).__len__()
+        stats[2] = ProductInspectCamera.first_part(data)
+        stats[3] = ProductInspectCamera.last_part(data)
+        stats[4] = stats[3].timestamp() - stats[2].timestamp()
+        stats[5] = ProductInspectCamera.empty_cycles(data).__len__()
+        stats[6] = stats[5] / stats[0]
+        stats[7] = ProductInspectCamera.reworks(data).__len__()
+        stats[8] = stats[1] - stats[7] / stats[1]
+
+        return stats

@@ -7,7 +7,7 @@ from datetime import datetime as dt
 import numpy as np
 import pandas as pd
 
-from datafiles import ProcessData
+from datafiles import *
 
 
 @dataclass
@@ -27,7 +27,7 @@ class DataBlock:
         )
 
 
-    def sliced(self, start_datetime: dt, end_datetime: dt) -> DataBlock:
+    def slice(self, start_datetime: dt, end_datetime: dt) -> DataBlock:
         """
         Returns a DataBlock object sliced from the given start and end time.
         """
@@ -57,7 +57,7 @@ class DataBlock:
 
         for start_datetime in np.delete(times, -1):
             end_datetime = start_datetime + time_delta
-            blocks.append(DataBlock.sliced(start_datetime, end_datetime))
+            blocks.append(DataBlock.slice(start_datetime, end_datetime))
         
         return blocks
 
