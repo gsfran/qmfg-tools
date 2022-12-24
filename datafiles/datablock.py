@@ -24,7 +24,7 @@ class DataBlock:
         self.data = ProcessData.load(
             self.machine_name, self.process_code,
             self.start_datetime, self.end_datetime
-        )
+            )
 
 
     def slice(self, start_datetime: dt, end_datetime: dt) -> DataBlock:
@@ -50,12 +50,12 @@ class DataBlock:
         at the specified datetime frequency (default hourly).
         """
         blocks = []
-        times = pd.date_range(
+        datetimes = pd.date_range(
             self.start_datetime, self.end_datetime, freq=freq
             ).to_pydatetime()
         time_delta = pd.Timedelta(1, freq)
 
-        for start_datetime in np.delete(times, -1):
+        for start_datetime in np.delete(datetimes, -1):
             end_datetime = start_datetime + time_delta
             blocks.append(DataBlock.slice(start_datetime, end_datetime))
         

@@ -34,10 +34,6 @@
         "process_data_headers": [
             "item_number", "lot_number", "serial_number", "part_present", "cognex_timestamp"
             ],
-        "production_headers":[
-            "total_cycles", "parts_pouched", "first_part_pouched", "last_part_pouched", 
-            "production_time", "empty_count", "empty_rate", "rework_parts", "first_pass_yield"
-            ],
         "downtime_headers":[
             "total_run_time", "net_run_time", "total_run_perc",
             "total_stop_time", "total_stop_perc",

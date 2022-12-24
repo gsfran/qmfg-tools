@@ -18,7 +18,7 @@ class Camera(ABC):
     @staticmethod
     def analyze_cycles(data: pd.DataFrame) -> pd.DataFrame:
         """
-        Calculates cycle times and instantaneous run rates for poucher cycles.
+        Calculates cycle times and instantaneous run rates for data cycles.
         """
         data['cycle_times'] = Camera.cycle_times(data)
         data['cycle_rates'] = Camera.cycle_rates(data)
