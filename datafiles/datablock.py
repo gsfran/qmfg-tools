@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime as dt
 
 import numpy as np
@@ -15,14 +15,15 @@ class DataBlock:
     """
     Object to store process data for a given process and time period.
     """
-    machine_name: str
+    data_folder: str
     process_code: str
     start_datetime: dt
     end_datetime: dt
+    data_headers: list[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         self.data = ProcessData.load(
-            self.machine_name, self.process_code,
+            self.data_folder, self.process_code, self.data_headers,
             self.start_datetime, self.end_datetime
             )
 
@@ -32,14 +33,14 @@ class DataBlock:
         Returns a DataBlock object sliced from the given start and end time.
         """
         new_block = DataBlock(
-            self.machine_name, self.process_code, 
+            self.data_folder, self.process_code, self.data_headers,
             start_datetime, end_datetime
             )
         new_block.data = ProcessData.slice(
             self.data, start_datetime, end_datetime
             )
 
-        ## NEED TO IMPLEMENT CHECKS FOR TIME VALIDITY
+        ## IMPLEMENT CHECKS FOR TIME VALIDITY
 
         return new_block
 
@@ -62,6 +63,4 @@ class DataBlock:
         return blocks
 
     
-
-
     ## OTHER METHODS TO MANIPULATE AND VISUALIZE DATA
