@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-import datetime
 from dataclasses import dataclass, field
 from datetime import datetime as dt
 
 import numpy as np
 import pandas as pd
 
-from datafiles import *
+from .process_data import ProcessData
 
 
 @dataclass
@@ -21,10 +20,12 @@ class DataBlock:
     end_datetime: dt
     data_headers: list[str] = field(default_factory=list)
 
+    
+
     def __post_init__(self) -> None:
         self.data = ProcessData.load(
-            self.data_folder, self.process_code, self.data_headers,
-            self.start_datetime, self.end_datetime
+            self.data_folder, self.process_code,
+            self.start_datetime, self.end_datetime, self.data_headers
             )
 
 

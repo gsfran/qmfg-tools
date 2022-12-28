@@ -1,4 +1,3 @@
-import datetime
 import json
 from dataclasses import dataclass
 from datetime import datetime as dt
@@ -13,13 +12,13 @@ class ProcessData:
     Object to manipulate process data and relevant info.
     """
 
-    PATH: str = '//kansas.us/qfs/Engineering/Process_Data'
+    PATH: str = './testdata'#//kansas.us/qfs/Engineering/Process_Data'
 
 
     @staticmethod
     def load(
-            data_folder: str, process_code: str, data_headers: list,
-            start_datetime: dt, end_datetime: dt
+            data_folder: str, process_code: str, 
+            start_datetime: dt, end_datetime: dt, data_headers: list
         ) -> pd.DataFrame:
         """
         Returns process data from time 'initial_time' to time 'final_time'
@@ -27,8 +26,8 @@ class ProcessData:
         """
 
         # creates a DateTimeIndex for the given start and end datetime
-        first_day = dt.combine(start_datetime, time(0))
-        last_day = dt.combine(end_datetime, time(0))
+        first_day = dt.combine(start_datetime.date(), time(6))
+        last_day = dt.combine(end_datetime.date(), time(6))
         days = pd.date_range(first_day, last_day, freq='d')
 
         # creates a list of process data files to capture

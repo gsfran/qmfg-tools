@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import json
 
 import pandas as pd
 
@@ -9,8 +10,15 @@ class iTrakLine:
     """
     iTrak Production Line object.
     """
-    def __init__(self, machine_info: dict) -> None:
-        self.machine_info = machine_info
+    MACHINE_DICT = './machines/machines.json'
+
+    def __init__(self, line_number: int) -> None:
+        self.name = f'Line {line_number}'
+
+        with open(iTrakLine.MACHINE_DICT, 'r') as reader:
+            machine_dict = json.load(reader)
+
+        self.machine_info = machine_dict['itrak'].get(self.name)
         self.data_folder = self.machine_info.get('data_folder')
         self.poucher = Poucher(self.machine_info)
         

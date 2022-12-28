@@ -1,14 +1,29 @@
 from datetime import date
+from datetime import datetime as dt
+from datetime import time
 
-import machines
-from datafiles import *
-from workday import *
+from cameras import ProductInspect
+from datafiles import DataBlock, ProcessData
+from machines import iTrakLine
+from workday import WorkDay
 
 
 def main():
 
-    production_date = date(2022, 12, 1)
-    WorkDay(production_date)
+    start_date = date(2022, 10, 12)
+    end_date = date(2022, 10, 13)
+    start = dt.combine(start_date, time(6, 0, 0))
+    end = dt.combine(end_date, time(6, 0, 0))
+
+    line = iTrakLine(8)
+    
+    db = line.poucher.product_inspect.load_data(start, end)
+
+    ProductInspect.analyze_cycles(db.data)
+
+    print(ProductInspect.stats(db.data))
+
+    
 
 
 

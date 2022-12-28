@@ -20,19 +20,19 @@ class Camera(ABC):
         """
         Calculates cycle times and instantaneous run rates for data cycles.
         """
-        data['cycle_times'] = Camera.cycle_times(data)
-        data['cycle_rates'] = Camera.cycle_rates(data)
+        data['cycle_time'] = Camera.cycle_time(data)
+        data['cycle_rate'] = Camera.cycle_rate(data)
         return data
 
     @staticmethod
-    def cycle_times(data: pd.DataFrame) -> pd.Series:
+    def cycle_time(data: pd.DataFrame) -> pd.Series:
         """
         Returns cycle times for the given data.
         """
         return data['timestamp'].diff()
 
     @staticmethod
-    def cycle_rates(data: pd.DataFrame) -> pd.Series:
+    def cycle_rate(data: pd.DataFrame) -> pd.Series:
         """
         Returns instantaneous machine speeds for the given data. [upm]
         """

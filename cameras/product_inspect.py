@@ -34,9 +34,8 @@ class ProductInspect(Camera):
         Returns a DataBlock object of process data for the given timespan.
         """
         return DataBlock(
-            self.data_folder,
-            ProductInspect.PROCESS_CODE, ProductInspect.RAW_DATA_HEADERS,
-            start_datetime, end_datetime
+            self.data_folder, ProductInspect.PROCESS_CODE,
+            start_datetime, end_datetime, ProductInspect.RAW_DATA_HEADERS,
         )
 
     # region stats
@@ -136,7 +135,7 @@ class ProductInspect(Camera):
         """
         Returns a cycle count for the given data.
         """
-        return len(data)
+        return len(data.index)
     
     @staticmethod
     def first_cycle(data: pd.DataFrame) -> pd.DatetimeIndex:
@@ -159,9 +158,9 @@ class ProductInspect(Camera):
         between the first and last cycle.
         """
         return (
-            data['timestamp'].loc(ProductInspect.last_cycle(data))
-            - data['timestamp'].loc(ProductInspect.first_cycle(data))
-            )
+            ProductInspect.last_cycle(data)
+            - ProductInspect.first_cycle(data)
+            ).total_seconds()
 
     @staticmethod
     def part_cycles(data: pd.DataFrame) -> pd.DataFrame:
@@ -175,7 +174,7 @@ class ProductInspect(Camera):
         """
         Returns the number of non-empty cycles for the given data.
         """
-        return len(ProductInspect.part_cycles(data))
+        return len(ProductInspect.part_cycles(data).index)
 
     @staticmethod
     def cumulative_part_count(data: pd.DataFrame) -> pd.Series:
@@ -205,9 +204,9 @@ class ProductInspect(Camera):
         between the first part and last part.
         """
         return (
-            data['timestamp'].loc(ProductInspect.last_part(data))
-            - data['timestamp'].loc(ProductInspect.first_part(data))
-            )
+            ProductInspect.last_part(data)
+            - ProductInspect.first_part(data)
+            ).total_seconds()
 
     @staticmethod
     def empty_cycles(data: pd.DataFrame) -> pd.DataFrame:
@@ -221,7 +220,7 @@ class ProductInspect(Camera):
         """
         Returns the number of empty cycles for the given data.
         """
-        return len(ProductInspect.empty_cycles(data))
+        return len(ProductInspect.empty_cycles(data).index)
 
     @staticmethod
     def empty_rate(data: pd.DataFrame) -> float:
@@ -245,7 +244,7 @@ class ProductInspect(Camera):
         """
         Returns the number of parts with duplicate serial numbers.
         """
-        return len(ProductInspect.reworks(data))
+        return len(ProductInspect.reworks(data).index)
 
     @staticmethod
     def rework_rate(data: pd.DataFrame) -> float:
@@ -257,7 +256,7 @@ class ProductInspect(Camera):
             / ProductInspect.cycle_count(data)
         )
     # endregion
-    pass
+    ...
 
     # region stop_stats_methods
     @staticmethod
@@ -272,14 +271,14 @@ class ProductInspect(Camera):
         """
         Returns the number of stops for the given data.
         """
-        return len(ProductInspect.stops(data))
+        return len(ProductInspect.stops(data).index)
 
     @staticmethod
     def total_stop_time(data: pd.DataFrame) -> float:
         """
         Returns the sum of cycle times greater than the maximum.
         """
-        return sum(ProductInspect.stops(data).loc['cycle_time'])
+        return sum(ProductInspect.stops(data)['cycle_time'])
 
     @staticmethod
     def total_run_time(data: pd.DataFrame) -> float:
@@ -287,7 +286,7 @@ class ProductInspect(Camera):
         Returns the sum of cycle times less than the maximum.
         """
         return (
-            ProductInspect.run_stats(data).loc['production_time']
+            ProductInspect.run_stats(data)['production_time']
             - ProductInspect.total_stop_time(data)
             )
 
@@ -307,18 +306,19 @@ class ProductInspect(Camera):
         Returns all stops with duration shorter than SHORT_STOP_CUTOFF.
         """
         return data.drop(
-            (
-                data['cycle_time'] > ProductInspect.OEE_STOP_CUTOFF
-                and data['cycle_time'] < ProductInspect.MAX_CYCLE_TIME
-                ).index
-            )
+            pd.concat([
+                    data[data['cycle_time'] > ProductInspect.OEE_STOP_CUTOFF],
+                    data[data['cycle_time'] < ProductInspect.MAX_CYCLE_TIME]
+                ]
+            ).index
+        )
 
     @staticmethod
     def short_stop_count(data: pd.DataFrame) -> int:
         """
         Returns the number of short stops for the given data.
         """
-        return len(ProductInspect.short_stops(data))
+        return len(ProductInspect.short_stops(data).index)
 
     @staticmethod
     def short_stop_time(data: pd.DataFrame) -> float:
@@ -326,7 +326,7 @@ class ProductInspect(Camera):
         Returns the total time in seconds of all
         short stops for the given data.
         """
-        return sum((ProductInspect.short_stops(data)).loc['cycle_time'])
+        return sum(ProductInspect.short_stops(data)['cycle_time'])
 
     @staticmethod
     def long_stops(data: pd.DataFrame) -> pd.DataFrame:
@@ -344,7 +344,7 @@ class ProductInspect(Camera):
         """
         Returns the number of long stops for the given data.
         """
-        return len(ProductInspect.long_stops(data))
+        return len(ProductInspect.long_stops(data).index)
 
     @staticmethod
     def long_stop_time(data: pd.DataFrame) -> float:
@@ -352,9 +352,9 @@ class ProductInspect(Camera):
         Returns the total time in seconds of all
         long stops for the given data.
         """
-        return sum((ProductInspect.long_stops(data)).loc['cycle_time'])
+        return sum(ProductInspect.long_stops(data)['cycle_time'])
     # endregion
-    pass
+    ...
 
     # region oee_stats_methods
     @staticmethod
@@ -419,8 +419,8 @@ class ProductInspect(Camera):
         )
 
     # endregion
-    pass
+    ...
 
     # endregion
-    pass
+    ...
 
