@@ -11,6 +11,8 @@ class iTrakLine:
     iTrak Production Line object.
     """
     MACHINE_DICT = './machines/machines.json'
+    IDEAL_RUN_RATE = 140
+    STANDARD_RATE = (5000 / 60)
 
     def __init__(self, line_number: int) -> None:
         self.name = f'Line {line_number}'
@@ -21,9 +23,3 @@ class iTrakLine:
         self.machine_info = machine_dict['itrak'].get(self.name)
         self.data_folder = self.machine_info.get('data_folder')
         self.poucher = Poucher(self.machine_info)
-        
-        print(f'{self.machine_info.get("production_line")} created:')
-        print(f'{self.machine_info}')
-
-    IDEAL_RUN_RATE = 140
-    STANDARD_RATE = (5000 / 60)

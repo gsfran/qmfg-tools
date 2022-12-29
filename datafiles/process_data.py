@@ -1,4 +1,3 @@
-import json
 from dataclasses import dataclass
 from datetime import datetime as dt
 from datetime import time
@@ -71,30 +70,6 @@ class ProcessData:
         data.drop(data[data.index < start_datetime].index, inplace=True)
         data.drop(data[data.index > end_datetime].index, inplace=True)
 
+        print('Data Loaded.')
+
         return data
-
-    @staticmethod
-    def info(process_code: str) -> dict:
-        """
-        Returns process-specific information.
-
-        Reads from 'processes.json'.
-        """
-
-        # load the json containing column headers
-        with open('processes.json', 'r') as reader:
-                process_info = json.load(reader)
-
-        # self.process_info = process_info[process_code]
-        return process_info[process_code]
-
-    @staticmethod
-    def slice(
-            data: pd.DataFrame, start_datetime: dt, end_datetime: dt
-        ) -> pd.DataFrame:
-        """
-        Slices the given data into the given timespan.
-        """
-        return data[
-            (data.index > start_datetime) and (data.index < end_datetime)
-            ]

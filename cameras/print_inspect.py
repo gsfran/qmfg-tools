@@ -19,7 +19,7 @@ class PrintInspectCamera(Camera):
         self.machine_info = machine_info
         self.data_folder = self.machine_info.get('data_folder')
 
-    def load_data(self, start_datetime: dt, end_datetime: dt) -> DataBlock:
+    def data(self, start_datetime: dt, end_datetime: dt) -> DataBlock:
         """
         Returns a DataBlock object of process data for the given timespan.
         """

@@ -1,21 +1,56 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
 from datetime import datetime as dt
 
 import pandas as pd
+import numpy as np
 
 from cameras import Camera
-from datafiles import *
+from datafiles import DataBlock, ProcessData
 
 
-class ProductInspect(Camera):
+class ProductInspectCamera(Camera):
     """
     iTrak Poucher Product Inspect Camera object.
     """
 
-    PROCESS_CODE = 'PR'
-    IDEAL_RUN_RATE = 140
-    MAX_CYCLE_TIME = 1.2
+    def __init__(self, machine_info: dict) -> None:
+        self.machine_info = machine_info
+        self.data_folder = self.machine_info.get('data_folder')
 
-    OEE_STOP_CUTOFF = 120
+    def load_data(
+        self, start_datetime: dt, end_datetime: dt
+        ) -> ProductInspectData:
+        """
+        Returns a DataBlock object of process data for the given timespan.
+        """
+        return ProductInspectData(
+            self.data_folder, start_datetime, end_datetime
+            )
+
+
+@dataclass
+class ProductInspectData(DataBlock):
+    """
+    DataBlock subclass for handling data logged by the
+    iTrak Poucher Product Inspect Camera.
+    """
+    data_folder: str
+    start_datetime: dt
+    end_datetime: dt
+
+    # region process_parameters
+    PROCESS_CODE = 'PR'
+    PARTS_PER_CYCLE = 1
+
+    # machine rates [/sec]
+    IDEAL_RATE_PER_S = 8400 / 3600
+    STANDARD_RATE_PER_S = 5000 / 3600
+
+    # stop duration information [s]
+    MAX_CYCLE_TIME = 1.1
+    SHORT_STOP_LIMIT = 120
     SHORT_STOP_BIN_WIDTH = 2
     LONG_STOP_BIN_WIDTH = 60
 
@@ -23,404 +58,537 @@ class ProductInspect(Camera):
         "item_number", "lot_number", "serial_number",
         "part_present", "cognex_timestamp"
         ]
+    # endregion
+    ...
 
+    def __post_init__(self) -> None:
+        self.data()
 
-    def __init__(self, machine_info: dict) -> None:
-        self.machine_info = machine_info
-        self.data_folder = self.machine_info.get('data_folder')
-
-    def load_data(self, start_datetime: dt, end_datetime: dt) -> DataBlock:
-        """
-        Returns a DataBlock object of process data for the given timespan.
-        """
-        return DataBlock(
-            self.data_folder, ProductInspect.PROCESS_CODE,
-            start_datetime, end_datetime, ProductInspect.RAW_DATA_HEADERS,
+    def __repr__(self) -> str:
+        return (
+            f'{self.data_folder}-{self.PROCESS_CODE}__'
+            f'{self.start_datetime:%Y%m%d-%H%M%S}_'
+            f'{self.end_datetime:%Y%m%d-%H%M%S}'
         )
+
+    def load_data(self) -> pd.DataFrame:
+        return ProcessData.load(
+            self.data_folder, ProductInspectData.PROCESS_CODE,
+            self.start_datetime, self.end_datetime,
+            ProductInspectData.RAW_DATA_HEADERS
+        )
+
+    def data(self) -> pd.DataFrame:
+        try:
+            return self._data
+        except AttributeError:
+            self._data = self.load_data()
+            self.cycle_times()
+            self.cycle_rates()
+            return self._data
+
+    def stats(self) -> pd.DataFrame:
+        try:
+            return self._stats
+        except AttributeError:
+            self._stats = pd.concat(
+                [
+                    self.run_stats(),
+                    self.stop_stats(),
+                    self.oee_stats()
+                ], axis=1,
+            )
+            return self._stats
 
     # region stats
-    @staticmethod
-    def stats(data: pd.DataFrame) -> pd.DataFrame:
+    def run_stats(self) -> pd.DataFrame:
         """
-        Returns all statistics for the given data.
-        """
-        return pd.concat(
-            [
-                ProductInspect.run_stats(data),
-                ProductInspect.stop_stats(data),
-                ProductInspect.oee_stats(data)
-            ], axis=1
-        )
-
-    @staticmethod
-    def run_stats(data: pd.DataFrame) -> pd.DataFrame:
-        """
-        Returns run statistics for the given data.
+        Returns run statistics for the data.
         """
 
         RUN_STATS_DICT = {
-            'total_cycles': ProductInspect.cycle_count,
-            'total_time': ProductInspect.total_time,
+            'total_cycles': self.cycle_count(),
+            'total_time': self.total_time(),
 
-            'parts_pouched': ProductInspect.part_count,
-            'first_part_pouched': ProductInspect.first_part,
-            'last_part_pouched': ProductInspect.last_part,
-            'production_time': ProductInspect.production_time,
+            'parts_pouched': self.part_count(),
+            'first_part_pouched': self.first_part(),
+            'last_part_pouched': self.last_part(),
+            'production_time': self.production_time(),
 
-            'empty_count': ProductInspect.empty_count,
-            'empty_rate': ProductInspect.empty_rate,
+            'empty_count': self.empty_count(),
+            'empty_rate': self.empty_rate(),
 
-            'rework_count': ProductInspect.rework_count,
-            'rework_rate': ProductInspect.rework_rate
+            'rework_count': self.rework_count(),
+            'rework_rate': self.rework_rate()
         }
 
-        run_stats = pd.DataFrame(columns=RUN_STATS_DICT.keys())
+        try:
+            return self._run_stats
 
-        for stat, method in RUN_STATS_DICT.items():
-            run_stats[stat] = method(data)
+        except AttributeError:
+            self._run_stats = pd.DataFrame(
+                columns=RUN_STATS_DICT.keys(), index=[self.__repr__()]
+                )
+            for stat, method in RUN_STATS_DICT.items():
+                self._run_stats[stat] = method
+            return self._run_stats
 
-        return run_stats
-
-    @staticmethod
-    def stop_stats(data: pd.DataFrame) -> pd.DataFrame:
+    def stop_stats(self) -> pd.DataFrame:
         """
-        Returns stop statistics for the given data.
+        Returns stop statistics for the data.
         """
 
         STOP_STATS_DICT = {
-            'total_stop_count': ProductInspect.total_stop_count,
-            'total_stop_time': ProductInspect.total_stop_time,
-            'total_run_time': ProductInspect.total_run_time,
+            'total_stop_count': self.total_stop_count(),
+            'total_stop_time': self.total_stop_time(),
+            'total_run_time': self.total_run_time(),
 
-            'short_stop_count': ProductInspect.short_stop_count,
-            'short_stop_time': ProductInspect.short_stop_time,
+            'short_stop_count': self.short_stop_count(),
+            'short_stop_time': self.short_stop_time(),
 
-            'long_stop_count': ProductInspect.long_stop_count,
-            'long_stop_time': ProductInspect.long_stop_time,
+            'long_stop_count': self.long_stop_count(),
+            'long_stop_time': self.long_stop_time(),
         }
 
-        stop_stats = pd.DataFrame(columns=STOP_STATS_DICT.keys())
+        try:
+            return self._stop_stats
 
-        for stat, method in STOP_STATS_DICT.items():
-            stop_stats[stat] = method(data)
-
-        return stop_stats
+        except AttributeError:
+            self._stop_stats = pd.DataFrame(
+                columns=STOP_STATS_DICT.keys(), index=[self.__repr__()]
+                )
+            for stat, method in STOP_STATS_DICT.items():
+                self._stop_stats[stat] = method
+            return self._stop_stats
     
-    @staticmethod
-    def oee_stats(data: pd.DataFrame) -> pd.DataFrame:
+    def oee_stats(self) -> pd.DataFrame:
         """
-        Returns OEE statistics for the given data.
+        Returns OEE statistics for the data.
         """
 
         OEE_STATS_DICT = {
-            'oee_run_time': ProductInspect.oee_run_time,
+            'oee_run_time': self.oee_run_time(),
 
-            'availability_rate': ProductInspect.availability_rate,
-            'performance_rate': ProductInspect.performance_rate,
-            'quality_rate': ProductInspect.quality_rate,
+            'availability_rate': self.availability_rate(),
+            'performance_rate': self.performance_rate(),
+            'quality_rate': self.quality_rate(),
 
-            'oee_rate': ProductInspect.oee_rate
+            'oee_rate': self.oee_rate()
         }
 
-        oee_stats = pd.DataFrame(columns=OEE_STATS_DICT.keys())
+        try:
+            return self._oee_stats
 
-        for stat, method in OEE_STATS_DICT.items():
-            oee_stats[stat] = method(data)
+        except AttributeError:
+            self._oee_stats = pd.DataFrame(
+                columns=OEE_STATS_DICT.keys(), index=[self.__repr__()]
+                )
+            for stat, method in OEE_STATS_DICT.items():
+                self._oee_stats[stat] = method
+            return self._oee_stats
 
-        return oee_stats
-
-    # region run_stats_methods
-    @staticmethod
-    def cycle_count(data: pd.DataFrame) -> int:
+    # region run_stats
+    def parts(self) -> pd.DataFrame:
         """
-        Returns a cycle count for the given data.
+        Returns non-empty poucher cycles for the data.
         """
-        return len(data.index)
+        try:
+            return self._parts
+        except AttributeError:
+            self._parts = self.data()[self.data()['part_present'] == 1]
+            return self._parts
+
+    def part_count(self) -> int:
+        """
+        Returns the number of non-empty cycles for the data.
+        """
+        try: 
+            return self._part_count
+        except AttributeError:
+            self._part_count = len(self.parts().index)
+            return self._part_count
+
+    def running_part_count(self) -> pd.Series:
+        """
+        Returns a Series with a running part count.
+        """
+        try:
+            self.data()['part_count'] = self.data()['part_present'].cumsum()
+        except Exception:
+            pass
+        finally:
+            return self.data()['part_count']
+
+    def first_part(self) -> pd.DatetimeIndex:
+        """
+        Returns the DatetimeIndex of the first part made.
+        """
+        try:
+            return self._first_part
+        except AttributeError:
+            self._first_part = min(
+                self.data()[self.data()['part_present']  == 1].index
+                )
+            return self._first_part
     
-    @staticmethod
-    def first_cycle(data: pd.DataFrame) -> pd.DatetimeIndex:
+    def last_part(self) -> pd.DatetimeIndex:
         """
-        Returns DatetimeIndex of the first data cycle.
+        Returns the DatetimeIndex of the last part made.
         """
-        return min(data.index)
+        try:
+            return self._last_part
+        except AttributeError:
+            self._last_part = max(
+                self.data()[self.data()['part_present']  == 1].index
+                )
+            return self._last_part
 
-    @staticmethod
-    def last_cycle(data: pd.DataFrame) -> pd.DatetimeIndex:
-        """
-        Returns DatetimeIndex of the last data cycle.
-        """
-        return max(data.index)
-
-    @staticmethod
-    def total_time(data: pd.DataFrame) -> float:
-        """
-        Returns the time difference (in seconds)
-        between the first and last cycle.
-        """
-        return (
-            ProductInspect.last_cycle(data)
-            - ProductInspect.first_cycle(data)
-            ).total_seconds()
-
-    @staticmethod
-    def part_cycles(data: pd.DataFrame) -> pd.DataFrame:
-        """
-        Returns non-empty poucher cycles for the given data.
-        """
-        return data[data['part_present'] == 1]
-
-    @staticmethod
-    def part_count(data: pd.DataFrame) -> int:
-        """
-        Returns the number of non-empty cycles for the given data.
-        """
-        return len(ProductInspect.part_cycles(data).index)
-
-    @staticmethod
-    def cumulative_part_count(data: pd.DataFrame) -> pd.Series:
-        """
-        Returns a column of cumulative parts for the given data.
-        """
-        return data['part_present'].cumsum()
-
-    @staticmethod
-    def first_part(data: pd.DataFrame) -> pd.DatetimeIndex:
-        """
-        Returns DatetimeIndex of the first part made.
-        """
-        return min(data[data['part_present'] == 1].index)
-
-    @staticmethod
-    def last_part(data: pd.DataFrame) -> pd.DatetimeIndex:
-        """
-        Returns DatetimeIndex of the last part made.
-        """
-        return max(data[data['part_present'] == 1].index)
-
-    @staticmethod
-    def production_time(data: pd.DataFrame) -> float:
+    def production_time(self) -> float:
         """
         Returns the time difference (in seconds)
         between the first part and last part.
         """
-        return (
-            ProductInspect.last_part(data)
-            - ProductInspect.first_part(data)
-            ).total_seconds()
+        try:
+            return self._production_time
+        except AttributeError:
+            self._production_time = (
+                self.last_part() - self.first_part()
+                ).total_seconds()
+            return self._production_time
 
-    @staticmethod
-    def empty_cycles(data: pd.DataFrame) -> pd.DataFrame:
+    def empty_cycles(self) -> pd.DataFrame:
         """
         Returns all cycles with no part present.
         """
-        return data[data['part_present'] == 0]
+        try:
+            return self._empty_cycles
+        except AttributeError:
+            self._empty_cycles = self.data()[self.data()['part_present'] == 0]
+            return self._empty_cycles
 
-    @staticmethod
-    def empty_count(data: pd.DataFrame) -> int:
+    def empty_count(self) -> int:
         """
-        Returns the number of empty cycles for the given data.
+        Returns the number of empty cycles for the data.
         """
-        return len(ProductInspect.empty_cycles(data).index)
+        try:
+            return self._empty_count
+        except AttributeError:
+            self._empty_count = len(self.empty_cycles().index)
+            return self._empty_count
 
-    @staticmethod
-    def empty_rate(data: pd.DataFrame) -> float:
+    def empty_rate(self) -> float:
         """
         Returns the decimal percentage of empty cycles for the data.
         """
-        return (
-            ProductInspect.empty_count(data)
-            / ProductInspect.cycle_count(data)
-        )
+        try:
+            return self._empty_rate
+        except AttributeError:
+            self._empty_rate = (self.empty_count() / self.cycle_count())
+            return self._empty_rate
 
-    @staticmethod
-    def reworks(data: pd.DataFrame) -> pd.DataFrame:
+    def reworks(self) -> pd.DataFrame:
         """
         Returns all cycles with duplicate serial numbers.
         """
-        return data[data.duplicated('serial_number')]
+        try:
+            return self._reworks
+        except AttributeError:
+            self._reworks = self.data()[
+                self.data().duplicated('serial_number')
+                ]
+            return self._reworks
 
-    @staticmethod
-    def rework_count(data: pd.DataFrame) -> int:
+    def rework_count(self) -> int:
         """
         Returns the number of parts with duplicate serial numbers.
         """
-        return len(ProductInspect.reworks(data).index)
+        try:
+            return self._rework_count
+        except AttributeError:
+            self._rework_count = len(self.reworks().index)
+            return self._rework_count
 
-    @staticmethod
-    def rework_rate(data: pd.DataFrame) -> float:
+    def rework_rate(self) -> float:
         """
         Returns the decimal percentage of reworked parts.
         """
-        return (
-            ProductInspect.rework_count(data)
-            / ProductInspect.cycle_count(data)
-        )
+        try:
+            return self._rework_rate
+        except AttributeError:
+            self._rework_rate = (
+                self.rework_count()
+                / self.cycle_count()
+            )
+            return self._rework_rate
     # endregion
     ...
 
-    # region stop_stats_methods
-    @staticmethod
-    def stops(data: pd.DataFrame) -> pd.DataFrame:
+    # region stop_stats
+    def stops(self) -> pd.DataFrame:
         """
         Returns all cycles which exceed maximum cycle time.
         """
-        return data[data['cycle_time'] > ProductInspect.MAX_CYCLE_TIME]
+        try:
+            return self._stops
+        except AttributeError:
+            self._stops = (
+                self.data()[self.data()['cycle_time']
+                > self.MAX_CYCLE_TIME]
+            )
+            return self._stops
 
-    @staticmethod
-    def total_stop_count(data: pd.DataFrame) -> int:
+    def run_cycles(self) -> pd.DataFrame:
+        """
+        Returns all cycles which do not exceed maximum cycle time.
+        """
+        try:
+            return self._run_cycles
+        except AttributeError:
+            self._run_cycles = (
+                self.data()[self.data()['cycle_time']
+                < self.MAX_CYCLE_TIME]
+            )
+            return self._run_cycles
+
+    def total_stop_count(self) -> int:
         """
         Returns the number of stops for the given data.
         """
-        return len(ProductInspect.stops(data).index)
+        try:
+            return self._total_stop_count
+        except AttributeError:
+            self._total_stop_count = len(self.stops().index)
+            return self._total_stop_count
 
-    @staticmethod
-    def total_stop_time(data: pd.DataFrame) -> float:
+    def total_stop_time(self) -> float:
         """
         Returns the sum of cycle times greater than the maximum.
         """
-        return sum(ProductInspect.stops(data)['cycle_time'])
+        try:
+            return self._total_stop_time
+        except AttributeError:
+            self._total_stop_time = sum(self.stops()['cycle_time'])
+            return self._total_stop_time
 
-    @staticmethod
-    def total_run_time(data: pd.DataFrame) -> float:
+    def total_run_time(self) -> float:
         """
         Returns the sum of cycle times less than the maximum.
         """
-        return (
-            ProductInspect.run_stats(data)['production_time']
-            - ProductInspect.total_stop_time(data)
+        try:
+            return self._total_run_time
+        except AttributeError:
+            self._total_run_time = sum(
+                self.run_cycles()['cycle_time']
             )
+            return self._total_run_time
 
-    @staticmethod
-    def uptime_percentage(data: pd.DataFrame) -> float:
+    def uptime_percentage(self) -> float:
         """
-        Returns the decimal percentage of uptime for the given data.
+        Returns the decimal percentage of uptime for the data.
         """
-        return (
-            ProductInspect.total_run_time(data)
-            / ProductInspect.total_time(data)
-            )
+        try:
+            return self._uptime_percentage
+        except AttributeError:
+            self._uptime_percentage = (
+                self.total_run_time() / self.total_time()
+                )
+            return self._uptime_percentage
 
-    @staticmethod
-    def short_stops(data: pd.DataFrame) -> pd.DataFrame:
+    def short_stops(self) -> pd.DataFrame:
         """
-        Returns all stops with duration shorter than SHORT_STOP_CUTOFF.
+        Returns all stops with duration shorter than SHORT_STOP_LIMIT.
         """
-        return data.drop(
-            pd.concat([
-                    data[data['cycle_time'] > ProductInspect.OEE_STOP_CUTOFF],
-                    data[data['cycle_time'] < ProductInspect.MAX_CYCLE_TIME]
-                ]
-            ).index
-        )
+        try:
+            return self._short_stops
+        except AttributeError:
+            drop_rows = pd.concat([
+                self.data()[self.data()['cycle_time'] > self.SHORT_STOP_LIMIT],
+                self.data()[self.data()['cycle_time'] < self.MAX_CYCLE_TIME]
+                ]).index
+            self._short_stops = self.data().drop(drop_rows).dropna()
+            return self._short_stops
 
-    @staticmethod
-    def short_stop_count(data: pd.DataFrame) -> int:
+    def short_stop_count(self) -> int:
         """
-        Returns the number of short stops for the given data.
+        Returns the number of short stops for the data.
         """
-        return len(ProductInspect.short_stops(data).index)
+        try:
+            return self._short_stop_count
+        except AttributeError:
+            self._short_stop_count = len(self.short_stops().index)
+            return self._short_stop_count
 
-    @staticmethod
-    def short_stop_time(data: pd.DataFrame) -> float:
+    def short_stop_time(self) -> float:
         """
-        Returns the total time in seconds of all
-        short stops for the given data.
+        Returns the total time in seconds of all short stops.
         """
-        return sum(ProductInspect.short_stops(data)['cycle_time'])
+        try:
+            return self._short_stop_time
+        except AttributeError:
+            self._short_stop_time = sum(self.short_stops()['cycle_time'])
+            return self._short_stop_time
 
-    @staticmethod
-    def long_stops(data: pd.DataFrame) -> pd.DataFrame:
+    def long_stops(self) -> pd.DataFrame:
         """
-        Returns all stops with duration longer than 2 minutes.
+        Returns all stops with duration longer than SHORT_STOP_LIMIT.
         """
-        return data.drop(
-            (
-                data['cycle_time'] < ProductInspect.OEE_STOP_CUTOFF
-                ).index
-        )
+        try:
+            return self._long_stops
+        except AttributeError:
+            drop_rows = self.data()[self.data()['cycle_time'] < self.SHORT_STOP_LIMIT].index
+            self._long_stops = self.data().drop(drop_rows).dropna()
+            return self._long_stops
+    
+    def long_stop_count(self) -> int:
+        """
+        Returns the number of long stops for the data.
+        """
+        try:
+            return self._long_stop_count
+        except AttributeError:
+            self._long_stop_count = len(self.long_stops().index)
+            return self._long_stop_count
 
-    @staticmethod
-    def long_stop_count(data: pd.DataFrame) -> int:
+    def long_stop_time(self) -> float:
         """
-        Returns the number of long stops for the given data.
+        Returns the total time in seconds of all long stops.
         """
-        return len(ProductInspect.long_stops(data).index)
-
-    @staticmethod
-    def long_stop_time(data: pd.DataFrame) -> float:
-        """
-        Returns the total time in seconds of all
-        long stops for the given data.
-        """
-        return sum(ProductInspect.long_stops(data)['cycle_time'])
+        try:
+            return self._long_stop_time
+        except AttributeError:
+            self._long_stop_time = sum(self.long_stops()['cycle_time'])
+            return self._long_stop_time
     # endregion
     ...
 
-    # region oee_stats_methods
-    @staticmethod
-    def oee_run_time(data: pd.DataFrame) -> float:
+    # region oee_stats
+    def oee_run_time(self) -> float:
         """
         Returns OEE Net Run Time, which ignores stops
-        with a duration shorter than OEE_STOP_CUTOFF.
+        with a duration shorter than SHORT_STOP_LIMIT.
         """
-        return (
-            ProductInspect.total_run_time(data)
-            + ProductInspect.short_stop_time(data)
-        )
+        try:
+            return self._oee_run_time
+        except AttributeError:
+            self._oee_run_time = (
+                self.total_run_time() + self.short_stop_time()
+            )
+            return self._oee_run_time
 
-    @staticmethod
-    def availability_rate(data: pd.DataFrame) -> float:
+    def availability_rate(self) -> float:
         """
-        Returns the OEE Availability Rate for the given data
+        Returns the OEE Availability Rate for the data
         as a decimal percentage.
         """
-        return (
-            ProductInspect.oee_run_time(data)
-            / ProductInspect.total_time(data)
-        )
+        try:
+            return self._availability_rate
+        except AttributeError:
+            self._availability_rate = (
+                self.oee_run_time()
+                / self.total_time()
+            )
+            return self._availability_rate
 
-    @staticmethod
-    def performance_rate(data: pd.DataFrame) -> float:
+    def performance_rate(self) -> float:
         """
-        Returns the OEE Performance Rate for the given data
+        Returns the OEE Performance Rate for the data
         as a decimal percentage.
         """
-        return (
-            ProductInspect.part_count(data)
-            / ProductInspect.oee_run_time(data)
-            / ProductInspect.IDEAL_RUN_RATE
-            / 60
-        )
+        try:
+            return self._performance_rate
+        except AttributeError:
+            self._performance_rate = (
+                (self.part_count() / self.oee_run_time())
+                / (self.IDEAL_RATE_PER_S / 60)
+            )
+            return self._performance_rate
 
-    @staticmethod
-    def quality_rate(data: pd.DataFrame) -> float:
+    def quality_rate(self) -> float:
         """
-        Returns the OEE Quality Rate for the given data
+        Returns the OEE Quality Rate for the data
         as a decimal percentage.
         
         Note: This only accounts for reworks, not rejected pouches. 
-        It's assumed losses due to print defects and melted product
-        are minimal, but this is not always the case.
+        It's assumed losses due to melted or crushed product are minimal.
         """
-        return 1 - (
-            ProductInspect.rework_count(data)
-            / ProductInspect.part_count(data)       
-        )
+        try:
+            return self._quality_rate
+        except AttributeError:
+            self._quality_rate = (
+                1 - (self.rework_count() / self.part_count())
+            )
+            return self._quality_rate
 
-    @staticmethod
-    def oee_rate(data: pd.DataFrame) -> float:
+    def oee_rate(self) -> float:
         """
-        Returns the OEE for the given data as a decimal percentage.
+        Returns the OEE for the data as a decimal percentage.
         """
-        return (
-            ProductInspect.availability_rate(data)
-            * ProductInspect.performance_rate(data)
-            * ProductInspect.quality_rate(data)
-        )
-
+        try:
+            return self._oee_rate
+        except AttributeError:
+            self._oee_rate = (
+                self.availability_rate()
+                * self.performance_rate()
+                * self.quality_rate()
+                )
+            return self._oee_rate
     # endregion
     ...
 
     # endregion
     ...
 
+    # region productivity
+    def productivity(self, freq: str='s') -> pd.DataFrame:
+        """
+        Returns production yields vs. standard yields
+        at the given frequency (default per second).
+        """
+        try:
+            return self._productivity[freq]
+        except AttributeError:
+            self._productivity = dict()
+            self._productivity[freq] = self.get_productivity(freq)
+            return self._productivity[freq]
+
+    def get_productivity(self, freq: str) -> pd.DataFrame:
+        """
+        Calculates the productivity at the given frequency.
+        """
+        datetime_range = pd.date_range(
+                self.start_datetime, self.end_datetime, freq=freq
+                )
+        range_size = len(datetime_range)
+        columns = ['actual_yield', 'standard_yield', 'rate']
+        productivity = pd.DataFrame(
+            data=np.zeros(shape=(range_size, len(columns))),
+            index=datetime_range, columns=columns
+        )
+
+        try:
+            period_length = (
+                productivity.index[1].to_datetime64()
+                - productivity.index[0].to_datetime64()
+            )
+        except IndexError:
+            raise Exception("Index out of bounds for the given data.")
+        
+        freq_seconds = pd.Timedelta(period_length)
+        frequency_multiplier = freq_seconds / pd.Timedelta(seconds =1)
+
+        productivity['standard_yield'] = (
+            np.arange(range_size)* ProductInspectData.STANDARD_RATE_PER_S
+            * frequency_multiplier
+        )
+
+        productivity['actual_yield'] = (
+            self.running_part_count().sort_index().reindex_like(
+                datetime_range.to_series(), method='ffill'
+                ).fillna(0)
+        )
+
+        productivity['rate_Hz'] = productivity['actual_yield'].diff() / frequency_multiplier
+
+        return productivity
+        # endregion
+        ...
