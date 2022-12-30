@@ -553,7 +553,8 @@ class ProductInspectData(DataBlock):
 
     def get_productivity(self, freq: str) -> pd.DataFrame:
         """
-        Calculates the productivity at the given frequency.
+        Calculates the productivity at each interval
+        of the given frequency.
         """
         datetime_range = pd.date_range(
                 self.start_datetime, self.end_datetime, freq=freq

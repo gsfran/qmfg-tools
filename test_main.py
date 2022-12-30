@@ -4,7 +4,6 @@ from datetime import time
 
 import matplotlib.pyplot as plt
 import pandas as pd
-from scipy import signal
 
 from cameras import ProductInspectCamera, ProductInspectData
 from datafiles import DataBlock, ProcessData
@@ -31,14 +30,12 @@ def main():
 
     prod_ = db.productivity()
 
-    win = signal.windows.gaussian(30, 7)
-
-    # new_db = db.slice(dt.combine(start_date, time(11)), dt.combine(start_date, time(12)))
+    new_db = db.slice(dt.combine(start_date, time(11)), dt.combine(start_date, time(12)))
 
     plt.plot(prod_.index, prod_['rate_Hz'].rolling(60).mean() * 60)
     plt.draw()
     plt.show()
-    
+
 
 if __name__ == '__main__':
     main()
