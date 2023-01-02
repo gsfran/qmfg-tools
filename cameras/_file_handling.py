@@ -29,7 +29,7 @@ class ProcessData:
         if data is not None:
             return ProcessData._clean_data(data)
         else:
-            return data
+            raise Exception("Empty DataFrame Loaded.")
 
     @staticmethod
     def _clean_data(data: pd.DataFrame) -> pd.DataFrame:
@@ -57,18 +57,15 @@ class ProcessData:
         return data
 
     @staticmethod
-    def _load_raw_data(
-        target_file: str, data_headers: list
-        ) -> pd.DataFrame:
+    def _load_raw_data(_filepath: str, _data_headers: list) -> pd.DataFrame:
         """
         Returns a Dataframe containing all process data for the given file.
         """
-        print(target_file)
         try:
-            data = pd.read_csv(target_file, names=data_headers)
+            data = pd.read_csv(_filepath, names=_data_headers)
         except FileNotFoundError:
             # if no file found, outputs to terminal
-            print(f'File Not Found: {target_file}')
+            print(f'File Not Found: {_filepath}')
             return None
 
         return data
@@ -79,9 +76,11 @@ class OnlineUtilizationLog:
     Tools for working with Online Utilization Log data.
     """
 
-    PATH = '//kansas.us/qfs/Engineering/Shared/Online Utilization Logs'
+    ROOT_PATH = '//kansas.us/qfs/Engineering/Shared/Online Utilization Logs'
 
-    def load(machine_name:str, month:dt.month, sheets:list = None) -> pd.DataFrame:
+    def load(
+        machine_name:str, month:dt.month, sheets:list = None
+        ) -> pd.DataFrame:
         """
         Returns data from the machine's Online Utilization Log
         """
@@ -94,12 +93,12 @@ class OnlineUtilizationLog:
         if (month >= first_of_this_month):
             # use /Current Month/ for current month
             folder_path = (
-                f'{OnlineUtilizationLog.PATH}/Current Month'
+                f'{OnlineUtilizationLog.ROOT_PATH}/Current Month'
                 )
         else:
             # use /History/ for any prior months
             folder_path = (
-                f'{OnlineUtilizationLog.PATH}/History/{month:%Y/%Y%m}'
+                f'{OnlineUtilizationLog.ROOT_PATH}/History/{month:%Y/%Y%m}'
                 )
 
         file_path = f'{folder_path}/{file_name}'

@@ -9,7 +9,6 @@ import pandas as pd
 from cameras import DataBlock, ProcessData
 
 
-
 @dataclass
 class ProductInspectCamera:
     """
@@ -45,6 +44,7 @@ class ProductInspectCamera:
 
     def __post_init__(self) -> None:
         self.data_folder = self.machine_info.get('data_folder')
+        self._params = self.PROCESS_PARAMETERS_DICT
         self._process_data = {}
 
     def __repr__(self) -> str:
@@ -92,10 +92,8 @@ class ProductInspectCamera:
                 target_file, self.RAW_DATA_HEADERS
                 )
         
-        try:
-            return self._process_data[date]
-        except TypeError:
-            return None
+        if self._process_data[date].empty:
+            raise Exception('Empty DataFrame Loaded.')
 
 
 @dataclass
@@ -110,8 +108,8 @@ class ProductInspectData:
     end_datetime: dt
 
     def __post_init__(self) -> None:
-        self.PROCESS_CODE = self._source.PROCESS_CODE
-        self.process_parameters = self._source.PROCESS_PARAMETERS_DICT
+        self.process_code = self._source.PROCESS_CODE
+        self._params = self._source._params
 
         if self._data.empty:
             raise Exception("Empty DataFrame.")
