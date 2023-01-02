@@ -1,9 +1,6 @@
-from dataclasses import dataclass
 import json
 
-import pandas as pd
-
-from .poucher import Poucher
+from cameras.product_inspect import ProductInspectCamera
 
 
 class iTrakLine: 
@@ -23,3 +20,12 @@ class iTrakLine:
         self.machine_info = machine_dict['itrak'].get(self.name)
         self.data_folder = self.machine_info.get('data_folder')
         self.poucher = Poucher(self.machine_info)
+
+
+class Poucher:
+    """
+    iTrak Poucher object, contains two Camera objects.
+    """
+    def __init__(self, machine_info: dict) -> None:
+        self.machine_info = machine_info
+        self.product_inspect = ProductInspectCamera(self.machine_info)

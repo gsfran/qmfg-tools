@@ -5,10 +5,7 @@ from datetime import time
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from cameras import ProductInspectCamera, ProductInspectData
-from datafiles import DataBlock, ProcessData
-from machines import iTrakLine
-from workday import WorkDay
+from machines import *
 
 
 def main():
@@ -22,15 +19,14 @@ def main():
 
     pd.set_option('display.max_rows', 100)
 
-    db = line.poucher.product_inspect.load_data(start, end)
+    db = line.poucher.product_inspect.datablock(start, end)
 
-    db.stats()
+    db.all_stats()
 
     print(db)
+    print(db.all_stats())
 
     prod_ = db.productivity()
-
-    new_db = db.slice(dt.combine(start_date, time(11)), dt.combine(start_date, time(12)))
 
     plt.plot(prod_.index, prod_['rate_Hz'].rolling(60).mean() * 60)
     plt.draw()
