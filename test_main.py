@@ -24,23 +24,25 @@ def main():
 
     db = line.product_inspect.new_block(start, end)
 
-    print(line.product_inspect._process_data.items())
+    # print(line.product_inspect.cached_data.items())
 
-    # db.all_stats()
-    # prod_ = db.productivity()
+    # print(line.product_inspect.cached_data[start])
 
-    # plt.plot(prod_.index, prod_['rate_Hz'].rolling(60).mean() * 60)
-    # plt.draw()
-    # plt.show()
-    # print('New DataBlock')
-    # new_db = line.product_inspect.new_block(new_start, new_end)
-    # print(new_db)
-    # new_db.all_stats()
-    # new_prod_ = new_db.productivity()
+    db.all_stats()
+    prod_ = db.productivity()
 
-    # plt.plot(new_prod_.index, new_prod_['rate_Hz'].rolling(60).mean() * 60)
-    # plt.draw()
-    # plt.show()
+    plt.plot(prod_.index, prod_['rate_Hz'].rolling(60).mean() * 60)
+    plt.draw()
+    plt.show()
+    print('New DataBlock')
+    new_db = line.product_inspect.new_block(new_start, new_end)
+    print(new_db)
+    new_db.all_stats()
+    new_prod_ = new_db.productivity()
+
+    plt.plot(new_prod_.index, new_prod_['rate_Hz'].rolling(60).mean() * 60)
+    plt.draw()
+    plt.show()
 
 
 if __name__ == '__main__':
