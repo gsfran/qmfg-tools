@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime as dt
+from typing import Any
 
 import numpy as np
 import pandas as pd
 
-from cameras import DataBlock, ProcessData
+from cameras import ProcessData
 
 
 @dataclass
@@ -14,17 +15,22 @@ class ProductInspectCamera:
     """
     iTrak Poucher Product Inspect Camera object.
     """
-    machine_info: dict = field(default_factory=dict)
+    _machine_info: dict = field(default_factory=dict)
+    
+    def __post_init__(self) -> None:
+        self._data_folder = self.machine_info.get('data_folder')
+        self._process_code = 'PR'
+        self._process_vars = self.PROCESS_VARS
+        self._cached_data = {}
 
     # region process_info
-    PROCESS_CODE = 'PR'
 
     RAW_DATA_HEADERS = [
         "item_number", "lot_number", "serial_number",
         "part_present", "cognex_timestamp"
         ]
 
-    PROCESS_PARAMETERS_DICT = {
+    PROCESS_VARS = {
 
         # throughput information
         'PARTS_PER_CYCLE': 1,
@@ -42,58 +48,101 @@ class ProductInspectCamera:
     # endregion
     ...
 
-    def __post_init__(self) -> None:
-        self.data_folder = self.machine_info.get('data_folder')
-        self._params = self.PROCESS_PARAMETERS_DICT
-        self._process_data = {}
+    # region properties
+    @property
+    def machine_info(self) -> dict:
+        return self._machine_info
 
-    def __repr__(self) -> str:
-        return (
-            f'{self.data_folder}-{self.PROCESS_CODE}'
-        )
+    @property
+    def data_folder(self) -> str:
+        return self._data_folder
 
-    def datablock(
+    @property
+    def process_code(self) -> str:
+        return self._process_code
+
+    @property
+    def process_vars(self) -> dict:
+        return self._process_vars
+    
+    @property
+    def cached_data(self) -> dict[pd.DataFrame]:
+        return self._cached_data
+
+    @cached_data.setter
+    def cached_data(self, key_: dt.date(), data: pd.DataFrame) -> None:
+        self._cached_data[key_] = data
+    # endregion
+    ...
+
+    def _check_data_cache(self, key_: dt.date()) -> pd.DataFrame:
+        """
+        Fetches process data for the given day, first checking
+        cached_data and only pulling raw data when necessary.
+        """
+        try:
+            return self.cached_data.get(key_)
+        except KeyError:
+            value_ = self._load_data_from_file(key_)
+            self.cached_data(key_, value_)
+            return self.cached_data.get(key_)
+
+    def new_block(
         self, start_datetime: dt, end_datetime: dt
-        ) -> DataBlock:
+        ) -> ProductInspectData:
         """
         Returns a DataBlock object of process data for the given timespan.
         """
-
-        _block_data = pd.DataFrame(columns=self.RAW_DATA_HEADERS)
-
-        block_dates = pd.date_range(
-            start_datetime.date(), end_datetime.date(), freq='d'
+        aggr_data = self._aggregate_days(
+            self._parse_dates(start_datetime, end_datetime)
             )
-
-        for date in block_dates:
-            _ = self.get_process_data(date)
-            if _ is not None:
-                pd.concat([_block_data, _])
-                _.drop(_.index, inplace=True)
-            else:
-                continue
+        print(
+            f'{dt.now()}: Retrieved data with length {len(aggr_data.index)}'
+            )
 
         return ProductInspectData(
-            self, _block_data, start_datetime, end_datetime
+            self, aggr_data, start_datetime, end_datetime
             )
 
-    def get_process_data(self, date: dt) -> pd.DataFrame:
+    def _parse_dates(
+        self, start_datetime: dt, end_datetime: dt
+        ) -> pd.DatetimeIndex:
         """
-        Fetches process data for the given day.
+        Generates a DatetimeIndex of days covering the given range.
         """
-        try:
-            return self._process_data[date]
-        except KeyError:
-            target_file = (
-                f'{self.data_folder}/{self.PROCESS_CODE}'
-                f'{date:%Y%m%d}.txt'
+        return (
+            pd.date_range(
+                start_datetime.date(), end_datetime.date(), freq='d'
                 )
-            self._process_data[date] = ProcessData.load(
-                target_file, self.RAW_DATA_HEADERS
-                )
+            )
+
+    def _aggregate_days(self, dates: pd.DatetimeIndex) -> pd.DataFrame:
+        """
+        Fetch the data for each item in dates.
+        """
+        block_data = pd.DataFrame()
+        for date_ts in dates:
+            date_dt = pd.to_datetime(date_ts).date()
+            returned_data = self._check_data_cache(date_dt)
+            if returned_data is None:
+                continue
+
+            block_data = pd.concat([block_data, returned_data])
+            returned_data.drop(returned_data.index, inplace=True)
         
-        if self._process_data[date].empty:
-            raise Exception('Empty DataFrame Loaded.')
+        return block_data
+
+    def _load_data_from_file(self, date: dt.date()) -> pd.DataFrame:
+        """
+        Loads process data file for the given day.
+        """
+        target_file = (
+            f'{self.data_folder}/{self.process_code}{date:%Y%m%d}.txt'
+            )
+        return ProcessData.load(target_file, self.RAW_DATA_HEADERS)
+    
+    def __repr__(self) -> str:
+        return (f'{self.data_folder}-{self.process_code}')
 
 
 @dataclass
@@ -102,131 +151,140 @@ class ProductInspectData:
     Object for handling data logged by the
     iTrak Poucher Product Inspect Camera.
     """
-    _source: ProductInspectCamera
+    _data_source: ProductInspectCamera
     _data: pd.DataFrame
-    start_datetime: dt
-    end_datetime: dt
+    _start_datetime: dt
+    _end_datetime: dt
+    _process_vars: dict = field(default_factory=dict)
 
     def __post_init__(self) -> None:
-        self.process_code = self._source.PROCESS_CODE
-        self._params = self._source._params
+        self._process_code = self.data_source.process_code
 
-        if self._data.empty:
+        self._process_vars = self.data_source.process_vars
+        for var_, value_ in self._process_vars.items():
+            self._process_vars[var_] = value_
+        
+        self._init_cache()
+
+        if self.data.empty:
             raise Exception("Empty DataFrame.")
 
-    def __repr__(self) -> str:
-        return (
-            f'{self._source}_'
-            f'{self.start_datetime:%Y%m%d-%H%M%S}_'
-            f'{self.end_datetime:%Y%m%d-%H%M%S}'
-        )
+    # region properties
+    @property
+    def data_source(self) -> ProductInspectCamera:
+        return self._data_source
 
-    # region core_methods
+    @property
     def data(self) -> pd.DataFrame:
-        """
-        Returns all cycles stored for the DataBlock.
-        """
         return self._data
 
-    def parts(self) -> pd.DataFrame:
-        """
-        Returns non-empty poucher cycles for the data.
-        """
-        try:
-            return self._parts
-        except AttributeError:
-            self._parts = self._data[self._data['part_present'] == 1]
-            return self._parts
+    @property
+    def process_code(self) -> str:
+        return self._process_code
 
+    @property
+    def process_vars(self) -> dict:
+        return self._process_vars
+
+    @property
+    def parts(self) -> pd.DataFrame:
+        return self._parts
+
+    @property
+    def first_part(self) -> pd.Timestamp:
+        return self._first_part
+
+    @property
+    def last_part(self) -> pd.Timestamp:
+        return self._last_part
+
+    @property
+    def production_time(self) -> float:
+        return self._production_time
+
+    @property
+    def part_count(self) -> int:
+        return self._part_count
+
+    @property
     def empty_cycles(self) -> pd.DataFrame:
-        """
-        Returns all cycles with no part present.
-        """
-        try:
-            return self._empty_cycles
-        except AttributeError:
-            self._empty_cycles = self._data[self._data['part_present'] == 0]
-            return self._empty_cycles
+        return self._empty_cycles
+
+    @property
+    def empty_count(self) -> int:
+        return self._empty_count
+
+    @property
+    def empty_rate(self) -> float:
+        return self._empty_rate
+
+    @property
+    def reworks(self) -> pd.DataFrame:
+        return self._reworks
+
+    @property
+    def rework_count(self) -> int:
+        return self._rework_count
+
+    @property
+    def rework_rate(self) -> float:
+        return self._rework_rate
+
+    @property
+    def first_cycle(self) -> pd.Timestamp:
+        return self._first_cycle
+
+    @property
+    def last_cycle(self) -> pd.Timestamp:
+        return self._last_cycle
+
+    @property
+    def all_cycle_time(self) -> float:
+        return self._all_cycle_time
+
+    @property
+    def cycle_count(self) -> int:
+        return self._cycle_count
+
+    @property
+    def cache_(self) -> dict:
+        return self._cache_
+
+    @cache_.setter
+    def cache_(self, key_: Any, value_: Any) -> None:
+        self._cache_[key_] = value_
     # endregion
     ...
 
-    # region all_stats
-    def all_stats(self) -> pd.DataFrame:
-        try:
-            return self._stats
-        except AttributeError:
-            self._stats = pd.concat(
-                [
-                    self.cycle_stats(),
-                    self.parts_stats(),
-                    self.stop_stats(),
-                    self.oee_stats()
-                ], axis=1,
-            )
-            return self._stats
-
-    def cycle_stats(self) -> pd.DataFrame:
+    # region method_dicts
+    def _init_cache(self) -> None:
         """
-        Returns cycle statistics for the datablock.
+        Initializes the dictionary containing cached data
+        and method calls.
         """
 
-        CYCLE_STATS_DICT = {
-
+        self._cycle_stats_dict = {
             'first_cycle': self.first_cycle(),
             'last_cycle': self.last_cycle(),
 
             'all_cycle_time': self.all_cycle_time(),
-            'total_cycles': self.cycle_count(),
-        }
+            'total_cycles': self.cycle_count()
+            }
 
-        try:
-            return self._cycle_stats
-
-        except AttributeError:
-            self._cycle_stats = pd.DataFrame(
-                columns=CYCLE_STATS_DICT.keys(), index=[self.__repr__()]
-                )
-            for stat, method in CYCLE_STATS_DICT.items():
-                self._cycle_stats[stat] = method
-            return self._cycle_stats
-
-    def parts_stats(self) -> pd.DataFrame:
-        """
-        Returns part statistics for the datablock.
-        """
-
-        PARTS_STATS_DICT = {
-
-            'parts_processed': self.total_part_count(),
+        self._parts_stats_dict = {
+            'parts_processed': self.part_count(),
             'first_part_processed': self.first_part(),
             'last_part_processed': self.last_part(),
-            'all_production_time': self.all_production_time(),
+            'all_production_time': self.production_time(),
 
             'empty_count': self.empty_count(),
             'empty_rate': self.empty_rate(),
 
             'rework_count': self.rework_count(),
             'rework_rate': self.rework_rate()
-        }
-
-        try:
-            return self._parts_stats
+            }
         
-        except AttributeError:
-            self._parts_stats = pd.DataFrame(
-                columns=PARTS_STATS_DICT.keys(), index=[self.__repr__()]
-            )
-        for stat, method in PARTS_STATS_DICT.items():
-            self._parts_stats[stat] = method
-        return self._parts_stats
-
-    def stop_stats(self) -> pd.DataFrame:
-        """
-        Returns stop statistics for the datablock.
-        """
-
-        STOP_STATS_DICT = {
-
+        self._stops_stats_dict = {
             'total_stop_count': self.total_stop_count(),
             'total_stop_time': self.total_stop_time(),
             'total_run_time': self.total_run_time(),
@@ -235,27 +293,10 @@ class ProductInspectData:
             'short_stop_time': self.short_stop_time(),
 
             'long_stop_count': self.long_stop_count(),
-            'long_stop_time': self.long_stop_time(),
-        }
+            'long_stop_time': self.long_stop_time()
+            }
 
-        try:
-            return self._stop_stats
-
-        except AttributeError:
-            self._stop_stats = pd.DataFrame(
-                columns=STOP_STATS_DICT.keys(), index=[self.__repr__()]
-                )
-            for stat, method in STOP_STATS_DICT.items():
-                self._stop_stats[stat] = method
-            return self._stop_stats
-    
-    def oee_stats(self) -> pd.DataFrame:
-        """
-        Returns OEE statistics for the data.
-        """
-
-        OEE_STATS_DICT = {
-
+        self._oee_stats_dict = {
             'oee_run_time': self.oee_run_time(),
 
             'availability_rate': self.availability_rate(),
@@ -263,53 +304,117 @@ class ProductInspectData:
             'quality_rate': self.quality_rate(),
 
             'oee_rate': self.oee_rate()
-        }
+            }
 
+        self._stat_dicts = {
+            'cycle': self._cycle_stats_dict,
+            'parts': self._parts_stats_dict,
+            'stops': self._stops_stats_dict,
+            'oee': self._oee_stats_dict
+            }
+
+        self._all_stats = {}
+        self._cache_ = {}
+
+        for dict_group, dict_ in self._stat_dicts.items():
+            self._all_stats.update(dict_)
+
+        for key_, method_ in self._all_stats.items():
+            self.cache_[key_]['method'] = method_
+    # endregion
+    ...
+
+    # region core_methods
+    def _check_cache(self, key_: Any) -> Any:
+        """
+        Checks if the requested value has already been stored
+        in local cache.
+        """
         try:
-            return self._oee_stats
+            return self.cache_.get(key_).get('cache')
+        except KeyError:
+            value_ = self.cache_.get(key_).get('method')
+            self.cache_(key_, value_)
+            return self._cache_.get(key_)
 
-        except AttributeError:
-            self._oee_stats = pd.DataFrame(
-                columns=OEE_STATS_DICT.keys(), index=[self.__repr__()]
-                )
-            for stat, method in OEE_STATS_DICT.items():
-                self._oee_stats[stat] = method
-            return self._oee_stats
+    @parts.setter
+    def parts(self) -> pd.DataFrame:
+        """
+        Returns non-empty poucher cycles for the data.
+        """
+        self._parts = self.data[self.data['part_present'] == 1]
+
+
+    @empty_cycles.setter
+    def empty_cycles(self) -> pd.DataFrame:
+        """
+        Returns all cycles with no part present.
+        """
+        self._empty_cycles = self.data[self.data['part_present'] == 0]
+    # endregion
+    ...
+
+    # region all_stats
+    def all_stats(self) -> None:
+        self.cycle_stats()
+        self.parts_stats()
+        self.stops_stats()
+        self.oee_stats()
+
+    def cycle_stats(self) -> None:
+        """
+        Returns cycle statistics for the datablock.
+        """
+        for stat, method_ in self._cycle_stats_dict.items():
+            self._cycle_stats_dict[stat] = method_
+
+    def parts_stats(self) -> None:
+        """
+        Returns part statistics for the datablock.
+        """
+        for stat, method_ in self._parts_stats_dict.items():
+            self._parts_stats_dict[stat] = method_
+
+    def stops_stats(self) -> None:
+        """
+        Returns stop statistics for the datablock.
+        """
+        for stat, method_ in self._stops_stats_dict.items():
+            self._stops_stats_dict[stat] = method_
+    
+    def oee_stats(self) -> None:
+        """
+        Returns OEE statistics for the data.
+        """
+        for stat, method_ in self._oee_stats_dict.items():
+            self._oee_stats_dict[stat] = method_
 
     # region cycle_stats
+    @first_cycle.setter
     def first_cycle(self) -> pd.Timestamp:
         """
         Returns time of first cycle for the given data.
         """
-        try:
-            return self._first_cycle
-        except AttributeError:
-            self._first_cycle = min(self._data.index)
-            return self._first_cycle
+        self._first_cycle = min(self.data.index)
 
+    @last_cycle.setter
     def last_cycle(self) -> pd.Timestamp:
         """
         Returns time of last cycle for the given data.
         """
-        try:
-            return self._last_cycle
-        except AttributeError:
-            self._last_cycle = max(self._data.index)
-            return self._last_cycle
+        self._last_cycle = max(self.data.index)
 
+    @all_cycle_time.setter
     def all_cycle_time(self) -> float:
         """
         Returns the time difference (in seconds)
         between the first and last cycle.
         """
-        try:
-            return self._all_cycle_time
-        except AttributeError:
-            self._all_cycle_time = (
-                self.last_cycle() - self.first_cycle()
+        self._all_cycle_time = (
+            self.last_cycle - self.first_cycle
             ).total_seconds()
-            return self._all_cycle_time
 
+    @cycle_count.setter
     def cycle_count(self) -> int:
         """
         Returns a cycle count for the given data.
@@ -317,113 +422,83 @@ class ProductInspectData:
         try:
             return self._cycle_count
         except AttributeError:
-            self._cycle_count = len(self._data.index)
+            self._cycle_count = len(self.data.index)
             return self._cycle_count
     # endregion
     ...
 
     # region parts_stats
-    def total_part_count(self) -> int:
+    @part_count.setter
+    def part_count(self) -> int:
         """
         Returns the number of non-empty cycles for the data.
         """
-        try: 
-            return self._part_count
-        except AttributeError:
-            self._part_count = len(self.parts().index)
-            return self._part_count
+        self._part_count = len(self.parts.index)
 
+    @first_part.setter
     def first_part(self) -> pd.Timestamp:
         """
         Returns the DatetimeIndex of the first part made.
         """
-        try:
-            return self._first_part
-        except AttributeError:
-            self._first_part = min(
-                self._data[self._data['part_present']  == 1].index
-                )
-            return self._first_part
+        self._first_part = min(
+            self.data[self.data['part_present']  == 1].index
+            )
     
+    @last_part.setter
     def last_part(self) -> pd.Timestamp:
         """
         Returns the DatetimeIndex of the last part made.
         """
-        try:
-            return self._last_part
-        except AttributeError:
-            self._last_part = max(
-                self._data[self._data['part_present']  == 1].index
-                )
-            return self._last_part
+        self._last_part = max(
+            self.data[self.data['part_present']  == 1].index
+            )
 
-    def all_production_time(self) -> float:
+    @production_time.setter
+    def production_time(self) -> float:
         """
         Returns the time difference (in seconds)
         between the first part and last part.
         """
-        try:
-            return self._production_time
-        except AttributeError:
-            self._production_time = (
-                self.last_part() - self.first_part()
+        self._production_time = (
+                self.last_part - self.first_part
             ).total_seconds()
-            return self._production_time
 
+    @empty_count.setter
     def empty_count(self) -> int:
         """
         Returns the number of empty cycles for the data.
         """
-        try:
-            return self._empty_count
-        except AttributeError:
-            self._empty_count = len(self.empty_cycles().index)
-            return self._empty_count
+        self._empty_count = len(self.empty_cycles.index)
 
+    @empty_rate.setter
     def empty_rate(self) -> float:
         """
         Returns the decimal percentage of empty cycles for the data.
         """
-        try:
-            return self._empty_rate
-        except AttributeError:
-            self._empty_rate = (self.empty_count() / self.cycle_count())
-            return self._empty_rate
+        self._empty_rate = (self.empty_count / self.cycle_count)
 
+    @reworks.setter
     def reworks(self) -> pd.DataFrame:
         """
         Returns all cycles with duplicate serial numbers.
         """
-        try:
-            return self._reworks
-        except AttributeError:
-            self._reworks = self._data[
-                self._data.duplicated('serial_number')
-                ]
-            return self._reworks
+        self._reworks = self.data[
+            self.data.duplicated('serial_number')
+            ]
 
+    @rework_count.setter
     def rework_count(self) -> int:
         """
         Returns the number of parts with duplicate serial numbers.
         """
-        try:
-            return self._rework_count
-        except AttributeError:
-            self._rework_count = len(self.reworks().index)
-            return self._rework_count
+        self._rework_count = len(self.reworks.index)
 
+    @rework_rate.setter
     def rework_rate(self) -> float:
         """
         Returns the decimal percentage of reworked parts.
         """
-        try:
-            return self._rework_rate
-        except AttributeError:
-            self._rework_rate = (
-                self.rework_count()
-                / self.cycle_count()
-            )
-            return self._rework_rate
+        self._rework_rate = (self.rework_count / self.cycle_count)
     # endregion
     ...
 
@@ -436,7 +511,7 @@ class ProductInspectData:
             return self._stops
         except AttributeError:
             self._stops = (
-                self._data[self._data['cycle_time']
+                self.data[self.data['cycle_time']
                 > self.MAX_CYCLE_TIME]
             )
             return self._stops
@@ -449,7 +524,7 @@ class ProductInspectData:
             return self._run_cycles
         except AttributeError:
             self._run_cycles = (
-                self._data[self._data['cycle_time']
+                self.data[self.data['cycle_time']
                 < self.MAX_CYCLE_TIME]
             )
             return self._run_cycles
@@ -506,12 +581,12 @@ class ProductInspectData:
             return self._short_stops
         except AttributeError:
             drop_rows = pd.concat([
-                self._data[self._data['cycle_time'] > self.SHORT_STOP_LIMIT],
-                self._data[self._data['cycle_time'] < self.MAX_CYCLE_TIME]
-                ]).index
-            self._short_stops = self._data.drop(drop_rows).dropna(
-                axis=0, how='cycle_time'
-                )
+                self.data[self.data['cycle_time']
+                > self.SHORT_STOP_LIMIT],
+                self.data[self.data['cycle_time']
+                < self.MAX_CYCLE_TIME]
+            ]).index
+            self._short_stops = self.data.drop(drop_rows).dropna()
             return self._short_stops
 
     def short_stop_count(self) -> int:
@@ -541,10 +616,10 @@ class ProductInspectData:
         try:
             return self._long_stops
         except AttributeError:
-            drop_rows = self._data[self._data['cycle_time'] < self.SHORT_STOP_LIMIT].index
-            self._long_stops = self._data.drop(drop_rows).dropna(
-                axis=0, how='cycle_time'
-            )
+            drop_rows = self.data[
+                self.data['cycle_time'] < self.SHORT_STOP_LIMIT
+                ].index
+            self._long_stops = self.data.drop(drop_rows).dropna()
             return self._long_stops
     
     def long_stop_count(self) -> int:
@@ -606,7 +681,7 @@ class ProductInspectData:
             return self._performance_rate
         except AttributeError:
             self._performance_rate = (
-                (self.total_part_count() / self.oee_run_time())
+                (self.part_count() / self.oee_run_time())
                 / (self.IDEAL_RATE_PER_S / 60)
             )
             return self._performance_rate
@@ -623,7 +698,7 @@ class ProductInspectData:
             return self._quality_rate
         except AttributeError:
             self._quality_rate = (
-                1 - (self.rework_count() / self.total_part_count())
+                1 - (self.rework_count() / self.part_count())
             )
             return self._quality_rate
 
@@ -665,7 +740,7 @@ class ProductInspectData:
         of the given frequency.
         """
         datetime_range = pd.date_range(
-                self.start_datetime, self.end_datetime, freq=freq
+                self._start_datetime, self._end_datetime, freq=freq
                 )
         range_size = len(datetime_range)
         columns = ['actual_yield', 'standard_yield', 'rate']
@@ -686,7 +761,7 @@ class ProductInspectData:
         frequency_multiplier = freq_seconds / pd.Timedelta(seconds =1)
 
         productivity['standard_yield'] = (
-            np.arange(range_size)* ProductInspectData.STANDARD_RATE_PER_S
+            np.arange(range_size)* self.STANDARD_RATE_PER_S
             * frequency_multiplier
         )
 
@@ -707,10 +782,16 @@ class ProductInspectData:
         Returns a Series with a running part count.
         """
         try:
-            self._data['part_count'] = self._data['part_present'].cumsum()
+            self.data['part_count'] = self.data['part_present'].cumsum()
         except Exception:
             pass
         finally:
-            return self._data['part_count']
+            return self.data['part_count']
     # endregion
     ...
+
+    def __repr__(self) -> str:
+        return (
+            f'{self._source}_{self._start_datetime:%Y%m%d-%H%M%S}_'
+            f'{self._end_datetime:%Y%m%d-%H%M%S}'
+        )
