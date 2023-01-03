@@ -5,7 +5,7 @@ from datetime import time
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from machines import *
+from machines import iTrak
 
 
 def main():
@@ -15,22 +15,32 @@ def main():
     start = dt.combine(start_date, time(6))
     end = dt.combine(end_date, time(6))
 
-    line = iTrakLine(8)
+    new_start = dt.combine(start_date, time(9))
+    new_end = dt.combine(start_date, time(14))
+
+    line = iTrak(8)
 
     pd.set_option('display.max_rows', 100)
 
-    db = line.poucher.product_inspect.datablock(start, end)
+    db = line.product_inspect.new_block(start, end)
 
-    db.all_stats()
+    print(line.product_inspect._process_data.items())
 
-    print(db)
-    print(db.all_stats())
+    # db.all_stats()
+    # prod_ = db.productivity()
 
-    prod_ = db.productivity()
+    # plt.plot(prod_.index, prod_['rate_Hz'].rolling(60).mean() * 60)
+    # plt.draw()
+    # plt.show()
+    # print('New DataBlock')
+    # new_db = line.product_inspect.new_block(new_start, new_end)
+    # print(new_db)
+    # new_db.all_stats()
+    # new_prod_ = new_db.productivity()
 
-    plt.plot(prod_.index, prod_['rate_Hz'].rolling(60).mean() * 60)
-    plt.draw()
-    plt.show()
+    # plt.plot(new_prod_.index, new_prod_['rate_Hz'].rolling(60).mean() * 60)
+    # plt.draw()
+    # plt.show()
 
 
 if __name__ == '__main__':

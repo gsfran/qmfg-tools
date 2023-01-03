@@ -24,12 +24,12 @@ class ProcessData:
         data = ProcessData._load_raw_data(
             _path, _data_headers
             )
-        print("Data loaded.")
+        print(f'{dt.now()}: Data loaded.')
 
-        if data is not None:
-            return ProcessData._clean_data(data)
-        else:
+        if data is None:
             raise Exception("Empty DataFrame Loaded.")
+
+        return ProcessData._clean_data(data)
 
     @staticmethod
     def _clean_data(data: pd.DataFrame) -> pd.DataFrame:
@@ -38,21 +38,24 @@ class ProcessData:
         the cycles time and instantaneous rate for each cycle.
         """
         # clean up cognex timestamp and index by DatetimeIndex
+        ## Could add a parsing function to better handle changes ##
         data['datetime'] = pd.to_datetime(data['cognex_timestamp'])
-
-        # converts the datetime column to timestamp values, 
-        # needed to calculate cycle times
-        data['timestamp'] = (
-            data['datetime'].values.astype(np.int64) // 10 ** 9
-            )
 
         # sets the DatetimeIndex and removes the cognex timestamp
         data = data.set_index('datetime')
         data.drop(['cognex_timestamp'], axis=1, inplace=True)
 
+        # converts the datetime column to timestamp values, 
+        # needed to calculate cycle times
+        data['timestamp'] = (
+            data.index.values.astype(np.int64) / 10 ** 9
+            )
+
         # adds cycle time and frequency data to the DataFrame
         data['cycle_time'] = data['timestamp'].diff()
         data['cycle_Hz'] = 1 / data['cycle_time']
+
+        print(f'{dt.now()}: Cleaning data.')
 
         return data
 
@@ -65,9 +68,10 @@ class ProcessData:
             data = pd.read_csv(_filepath, names=_data_headers)
         except FileNotFoundError:
             # if no file found, outputs to terminal
-            print(f'File Not Found: {_filepath}')
+            print(f'{dt.now()}: Requested data file not found: {_filepath}')
             return None
 
+        print(f'{dt.now()}: Loading file: {_filepath}')
         return data
 
 

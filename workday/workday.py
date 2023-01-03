@@ -28,4 +28,4 @@ class WorkDay:
 
         for machine_name, machine_info in self.machines.items():
             if machine_info['family'] == 'itrak':
-                machine_info['object'] = iTrakLine(machine_info)
+                machine_info['object'] = iTrak(machine_info)

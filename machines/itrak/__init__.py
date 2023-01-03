@@ -1,1 +1,1 @@
-from .itrak_line import iTrakLine
+from .itrak_line import iTrak
