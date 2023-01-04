@@ -3,6 +3,7 @@ from datetime import datetime as dt
 from datetime import time
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 
 from machines import iTrak
@@ -28,19 +29,25 @@ def main():
 
     # print(line.product_inspect.cached_data[start])
 
-    db.all_stats()
-    prod_ = db.productivity()
+    # db.all_stats
+    prod_ = db.productivity
 
-    plt.plot(prod_.index, prod_['rate_Hz'].rolling(60).mean() * 60)
-    plt.draw()
-    plt.show()
-    print('New DataBlock')
-    new_db = line.product_inspect.new_block(new_start, new_end)
-    print(new_db)
-    new_db.all_stats()
-    new_prod_ = new_db.productivity()
+    # plt.plot(prod_.index, prod_['rate_Hz'].rolling(30).mean() * 60)
+    # plt.draw()
+    # # plt.show()
+    # new_db = line.product_inspect.new_block(new_start, new_end)
+    # # print(new_db)
+    # new_db.all_stats
+    # new_prod_ = new_db.productivity
 
-    plt.plot(new_prod_.index, new_prod_['rate_Hz'].rolling(60).mean() * 60)
+    winsize = 30
+
+    y = prod_['rate_Hz'].rolling(winsize).mean().fillna(0).values * 60
+
+    y_0 = np.zeros((len(y), 1)).flatten()
+
+
+    plt.fill_between(prod_.index, y_0, y)
     plt.draw()
     plt.show()
 

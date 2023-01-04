@@ -20,44 +20,45 @@ class ProcessData:
         """
         Returns a Dataframe containing cleaned process data for the given file.
         """
+        _t = dt.now()
+        print(f'{_t}: Loading data files...\t\t\t', end='')
+        
         _path = f'{ProcessData.ROOT_PATH}/{target_file}'
-        data = ProcessData._load_raw_data(
+        _raw_data = ProcessData._load_raw_data(
             _path, _data_headers
             )
-        print(f'{dt.now()}: Data loaded.')
-
-        if data is None:
-            raise Exception("Empty DataFrame Loaded.")
-
-        return ProcessData._clean_data(data)
+        
+        print(f'Done in {dt.now() - _t}')
+        return ProcessData._clean_data(_raw_data)
 
     @staticmethod
-    def _clean_data(data: pd.DataFrame) -> pd.DataFrame:
+    def _clean_data(data_: pd.DataFrame) -> pd.DataFrame:
         """
         Indexes the given data by timestamp and calculates
         the cycles time and instantaneous rate for each cycle.
         """
+        _t = dt.now()
+        print(f'{_t}: Cleaning raw data...\t\t\t', end='')
         # clean up cognex timestamp and index by DatetimeIndex
         ## Could add a parsing function to better handle changes ##
-        data['datetime'] = pd.to_datetime(data['cognex_timestamp'])
+        data_['datetime'] = pd.to_datetime(data_['cognex_timestamp'])
 
         # sets the DatetimeIndex and removes the cognex timestamp
-        data = data.set_index('datetime')
-        data.drop(['cognex_timestamp'], axis=1, inplace=True)
+        data_ = data_.set_index('datetime')
+        data_ = data_.drop(['cognex_timestamp'], axis=1)
 
         # converts the datetime column to timestamp values, 
         # needed to calculate cycle times
-        data['timestamp'] = (
-            data.index.values.astype(np.int64) / 10 ** 9
+        data_['timestamp'] = (
+            data_.index.values.astype(np.int64) / 10 ** 9
             )
 
         # adds cycle time and frequency data to the DataFrame
-        data['cycle_time'] = data['timestamp'].diff()
-        data['cycle_Hz'] = 1 / data['cycle_time']
+        data_['cycle_time'] = data_['timestamp'].diff()
+        data_['cycle_Hz'] = 1 / data_['cycle_time']
 
-        print(f'{dt.now()}: Cleaning data.')
-
-        return data
+        print(f'Done in {dt.now() - _t}')
+        return data_
 
     @staticmethod
     def _load_raw_data(_filepath: str, _data_headers: list) -> pd.DataFrame:
@@ -65,14 +66,11 @@ class ProcessData:
         Returns a Dataframe containing all process data for the given file.
         """
         try:
-            data = pd.read_csv(_filepath, names=_data_headers)
+            return pd.read_csv(_filepath, names=_data_headers)
         except FileNotFoundError:
-            # if no file found, outputs to terminal
-            print(f'{dt.now()}: Requested data file not found: {_filepath}')
+            # if no file found, outputs warning to terminal
+            print(f'{dt.now()}: File not found: {_filepath}')
             return None
-
-        print(f'{dt.now()}: Loading file: {_filepath}')
-        return data
 
 
 class OnlineUtilizationLog:
