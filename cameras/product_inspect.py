@@ -100,7 +100,7 @@ class ProductInspectCamera:
         )
 
         print(
-            f'{dt.now()}: Retrieved data with length '
+            f'Retrieved data with length '
             f'{len(data_.index)} in {dt.now() - _t}'
             )
 
