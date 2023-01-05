@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import os
 from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime as dt
@@ -542,6 +543,7 @@ class ProductInspectData:
             )
             return self._stops
 
+
     @property
     def run_cycles(self) -> pd.DataFrame:
         """
@@ -677,6 +679,25 @@ class ProductInspectData:
         except AttributeError:
             self._long_stop_time = sum(self.long_stops['cycle_time'])
         return self._long_stop_time
+
+
+    def stops_to_xlsx(self) -> None:
+        """
+        Dumps the stops DataFrame to .xlsx file.
+        """
+        file_ = f'{self.__str__()}_Stops.xlsx'
+        folder_ = f'./xls/{self._data_source.data_folder}/'
+
+        full_path_ = os.path.normpath(folder_ + file_)
+        folder_path = os.path.normpath(folder_)
+
+        try:
+            self._stops.to_excel(full_path_)
+        except FileNotFoundError:
+            os.mkdir(folder_)
+            self.stops_to_xlsx()
+        except Exception:
+            raise
     # endregion
     ...
 
@@ -821,11 +842,7 @@ class ProductInspectData:
         """
         Returns a Series with a running part count.
         """
-        try:
-            self.data['part_count'] = self.data['part_present'].cumsum()
-        except Exception:
-            raise
-        finally:
-            return self.data['part_count']
+        self.data['part_count'] = self.data['part_present'].cumsum()
+        return self.data['part_count']
     # endregion
     ...

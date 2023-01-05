@@ -1,3 +1,4 @@
+from copy import deepcopy
 from datetime import date
 from datetime import datetime as dt
 from datetime import time
@@ -33,8 +34,40 @@ def main():
 
     # print(line.product_inspect.cached_data[start])
 
-    # db.all_stats
+    db.all_stats
     prod_ = db.productivity
+
+    db.stops_to_xlsx()
+
+
+
+
+
+
+
+    """
+    OLD_VS_NEW
+
+    t0 = dt.now()
+    db_slow = deepcopy(db)
+
+    df = pd.DataFrame(
+            index=pd.date_range(
+                db_slow.first_cycle, db_slow.last_cycle, freq='s'
+            ), 
+            columns=['count', 'standard']
+            )
+    df.at[df.index[0], 'count'] = 0
+
+    df[['count', 'standard']] = [
+            (
+                db.parts[db.parts.index < x].__len__(), i * (140/60)
+                ) for i, x in enumerate(df.index)
+            ]
+    tf = dt.now()
+    print(f'\n\nSlow method finished in {tf - t0}')
+    """
+
 
     # plt.plot(prod_.index, prod_['rate_Hz'].rolling(30).mean() * 60)
     # plt.draw()
@@ -45,32 +78,31 @@ def main():
     # new_prod_ = new_db.productivity
 
 
-    winsize = 60
+    # winsize = 60
 
-    x = prod_.index
-    y = prod_['rate_Hz'].rolling(winsize).mean().fillna(0).values * 60
-    y_norm = y / max(y)
+    # x = prod_.index
+    # y = prod_['rate_Hz'].rolling(winsize).mean().fillna(0).values * 60
+    # y_norm = y / max(y)
 
-    y_0 = np.zeros((len(y), 1)).flatten()
+    # y_0 = np.zeros((len(y), 1)).flatten()
 
-    fig = plt.figure(figsize=(8,4), constrained_layout=True)
+    # fig = plt.figure(figsize=(8,4), constrained_layout=True)
 
-    ax = fig.add_subplot()
-    plt.axes = ax
+    # ax = fig.add_subplot()
+    # plt.axes = ax
 
-    ax.set_facecolor('lightgrey')
+    # ax.set_facecolor('lightgrey')
 
-    xformat = mdates.DateFormatter('%H:%M\n%b-%d')
-    plt.axes.xaxis.set_major_formatter(xformat)
+    # xformat = mdates.DateFormatter('%H:%M\n%b-%d')
+    # plt.axes.xaxis.set_major_formatter(xformat)
 
-    # [plt.axvline(_, 0, 1, color='tab:blue', alpha=y_norm[i], lw=0.20) for i, _ in enumerate(x)]
+    # # [plt.axvline(_, 0, 1, color='tab:blue', alpha=y_norm[i], lw=0.20) for i, _ in enumerate(x)]
+
+    # plt.fill_between(prod_.index, y_0, y, color='tab:blue', lw=.25)
 
 
-    plt.fill_between(prod_.index, y_0, y, color='tab:blue', lw=.25)
-
-
-    plt.axes.draw
-    plt.show()
+    # plt.axes.draw
+    # plt.show()
 
 
 if __name__ == '__main__':

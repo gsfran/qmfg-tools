@@ -1,4 +1,5 @@
 from datetime import datetime as dt
+import pathlib
 from warnings import filterwarnings
 
 import numpy as np
@@ -119,3 +120,5 @@ class OnlineUtilizationLog:
                 raise Exception(f'{file_path} could not be loaded.')
 
         return utilization_log_data
+
+
