@@ -679,25 +679,6 @@ class ProductInspectData:
         except AttributeError:
             self._long_stop_time = sum(self.long_stops['cycle_time'])
         return self._long_stop_time
-
-
-    def stops_to_xlsx(self) -> None:
-        """
-        Dumps the stops DataFrame to .xlsx file.
-        """
-        file_ = f'{self.__str__()}_Stops.xlsx'
-        folder_ = f'./xls/{self._data_source.data_folder}/'
-
-        full_path_ = os.path.normpath(folder_ + file_)
-        folder_path = os.path.normpath(folder_)
-
-        try:
-            self._stops.to_excel(full_path_)
-        except FileNotFoundError:
-            os.mkdir(folder_)
-            self.stops_to_xlsx()
-        except Exception:
-            raise
     # endregion
     ...
 
@@ -778,6 +759,38 @@ class ProductInspectData:
     # endregion
     ...
 
+    # region to_excel
+    def stats_to_xls(self) -> None:
+        """
+        Dumps the stats DataFrame to .xlsx file.
+        """
+        file_ = f'{self.__str__()}_Stats.xlsx'
+        folder_ = f'.test_out/xls/{self._data_source.__str__()}/'
+        path_ = folder_ + file_
+
+        if not os.path.exists(folder_):
+            os.mkdir(folder_)
+
+        pd.DataFrame(
+                self.all_stats.values(), columns=[self.__str__()],
+                index=self.all_stats.keys()
+            ).T.to_excel(path_)
+
+    def stops_to_xls(self) -> None:
+        """
+        Dumps the stops DataFrame to .xlsx file.
+        """
+        file_ = f'{self.__str__()}_Stops.xlsx'
+        folder_ = f'.test_out/xls/{self._data_source.__str__()}/'
+        path_ = folder_ + file_
+
+        if not os.path.exists(folder_):
+            os.mkdir(folder_)
+
+        self._stops.to_excel(path_)
+    # endregion
+    ...
+
     # region productivity
     @property
     def productivity(self, freq: str='s') -> pd.DataFrame:
@@ -844,5 +857,19 @@ class ProductInspectData:
         """
         self.data['part_count'] = self.data['part_present'].cumsum()
         return self.data['part_count']
+
+
+    def prod_to_xls(self) -> None:
+        """
+        Dumps the productivity DataFrame to .xlsx file.
+        """
+        file_ = f'{self.__str__()}_Productivity.xlsx'
+        folder_ = f'.test_out/xls/{self._data_source.__str__()}/'
+        path_ = folder_ + file_
+
+        if not os.path.exists(folder_):
+            os.mkdir(folder_)
+
+        self._stops.to_excel(path_)
     # endregion
     ...

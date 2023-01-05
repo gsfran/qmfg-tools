@@ -3,7 +3,7 @@
 
 ### Python ###
 
-.ignore/
+.test_out/
 
 
 # Byte-compiled / optimized / DLL files

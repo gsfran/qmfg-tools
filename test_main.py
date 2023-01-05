@@ -37,10 +37,8 @@ def main():
     db.all_stats
     prod_ = db.productivity
 
-    db.stops_to_xlsx()
-
-
-
+    db.stats_to_xls()
+    db.stops_to_xls()
 
 
 
