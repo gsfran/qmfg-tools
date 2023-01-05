@@ -39,6 +39,7 @@ def main():
 
     db.stats_to_xls()
     db.stops_to_xls()
+    db.prod_to_xls()
 
 
 
