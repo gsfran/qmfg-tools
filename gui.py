@@ -6,12 +6,12 @@ customtkinter.set_appearance_mode("System")  # Modes: "System" (standard), "Dark
 customtkinter.set_default_color_theme("green")  # Themes: "blue" (standard), "green", "dark-blue"
 
 
-class App(customtkinter.CTk):
+class Index(customtkinter.CTk):
     def __init__(self):
         super().__init__()
 
         # configure window
-        self.title("Process Data Visualizer")
+        self.title("qmfg-tools-0.1")
         self.geometry(f"{1500}x{800}")
 
         # configure grid layout (4x4)
@@ -152,5 +152,5 @@ class App(customtkinter.CTk):
 
 
 if __name__ == "__main__":
-    app = App()
+    app = Index()
     app.mainloop()

@@ -7,7 +7,6 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from openpyxl import load_workbook
 
 PD_PATH = '//kansas.us/qfs/Engineering/Process_Data'
 # OUL_PATH = '//kansas.us/qfs/Engineering/Shared/Online Utilization Logs'
