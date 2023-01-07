@@ -1,71 +1,175 @@
 body {
-    background-color: lightslategrey;
+    background-color: darkgrey;
+    font: 1em sans-serif;
 }
 
+/* Page Header */
 .header {
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    /* font-family:Verdana, Geneva, Tahoma, sans-serif; */
+    /* font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; */
+    font-size: 280%;
+    /* font-size: 48px; */
+    color: #ffffff;
     text-align: center;
-    padding: 20px;
+    background-color: #774def;
+    padding: 1px;
 }
 
- /* The navbar container */
- .topnav {
+/* Top Navigation Bar */
+.topnav {
     overflow: hidden;
-    background-color: #333;
-  }
-  
-  /* Navbar links */
-  .topnav a {
-    float: left;
+    background-color: #774def;
+}
+
+/* Navbar Links */
+.topnav a {
+    float: right;
+    margin: 3px;
     display: block;
-    color: #f2f2f2;
-    text-align: center;
-    padding: 14px 16px;
+    color: #ffffff;
+    text-align:justify;
     text-decoration: none;
-  }
-  
-  /* Links - change color on hover */
-  .topnav a:hover {
-    background-color: #ddd;
-    color: black;
-  } 
-
-.main_row {
-    border: 1px solid yellow;
+    margin-right: 20px;
+    margin-left: 20px;
 }
 
-.poucher_row {
-    width: auto;
-    height: 150px;
-    margin: 5px;
-    border: 1.8px solid black;
-    padding: 10px 18px;
-    background-image: linear-gradient(180deg, gainsboro, lightgray 7%, grey);
+/* Links - change color on hover */
+.topnav a:hover {
+    background-color: #ffffff;
+    font-weight: bold;
+    color: #774def;
 }
 
-.poucher_column {
-    width: 80%;
-    display: inline-block;
-    border: 1px solid red;
-}
-
-.day_block {
-    width: 12%;
-    height: 100%;
-    display: inline-block;
-    border: 1px solid black;
-}
-
-.left_column {
-    width: 5%;
-    height: 100%;
+/* Left  Sidebar */
+.sidebar {
+    width: 10%;
+    height: auto;
     border: 1px solid green;
     display: inline-block;
 }
 
+/* Weekly Calendar Views */
+.calendar {
+    display: grid;
+    grid-gap: 1px;
+    background-color: #eee;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+}
+
+.weekly-byline {
+    grid-template-columns:
+        [machine] auto [mon] 1fr [tue] 1fr [wed] 1fr [thu] 1fr [fri] 1fr [sat] 1fr [sun] 1fr [end-col];
+    grid-template-rows:
+        [day] auto 
+        [line_5] 1fr 
+        [line_6] 1fr 
+        [line_7] 1fr 
+        [line_8] 1fr 
+        [line_9] 1fr 
+        [end-row];
+}
+
+/* Use a Stacked Area Chart, separated by line. */
+/* .weekly-byproduct {
+    display: grid;
+} */
+
+/* GENERAL ITEM SETUP */
+.calendar li {
+    background-color: #ffffff;
+    padding: 0.25em;
+    display: inline-block;
+}
+
+/* ITEM TYPES */
+li.day,
+li.time,
+li.corner {
+    background-color: #f5f5f5;
+}
+
+li.day {
+    text-align: center;
+}
+
+li.time {
+    text-align: right;
+    vertical-align: bottom;
+}
+
+li.job {
+    background-color: #82caaf;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+}
+
+/* CATEGORIES */
+.job.blue_product {
+    background-color: deepskyblue;
+}
+
+.job.green_product {
+    background-color: yellowgreen;
+}
+
+/* DAY HEADINGS */
+.mon {
+    grid-area: day / mon;
+}
+
+.tue {
+    grid-area: day / tue;
+}
+
+.wed {
+    grid-area: day / wed;
+}
+
+.thu {
+    grid-area: day / thu;
+}
+
+.fri {
+    grid-area: day / fri;
+}
+
+.sat {
+    grid-area: day / sat;
+}
+
+.sun {
+    grid-area: day / sun;
+}
+
+/* LINE HEADINGS */
+.line_5 {
+    grid-area: line_5 / machine;
+}
+
+.line_6 {
+    grid-area: line_6 / machine;
+}
+
+.line_7 {
+    grid-area: line_7 / machine;
+}
+
+.line_8 {
+    grid-area: line_8 / machine;
+}
+
+.line_9 {
+    grid-area: line_9 / machine;
+}
+
 .parking_lot {
-    width: 20%;
-    padding: 5px, 9px;
-    background-image: linear-gradient(90deg, gainsboro, lightgray 7%, grey);
+    width: auto;
+    height: auto;
+    background-image: linear-gradient(180deg, gainsboro, lightgray 7%, grey);
     border: 1px solid blue;
     display: inline-block;
 }

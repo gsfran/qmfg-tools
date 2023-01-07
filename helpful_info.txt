@@ -1,0 +1,11 @@
+CSS
+https://www.w3schools.com/css/default.asp
+
+CSS grid (calendar)
+https://codepen.io/roccop/pen/OGyBPG?editors=1100
+
+CSS Colors
+https://www.w3.org/wiki/CSS/Properties/color/keywords
+
+Environment Variables
+https://www.nylas.com/blog/making-use-of-environment-variables-in-python/
