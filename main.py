@@ -1,4 +1,3 @@
-import os
 import jyserver.Flask as jsf
 from flask import Flask, render_template
 
