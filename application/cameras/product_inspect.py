@@ -10,7 +10,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from cameras import ProcessData
+from application.cameras import ProcessData
 
 
 @dataclass

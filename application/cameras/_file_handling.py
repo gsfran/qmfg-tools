@@ -12,7 +12,7 @@ class ProcessData:
     """
 
     # ROOT_PATH = '//kansas.us/qfs/Engineering/Process_Data'
-    ROOT_PATH = './testdata'
+    ROOT_PATH = './application/testdata'
 
     @staticmethod
     def load(
