@@ -6,73 +6,86 @@
     </head>
     <body>
     <div class="header">
-        <h1>Pouching Schedule</h1>
-        <p>Build in progress.</p>
+        <div class="header main"><p>Work Order Flow</p></div>
+        <div class="header sub"><p>Cassette Pouching</p></div>
     </div>
-    
-    <div class="topnav">
-        <a href="/Help/">Help</a>
-        <a href="/Change/">Modify Existing Job</a>
-        <a href="/New/">Start New Job</a>
+    <div class="nav_bar">
+        <li class="nav_link">Home</li>
+        <li class="nav_link">Create Work Order</li>
+        <li class="nav_link">Load Work Order</li>
+        <li class="nav_link">Modify Work Order</li>
+        <li class="nav_link">Remove Work Order</li>
+        <li class="nav_link">Help</li>
     </div>
 
-    <ul class="calendar weekly-byline">
+    <div class="main_block">
+        <div class="side_bar">
+            <p>Side Bar</p>
+        </div>
+        <div class="calendar weekly-byline" id="grid_div">
+        <!-- <ul> -->
 
-        <!--  WEEK DAYS  -->
-        <li class="day mon">Mon</li>
-        <li class="day tue">Tue</li>
-        <li class="day wed">Wed</li>
-        <li class="day thu">Thu</li>
-        <li class="day fri">Fri</li>
-        <li class="day sat">Sat</li>
-        <li class="day sun">Sun</li>
+            <!--  WEEK DAYS  -->
+            <li class="weekday_header mon">MON</li>
+            <li class="weekday_header tue">TUE</li>
+            <li class="weekday_header wed">WED</li>
+            <li class="weekday_header thu">THU</li>
+            <li class="weekday_header fri">FRI</li>
+            <li class="weekday_header sat">SAT</li>
+            <li class="weekday_header sun">SUN</li>
 
-        <!--  PRODUCTION LINES  -->
-        <li class="line_5">Line 5</li>
-        <li class="line_6">Line 6</li>
-        <li class="line_7">Line 7</li>
-        <li class="line_8">Line 8</li>
-        <li class="line_9">Line 9</li>
+            <!--  PRODUCTION LINES  -->
+            <li class="machine_index line_5">5</li>
+            <li class="machine_index line_6">6</li>
+            <li class="machine_index line_7">7</li>
+            <li class="machine_index line_8">8</li>
+            <li class="machine_index line_9">9</li>
 
-        <!--  TOP LEFT CORNER FILLER  -->
-        <li class="corner"></li>
+            <!--  TOP LEFT CORNER FILLER  -->
+            <li class="corner">LINE</li>
 
-        <!--  EMPTY CELL FILLERS -->
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-    </ul>
+            <!--  EMPTY CELL FILLERS -->
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+            <li class="day"></li>
+        <!-- </ul> -->
+        </div>
+        <div class="parking_lot">
+            <li class="parking_lot_header">Parking Lot</li>
+            <li class="work_order">Lot ABC</li>
+        </div>
+    </div>
     </body>
 </html>

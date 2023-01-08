@@ -1,69 +1,137 @@
+:root {
+    --bg_purple: #774def;
+    --faint_purple: #f0f0ff;
+    --light_grey: #bbbbbb;
+    --dark_grey: #888888;
+}
+
 body {
-    background-color: darkgrey;
+    background-color: var(--bg_purple);
     font: 1em sans-serif;
+    min-width: 800px;
 }
 
 /* Page Header */
 .header {
+    width: 100%;
+    min-width: 800px;
     font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-    /* font-family:Verdana, Geneva, Tahoma, sans-serif; */
-    /* font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; */
-    font-size: 280%;
-    /* font-size: 48px; */
     color: #ffffff;
     text-align: center;
-    background-color: #774def;
-    padding: 1px;
 }
-
-/* Top Navigation Bar */
-.topnav {
-    overflow: hidden;
-    background-color: #774def;
+.header.main {
+    font-size: 4rem;
+    font-weight: bolder;
+    height: 40px;
+    line-height: 0px;
 }
-
-/* Navbar Links */
-.topnav a {
-    float: right;
-    margin: 3px;
-    display: block;
-    color: #ffffff;
-    text-align:justify;
-    text-decoration: none;
-    margin-right: 20px;
-    margin-left: 20px;
-}
-
-/* Links - change color on hover */
-.topnav a:hover {
-    background-color: #ffffff;
+.header.sub {
+    font-size: 1.25rem;
     font-weight: bold;
-    color: #774def;
+    height: 40px;
+    line-height: 0px;
+}
+
+/* Top Navigation Bar #region */
+.nav_bar {
+    width: 100%;
+    min-width: 800px;
+    height: 40px;
+    display: inline-flex;
+    /* overflow: hidden; */
+    background-color: var(--bg_purple);
+    float: left;
+    list-style: none;
+}
+
+.nav_bar li {
+    width: 20%;;
+    min-width: 100px;
+    overflow-block: clip;
+    overflow-inline: visible;
+    font-weight: bolder;
+    color: #fff;
+    text-align: center;
+    text-decoration: none;
+    line-height: 40px;
+}
+
+li.nav_link:hover {
+    background-color: #ffffff;
+    color: var(--bg_purple);
+}
+/* #endregion */
+
+
+
+.main_block {
+    display: inline-flex;
+
+    width: 100%;
+    height: auto;
+    min-width: 1000px;
+    min-height: 300px;
+
+    background-color: #fff;
+    padding-block: 10px;
+    border-top: 2px solid #000;
 }
 
 /* Left  Sidebar */
-.sidebar {
-    width: 10%;
+.side_bar {
+    width: 7.5%;
     height: auto;
-    border: 1px solid green;
-    display: inline-block;
+    float:inline-start;
+    text-align: center;
+    margin-inline: 5px;
+    border: 5px dashed orange;
 }
 
-/* Weekly Calendar Views */
+/* Parking Lot */
+.parking_lot {
+    display: block;
+    width: 25%;
+    height: auto;
+    text-align: center;
+    margin-inline: 5px;
+    /* border: 5px dashed limegreen; */
+}
+
+.parking_lot li {
+    line-height: 1fr;
+    width: auto;
+    list-style: none;
+}
+
+li.parking_lot_header {
+    background-color: var(--light_grey);
+    width: auto;
+    height: .25fr;
+    line-height: .5fr;
+    border: 2px solid #000;
+}
+
+
+/* Week View */
 .calendar {
     display: grid;
-    grid-gap: 1px;
-    background-color: #eee;
-    position: fixed;
-    width: 100%;
-    height: 100%;
+    grid-column-gap: 1px;
+    grid-row-gap: 2px;
+
+    background-color: #fff;
+    width: 67.5%;
+    /* min-width: 500px; */
+    height: auto;
+    float: left;
+    margin-inline: 5px;
+    overflow: hidden;
 }
 
 .weekly-byline {
     grid-template-columns:
-        [machine] auto [mon] 1fr [tue] 1fr [wed] 1fr [thu] 1fr [fri] 1fr [sat] 1fr [sun] 1fr [end-col];
+        [machine_index] .25fr [mon] 1fr [tue] 1fr [wed] 1fr [thu] 1fr [fri] 1fr [sat] 1fr [sun] 1fr [end-col];
     grid-template-rows:
-        [day] auto 
+        [weekday_header] .20fr 
         [line_5] 1fr 
         [line_6] 1fr 
         [line_7] 1fr 
@@ -79,97 +147,101 @@ body {
 
 /* GENERAL ITEM SETUP */
 .calendar li {
-    background-color: #ffffff;
-    padding: 0.25em;
+    padding: 0.5rem;
     display: inline-block;
 }
-
-/* ITEM TYPES */
-li.day,
-li.time,
-li.corner {
-    background-color: #f5f5f5;
-}
-
-li.day {
+.corner {
+    color: #fff;
+    background-color: var(--dark_grey);
+    font-weight: bolder;
     text-align: center;
+    border: 2px solid #000;
+}
+.weekday_header {
+    background-color: var(--bg_purple);
+    text-align: center;
+    color: #ffffff;
+    font-weight: bolder;
+    border: 2px solid black;
+}
+.machine_index {
+    background-color: #ddd;
+    line-height: 5rem;
+    font-size: 2em;
+    text-align: center;
+    font-weight: bolder;
+    font-family:Verdana, Geneva, Tahoma, sans-serif;
+    border: 2px solid #000;
+}
+.day {
+    background-color: var(--faint_purple);
+    border-block: 2px solid #000;
+    border-inline: 2px dashed var(--dark_grey)
 }
 
-li.time {
-    text-align: right;
-    vertical-align: bottom;
+.work_order {
+    background-color: yellow;
+    position: relative;
+    height: auto;
+    width: auto;
 }
 
-li.job {
-    background-color: #82caaf;
-    position: absolute;
-    height: 100%;
-    width: 100%;
-}
-
-/* CATEGORIES */
-.job.blue_product {
+/* WORK ORDER TYPES */
+.work_order.blue_product {
     background-color: deepskyblue;
 }
 
-.job.green_product {
+.work_order.green_product {
     background-color: yellowgreen;
 }
 
-/* DAY HEADINGS */
+/* #region WEEKDAY SELECTORS */
 .mon {
-    grid-area: day / mon;
+    grid-area: weekday_header / mon;
 }
 
 .tue {
-    grid-area: day / tue;
+    grid-area: weekday_header / tue;
 }
 
 .wed {
-    grid-area: day / wed;
+    grid-area: weekday_header / wed;
 }
 
 .thu {
-    grid-area: day / thu;
+    grid-area: weekday_header / thu;
 }
 
 .fri {
-    grid-area: day / fri;
+    grid-area: weekday_header / fri;
 }
 
 .sat {
-    grid-area: day / sat;
+    grid-area: weekday_header / sat;
 }
 
 .sun {
-    grid-area: day / sun;
+    grid-area: weekday_header / sun;
 }
+/* # endregion */
 
-/* LINE HEADINGS */
+/* MACHINE SELECTORS */
 .line_5 {
-    grid-area: line_5 / machine;
+    grid-area: line_5 / machine_index;
 }
 
 .line_6 {
-    grid-area: line_6 / machine;
+    grid-area: line_6 / machine_index;
 }
 
 .line_7 {
-    grid-area: line_7 / machine;
+    grid-area: line_7 / machine_index;
 }
 
 .line_8 {
-    grid-area: line_8 / machine;
+    grid-area: line_8 / machine_index;
 }
 
 .line_9 {
-    grid-area: line_9 / machine;
-}
-
-.parking_lot {
-    width: auto;
-    height: auto;
-    background-image: linear-gradient(180deg, gainsboro, lightgray 7%, grey);
-    border: 1px solid blue;
-    display: inline-block;
+    grid-area: line_9 / machine_index;
 }
