@@ -9,3 +9,6 @@ https://www.w3.org/wiki/CSS/Properties/color/keywords
 
 Environment Variables
 https://www.nylas.com/blog/making-use-of-environment-variables-in-python/
+
+WSGI Server Setup on Windows
+https://thilinamad.medium.com/flask-app-deployment-in-windows-apache-server-mod-wsgi-82e1cfeeb2ed

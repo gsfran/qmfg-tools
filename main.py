@@ -1,12 +1,11 @@
 import os
 import jyserver.Flask as jsf
 from flask import Flask, render_template
-from app import iTrak
 
 
-webapp = Flask(__name__)
+app = Flask(__name__)
 
-@jsf.use(webapp)
+@jsf.use(app)
 class App:
     def __init__(self):
         self.count = 0
@@ -15,13 +14,11 @@ class App:
         self.count += 1
         self.js.document.getElementById('count').innerHTML = self.count
 
-@webapp.route('/')
+@app.route('/')
 def index():
     return App.render(render_template('index.html'))
 
 
 if __name__ == '__main__':
-
-    # app.run(host='10.25.20.153', port=5000, debug=True)
-
-    webapp.run(host='127.0.0.1', port=8080, debug=True)
+    
+    app.run(host='127.0.0.1', port=8080, debug=True)
