@@ -32,4 +32,4 @@ def delete(entry_id):
 
 @app.route('/dashboard')
 def dashboard():
-    pass
+    ...

@@ -7,22 +7,20 @@ class UserDataForm(FlaskForm):
 
     type = SelectField(
         'Type', validators=[DataRequired()],
-        choices=[(
-            'income', 'income'
-        ),
-        (
-            'expense', 'expense'
-        )]
+        choices=[
+            ('income', 'income'),
+            ('expense', 'expense')
+            ]
         )
     
     category = SelectField(
         "Category", validators=[DataRequired()],
-        choices=[(
+        choices=[
             ('rent', 'rent'),
             ('salary', 'salary'),
             ('investment', 'investment'),
             ('side_hustle', 'side_hustle')
-            )]
+            ]
         )
 
     amount = IntegerField('Amount', validators=[DataRequired()])
