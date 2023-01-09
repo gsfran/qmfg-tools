@@ -24,7 +24,7 @@
     <div class="card card-style mb-2">
         <div class="card-body">
             <div class="chart-container" style="position: relative;">
-                <canvas id="overtime_expenditure"></canvas>
+                <canvas id="chart3"></canvas>
             </div>
         </div>
     </div>
@@ -32,8 +32,8 @@
 
 {% block javascript %}
 <script>
-    let income_vs_expense_data = JSON.parse({{ income_vs_expense | tojson }})
-    let income_category_data = JSON.parse({{ income_category | tojson}})
+    let chart1_data = JSON.parse({{ chart1_data | tojson }})
+    let chart2_data = JSON.parse({{ income_category | tojson}})
 
     Chart.scaleService.updateScaleDefaults('linear', {
             ticks: {
@@ -47,8 +47,8 @@
             data: {
             labels: ['expense', 'income'],
                 datasets: [{
-                    label: "Income Vs Expenses",
-                    data: income_vs_expense_data,
+                    label: "Chart 1",
+                    data: chart1_data,
                     backgroundColor: ['#5DA5DA ', '#FAA43A', '#60BD68',
                         '#B276B2', '#E16851', '#FB8267'],
 
@@ -62,7 +62,7 @@
             options: {
                     title: {
                         display: true,
-                            text: "Income Vs Expenses",
+                            text: "Chart 1",
                                 fontSize: 20,
                     },
                     legend: {
@@ -79,13 +79,13 @@
             }
         })
 
-    let income_vs_category_chart = new Chart(income_vs_category, {
+    let chart2 = new Chart(income_vs_category, {
             type: 'bar',
             data: {
-                labels: ['investment', 'rent', 'salary', 'side_hustle'],
+                labels: ['cat1','cat2','cat3','cat4'],
                 datasets: [{
-                    label: "Categories Of Income",
-                    data: income_category_data,
+                    label: "Chart 2",
+                    data: chart2_data,
             backgroundColor: ['#5DA5DA ', '#FAA43A', '#60BD68',
                 '#B276B2', '#E16851', '#FB8267'],
             borderWidth: 1,
@@ -98,7 +98,7 @@
         options: {
                 title: {
                     display: true,
-                        text: "Income Categories",
+                        text: "Categories",
                             fontSize: 20,
             },
                 legend: {
@@ -114,18 +114,18 @@
             }
             }
         })
-        over_time_expenditure = JSON.parse({{over_time_expenditure | tojson}})
+        chart3_data = JSON.parse({{chart3_data | tojson}})
         labels = JSON.parse({{ dates_label  | tojson}})
 
-        new Chart(document.getElementById("overtime_expenditure"), {
+        new Chart(chart3, {
                 type: "line",
                 data:
                 {
                     labels: labels,
                     datasets: [{
-                        label: "Expenditure Over Time",
+                        label: "Chart 3",
                         
-                        data: over_time_expenditure,
+                        data: chart3_data,
                         fill: false,
                         borderColor: "rgb(75, 192, 192)",
                         lineTension: 0.1

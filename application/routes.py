@@ -33,34 +33,34 @@ def delete(entry_id):
     entry = ScheduledJobs.query.get_or_404(int(entry_id))
     db.session.delete(entry)
     db.session.commit()
-    flash(f'Entry Deleted', 'warning')
+    flash(f'Entry deleted.', 'danger')
     return redirect(url_for("index"))
 
 @app.route('/dashboard')
 def dashboard():
-    income_vs_expense = db.session.query(db.func.sum(ScheduledJobs.lot_number), ScheduledJobs.product).group_by(ScheduledJobs.product).order_by(ScheduledJobs.product).all()
+    type_comparison = db.session.query(db.func.sum(ScheduledJobs.lot_number), ScheduledJobs.product).group_by(ScheduledJobs.product).order_by(ScheduledJobs.product).all()
 
-    category_comparison = db.session.query(db.func.sum(ScheduledJobs.lot_number), ScheduledJobs.category).group_by(ScheduledJobs.category).order_by(ScheduledJobs.category).all()
+    product_comparison = db.session.query(db.func.sum(ScheduledJobs.lot_number), ScheduledJobs.category).group_by(ScheduledJobs.category).order_by(ScheduledJobs.category).all()
 
     dates = db.session.query(db.func.sum(ScheduledJobs.lot_number), ScheduledJobs.date).group_by(ScheduledJobs.date).order_by(ScheduledJobs.date).all()
 
     income_category = []
-    for lot_numbers, _ in category_comparison:
+    for lot_numbers, _ in product_comparison:
         income_category.append(lot_numbers)
 
     income_expense = []
-    for total_lot_number, _ in income_vs_expense:
+    for total_lot_number, _ in type_comparison:
         income_expense.append(total_lot_number)
 
-    over_time_expenditure = []
+    chart3_data = []
     dates_label = []
     for lot_number, date in dates:
         dates_label.append(date.strftime("%m-%d-%y"))
-        over_time_expenditure.append(lot_number)
+        chart3_data.append(lot_number)
 
     return render_template('dashboard.html',
-                            income_vs_expense=json.dumps(income_expense),
+                            chart1_data=json.dumps(income_expense),
                             income_category=json.dumps(income_category),
-                            over_time_expenditure=json.dumps(over_time_expenditure),
+                            chart3_data=json.dumps(chart3_data),
                             dates_label =json.dumps(dates_label)
                         )
