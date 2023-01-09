@@ -12,9 +12,9 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
 
   {% if title %}
-  <title>Data Viewer - {{ title }}</title>
+    <title>Data Viewer - {{ title }}</title>
   {% else %}
-  <title>Data Viewer</title>
+    <title>Data Viewer</title>
   {% endif %}
 </head>
 
@@ -23,16 +23,16 @@
     <div class="row">
       <div class="col-md-12 p-0">
         <header class="mb-4">
-          <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-            <a class="navbar-brand" href="#">Production Scheduler</a>
+          <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #774def;">
+            <a class="navbar-brand" href="{{ url_for('index') }}">Production Scheduler</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
               aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
               <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
               <div class="navbar-nav ml-auto mr-3">
-                <a class="nav-item nav-link" href="#">Add</a>
-                <a class="nav-item nav-link" href="#">Dashboard</a>
+                <a class="nav-item nav-link" href="{{ url_for('add_work_order') }}">Add Work Order</a>
+                <a class="nav-item nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
               </div>
             </div>
           </nav>
@@ -42,17 +42,18 @@
 
     <div class="row justify-content-center">
       <div class="col-md-10">
-      </div>
-      {% with messages = get_flashed_messages(with_categories = True) %}
-      {% if messages %}
-      {% for category, message in messages %}
-      <div class="alert alert-{{ category }}">
-        {{ message }}
-      </div>
-      {% endfor %}
-      {% endif %}
-      {% endwith %}
-      {% block content %}{% endblock %}
+        {% with messages = get_flashed_messages(with_categories = True) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        </div>
+    {% block content %}
+    {% endblock %}
     </div>
   </div>
 

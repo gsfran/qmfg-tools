@@ -1,31 +1,33 @@
 {% extends 'layout.html' %}
 {% block content %}
-    
-    <div class="col-sm-10 ml-auto mr-auto ">
-        <H2>Transaction History</H2>
-        <table class="table">
-            <thead class="thead-dark">
-                <tr>
-                    <th scope="col">ID</th>
-                    <th scope="col">Date</th>
-                    <th scope="col">Type</th>
-                    <th scope="col">Category</th>
-                    <th scope="col">Amount</th>
-                    <th scope="col">Delete</th>
-                </tr>
-            </thead>
-            <!-- <tbody>
-                {% for entry in entries %}
-                        <tr>
-                            <th scope="row">{{loop.index}}</th>
-                            <td>{{entry.date.strftime("%m-%d-%Y")}}</td>
-                            <td>{{entry.type}}</td>
-                            <td>{{ entry.category }}</td>
-                            <td>{{ entry.amount }}</td>
-                            <td><a href="{{ url_for('delete', entry_id = entry.id) }}" class="btn btn-outline-danger btn-sm">Delete</a></td>
-                        </tr>
-                {% endfor %}
-        </tbody> -->
-        </table>
-    </div>
+<div class="col-sm-10 ml-auto mr-auto ">
+    <H2>Current Work Orders</H2>
+    <table class="table">
+        <thead class="thead-dark" style="background-color: #774def;">
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Date Added</th>
+                <th scope="col">Product</th>
+                <th scope="col">Category</th>
+                <th scope="col">Lot Number</th>
+                <th scope="col"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in entries %}
+            <tr>
+                <th scope="row">{{loop.index}}</th>
+                <td>{{ entry.date.strftime("%m-%d-%Y") }}</td>
+                <td>{{ entry.product }}</td>
+                <td>{{ entry.category }}</td>
+                <td>{{ entry.lot_number }}</td>
+                <td><a href="{{ url_for('delete', entry_id = entry.id) }}"
+                    class="btn btn-outline-dark btn-sm">Edit</a>
+                    <a href="{{ url_for('delete', entry_id = entry.id) }}"
+                        class="btn btn-outline-danger btn-sm">Remove</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}
