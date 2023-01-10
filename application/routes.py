@@ -30,7 +30,7 @@ def add_work_order():
             f'{form.product.data}: Lot #{form.lot_number.data} '
             f'has been added.', 'success'
             )
-        return redirect(url_for('index'))
+        return redirect(url_for('view_work_orders'))
     return render_template('add.html', title='Add Work Order', form=form)
 
 @app.route('/delete-post/<int:entry_id>')

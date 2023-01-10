@@ -50,6 +50,7 @@ h2 {
     /* line-height: 1fr; */
     width: auto;
     list-style: none;
+    margin: 10px;
 }
 
 .parking_lot_header {
@@ -68,8 +69,6 @@ h2 {
     display: grid;
     grid-column-gap: 2px;
     grid-row-gap: 3px;
-
-    background-color: #fff;
     width: 75%;
     /* min-width: 600px; */
     height: 100%;
@@ -118,12 +117,13 @@ h2 {
     border-radius: 5px;
 }
 .machine_index {
-    background-color: #ccc;
+    background-color: #666;
+    color: #fff;
     line-height: 3em;
     font-size: 1.5em;
     text-align: center;
     font-weight: bolder;
-    font-family:Verdana, Geneva, Tahoma, sans-serif;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
     border-radius: 10px;
 }
 
@@ -139,7 +139,6 @@ h2 {
         [hour_20] 1fr [hour_21] 1fr [hour_22] 1fr [hour_23] 1fr [end-col];
     background-color: #f0f0f0;
     border-radius: 10px;
-    position: relative;
 }
 
 .day .hour {
@@ -147,16 +146,15 @@ h2 {
     position: fixed;
     /* grid-column: auto; */
     /* grid-row: 1; */
-    /* display: inline-block; */
+    display: inline-block;
 }
 
 .work_order {
     position: relative;
-    height: 2em;
-    line-height: 2em;
+    /* height: 2em;
+    line-height: 2em; */
     width: auto;
-    margin: 10px;
-    border: 1px solid #000;
+    margin: 2px;
     border-radius: 13px;
 }
 

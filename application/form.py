@@ -5,6 +5,7 @@ from wtforms.validators import DataRequired
 
 class UserDataForm(FlaskForm):
 
+    lot_number = StringField('Work Order #', validators=[DataRequired()])
     product = SelectField(
         'Product', validators=[DataRequired()],
         choices=[
@@ -15,7 +16,6 @@ class UserDataForm(FlaskForm):
             ('SARS Antigen', 'SARS Antigen')
             ]
         )
-    
     category = SelectField(
         "Category", validators=[DataRequired()],
         choices=[
@@ -25,6 +25,5 @@ class UserDataForm(FlaskForm):
             ('cat4', 'cat4')
             ]
         )
-
-    lot_number = IntegerField('Work Order #', validators=[DataRequired()])
+        
     submit = SubmitField('Submit')
