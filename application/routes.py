@@ -39,7 +39,7 @@ def delete(entry_id):
     db.session.delete(entry)
     db.session.commit()
     flash(f'Entry deleted.', 'danger')
-    return redirect(url_for("index"))
+    return redirect(url_for('view_work_orders'))
 
 @app.route('/dashboard')
 def dashboard():
