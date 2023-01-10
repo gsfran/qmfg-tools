@@ -16,7 +16,7 @@
         <tbody>
             {% for entry in entries %}
             <tr>
-                <th scope="row">{{loop.index}}</th>
+                <th scope="row">{{ loop.index }}</th>
                 <td>{{ entry.date.strftime("%m-%d-%Y") }}</td>
                 <td>{{ entry.product }}</td>
                 <td>{{ entry.category }}</td>

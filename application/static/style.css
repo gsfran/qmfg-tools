@@ -11,15 +11,20 @@ body {
     min-width: 600px;
 }
 
+h2 {
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-size: 2.5em;
+}
+
 .main_block {
     display: inline-flex;
-    margin-top: 15px;
+    margin-top: 50px;
     float: center;
 
     width: 100%;
     height: auto;
     min-width: 400px;
-    max-width: 1200px;
+    max-width: 1600px;
     min-height: 400px;
     overflow-inline: auto;
 
@@ -38,6 +43,7 @@ body {
     padding: 10px;
     margin-left: 35px;
     border: 2px dotted #222;
+    border-radius: 5px;
 }
 
 .parking_lot li {
@@ -46,7 +52,7 @@ body {
     list-style: none;
 }
 
-li.parking_lot_header {
+.parking_lot_header {
     background-color: #fff;
     font-size: 1.25em;
     font-weight: bolder;
@@ -61,7 +67,7 @@ li.parking_lot_header {
 .schedule {
     display: grid;
     grid-column-gap: 2px;
-    grid-row-gap: 6px;
+    grid-row-gap: 3px;
 
     background-color: #fff;
     width: 75%;
@@ -113,40 +119,56 @@ li.parking_lot_header {
 }
 .machine_index {
     background-color: #ccc;
-    line-height: 3rem;
+    line-height: 3em;
     font-size: 1.5em;
     text-align: center;
     font-weight: bolder;
     font-family:Verdana, Geneva, Tahoma, sans-serif;
-    border-radius: 5px;
-}
-.day {
-    background-color: #f0f0f0;
-    border-radius: 5px;
+    border-radius: 10px;
 }
 
-.hour {
+.day {
+    display: inline-grid;
+    grid-gap: none;
+    grid-template-columns:
+        [hour_0] 1fr [hour_1] 1fr [hour_2] 1fr [hour_3] 1fr 
+        [hour_4] 1fr [hour_5] 1fr [hour_6] 1fr [hour_7] 1fr 
+        [hour_8] 1fr [hour_9] 1fr [hour_10] 1fr [hour_11] 1fr 
+        [hour_12] 1fr [hour_13] 1fr [hour_14] 1fr [hour_15] 1fr 
+        [hour_16] 1fr [hour_17] 1fr [hour_18] 1fr [hour_19] 1fr 
+        [hour_20] 1fr [hour_21] 1fr [hour_22] 1fr [hour_23] 1fr [end-col];
     background-color: #f0f0f0;
+    border-radius: 10px;
+    position: relative;
+}
+
+.day .hour {
+    background-color: #f0f0f0;
+    position: fixed;
+    /* grid-column: auto; */
+    /* grid-row: 1; */
+    /* display: inline-block; */
 }
 
 .work_order {
-    background-color: deepskyblue;
     position: relative;
     height: 2em;
     line-height: 2em;
     width: auto;
     margin: 10px;
     border: 1px solid #000;
-    border-radius: 10px;
+    border-radius: 13px;
 }
 
 /* WORK ORDER TYPES */
 .work_order.blue_product {
-    background-color: deepskyblue;
+    background-color: #00bfff40;
+    border: 1px solid deepskyblue;
 }
 
 .work_order.green_product {
-    background-color: yellowgreen;
+    background-color: #9acd3230;
+    border: 1px solid yellowgreen;
 }
 
 /* #region WEEKDAY SELECTORS */
