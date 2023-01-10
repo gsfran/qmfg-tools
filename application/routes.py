@@ -11,6 +11,11 @@ def index():
     entries = ScheduledJobs.query.order_by(ScheduledJobs.date.desc()).all()
     return render_template('index.html', entries=entries)
 
+@app.route('/view-all')
+def view_work_orders():
+    entries = ScheduledJobs.query.order_by(ScheduledJobs.date.desc()).all()
+    return render_template('workorders.html', entries=entries)
+
 @app.route('/add', methods=["POST", "GET"])
 def add_work_order():
     form = UserDataForm()

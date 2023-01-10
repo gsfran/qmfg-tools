@@ -13,8 +13,5 @@ db = SQLAlchemy(app)
 def create_tables():
     db.create_all()
 
-# with app.app_context():
-#     db.create_all()
-
 from application import routes
 # from application.machines import iTrak

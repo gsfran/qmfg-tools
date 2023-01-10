@@ -6,125 +6,69 @@
 }
 
 body {
-    background-color: var(--bg_purple);
+    background-color: #fff;
     font: 1em sans-serif;
-    min-width: 800px;
+    min-width: 600px;
 }
-
-/* Page Header */
-.header {
-    width: 100%;
-    min-width: 800px;
-    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-    color: #ffffff;
-    text-align: center;
-}
-.header.main {
-    font-size: 4rem;
-    font-weight: bolder;
-    height: 40px;
-    line-height: 0px;
-}
-.header.sub {
-    font-size: 1.25rem;
-    font-weight: bold;
-    height: 40px;
-    line-height: 0px;
-}
-
-/* Top Navigation Bar #region */
-.nav_bar {
-    width: 100%;
-    min-width: 800px;
-    height: 40px;
-    display: inline-flex;
-    /* overflow: hidden; */
-    background-color: var(--bg_purple);
-    float: left;
-    list-style: none;
-}
-
-.nav_bar li {
-    width: 20%;;
-    min-width: 100px;
-    overflow-block: clip;
-    overflow-inline: visible;
-    font-weight: bolder;
-    color: #fff;
-    text-align: center;
-    text-decoration: none;
-    line-height: 40px;
-}
-
-li.nav_link:hover {
-    background-color: #ffffff;
-    color: var(--bg_purple);
-}
-/* #endregion */
-
-
 
 .main_block {
     display: inline-flex;
+    margin-top: 15px;
 
     width: 100%;
     height: auto;
-    min-width: 1000px;
-    min-height: 300px;
+    min-width: 400px;
+    min-height: 400px;
+    overflow-inline: auto;
 
     background-color: #fff;
-    padding-block: 10px;
-    border-top: 2px solid #000;
-}
-
-/* Left  Sidebar */
-.side_bar {
-    width: 7.5%;
-    height: auto;
-    float:inline-start;
-    text-align: center;
-    margin-inline: 5px;
-    border: 5px dashed orange;
 }
 
 /* Parking Lot */
 .parking_lot {
     display: block;
     width: 25%;
+    min-width: 200px;
     height: auto;
+    overflow: auto;
+
     text-align: center;
-    margin-inline: 5px;
-    /* border: 5px dashed limegreen; */
+    padding: 10px;
+    margin-left: 35px;
+    border: 2px dotted #222;
 }
 
 .parking_lot li {
-    line-height: 1fr;
+    /* line-height: 1fr; */
     width: auto;
     list-style: none;
 }
 
 li.parking_lot_header {
-    background-color: var(--light_grey);
+    background-color: #fff;
+    font-size: 1.25em;
+    font-weight: bolder;
     width: auto;
-    height: .25fr;
-    line-height: .5fr;
-    border: 2px solid #000;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #000;
+    padding: 5px;
 }
 
 
 /* Week View */
-.calendar {
+.schedule {
     display: grid;
-    grid-column-gap: 1px;
-    grid-row-gap: 2px;
+    grid-column-gap: 2px;
+    grid-row-gap: 6px;
 
     background-color: #fff;
-    width: 67.5%;
-    /* min-width: 500px; */
+    width: 75%;
+    min-width: 600px;
     height: auto;
-    float: left;
-    margin-inline: 5px;
-    overflow: hidden;
+
+    aspect-ratio: 2.5 / 1;
+
+    /* float: left; */
 }
 
 .weekly-byline {
@@ -146,44 +90,48 @@ li.parking_lot_header {
 } */
 
 /* GENERAL ITEM SETUP */
-.calendar li {
+.schedule li {
     padding: 0.5rem;
     display: inline-block;
 }
 .corner {
-    color: #fff;
-    background-color: var(--dark_grey);
-    font-weight: bolder;
+    color: #000;
+    background-color: #fff;
+    font-weight: bold;
     text-align: center;
-    border: 2px solid #000;
+    /* border-bottom: 2px solid #000; */
 }
 .weekday_header {
-    background-color: var(--bg_purple);
+    background-color: #fff;
     text-align: center;
-    color: #ffffff;
+    color: #000;
     font-weight: bolder;
-    border: 2px solid black;
+    /* border-bottom: 1px solid #000; */
+    border-radius: 5px;
 }
 .machine_index {
-    background-color: #ddd;
-    line-height: 5rem;
-    font-size: 2em;
+    background-color: #ccc;
+    line-height: 3rem;
+    font-size: 1.5em;
     text-align: center;
     font-weight: bolder;
     font-family:Verdana, Geneva, Tahoma, sans-serif;
-    border: 2px solid #000;
+    border-radius: 5px;
 }
 .day {
-    background-color: var(--faint_purple);
-    border-block: 2px solid #000;
-    border-inline: 2px dashed var(--dark_grey)
+    background-color: #f0f0f0;
+    border-radius: 5px;
 }
 
 .work_order {
-    background-color: yellow;
+    background-color: deepskyblue;
     position: relative;
-    height: auto;
+    height: 2em;
+    line-height: 2em;
     width: auto;
+    margin: 10px;
+    border: 1px solid #000;
+    border-radius: 10px;
 }
 
 /* WORK ORDER TYPES */

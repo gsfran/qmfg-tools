@@ -1,0 +1,33 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="col-sm-10 ml-auto mr-auto ">
+    <H2>Current Work Orders</H2>
+    <table class="table">
+        <thead style="background-color: #555; color: #ffffff;">
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Date Added</th>
+                <th scope="col">Product</th>
+                <th scope="col">Category</th>
+                <th scope="col">Lot Number</th>
+                <th scope="col"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in entries %}
+            <tr>
+                <th scope="row">{{loop.index}}</th>
+                <td>{{ entry.date.strftime("%m-%d-%Y") }}</td>
+                <td>{{ entry.product }}</td>
+                <td>{{ entry.category }}</td>
+                <td>{{ entry.lot_number }}</td>
+                <td><a href="{{ url_for('delete', entry_id = entry.id) }}"
+                    class="btn btn-outline-dark btn-sm">Edit</a>
+                    <a href="{{ url_for('delete', entry_id = entry.id) }}"
+                        class="btn btn-outline-danger btn-sm">Remove</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
