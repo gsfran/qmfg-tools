@@ -14,10 +14,12 @@ body {
 .main_block {
     display: inline-flex;
     margin-top: 15px;
+    float: center;
 
     width: 100%;
     height: auto;
     min-width: 400px;
+    max-width: 1200px;
     min-height: 400px;
     overflow-inline: auto;
 
@@ -63,8 +65,8 @@ li.parking_lot_header {
 
     background-color: #fff;
     width: 75%;
-    min-width: 600px;
-    height: auto;
+    /* min-width: 600px; */
+    height: 100%;
 
     aspect-ratio: 2.5 / 1;
 
@@ -121,6 +123,10 @@ li.parking_lot_header {
 .day {
     background-color: #f0f0f0;
     border-radius: 5px;
+}
+
+.hour {
+    background-color: #f0f0f0;
 }
 
 .work_order {
