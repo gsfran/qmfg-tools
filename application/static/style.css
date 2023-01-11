@@ -80,7 +80,8 @@ h2 {
 
 .weekly-byline {
     grid-template-columns:
-        [machine_index] .25fr [mon] 1fr [tue] 1fr [wed] 1fr [thu] 1fr [fri] 1fr [sat] 1fr [sun] 1fr [end-col];
+        [machine_index] .25fr
+        [mon] 1fr [tue] 1fr [wed] 1fr [thu] 1fr [fri] 1fr [sat] 1fr [sun] 1fr [end-col];
     grid-template-rows:
         [weekday_header] .20fr 
         [line_5] 1fr 
@@ -106,6 +107,7 @@ h2 {
     background-color: #fff;
     font-weight: bold;
     text-align: center;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
     /* border-bottom: 2px solid #000; */
 }
 .weekday_header {
@@ -141,12 +143,13 @@ h2 {
     border-radius: 10px;
 }
 
-.day .hour {
+.hour {
     background-color: #f0f0f0;
-    position: fixed;
+    /* position: relative; */
     /* grid-column: auto; */
     /* grid-row: 1; */
     display: inline-block;
+    padding: 0px;
 }
 
 .work_order {
