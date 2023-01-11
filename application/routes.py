@@ -8,8 +8,14 @@ import json
 
 @app.route('/')
 def index():
+    weekdays = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
+    lines = range(5, 10)
     entries = ScheduledJobs.query.order_by(ScheduledJobs.date.desc()).all()
-    return render_template('index.html', entries=entries)
+
+    return render_template(
+        'index.html', weekdays=weekdays,
+        lines=lines, entries=entries
+        )
 
 @app.route('/view-all')
 def view_work_orders():
@@ -43,11 +49,38 @@ def delete(entry_id):
 
 @app.route('/dashboard')
 def dashboard():
-    type_comparison = db.session.query(db.func.sum(ScheduledJobs.lot_number), ScheduledJobs.product).group_by(ScheduledJobs.product).order_by(ScheduledJobs.product).all()
+    type_comparison = (
+        db.session.query(
+                db.func.sum(ScheduledJobs.lot_number),
+                ScheduledJobs.product
+            ).group_by(
+                ScheduledJobs.product
+                ).order_by(
+                    ScheduledJobs.product
+                    ).all()
+        )
 
-    product_comparison = db.session.query(db.func.sum(ScheduledJobs.lot_number), ScheduledJobs.category).group_by(ScheduledJobs.category).order_by(ScheduledJobs.category).all()
+    product_comparison = (
+        db.session.query(
+                db.func.sum(ScheduledJobs.lot_number),
+                ScheduledJobs.category
+            ).group_by(
+                ScheduledJobs.category
+                ).order_by(
+                    ScheduledJobs.category
+                    ).all()
+        )
 
-    dates = db.session.query(db.func.sum(ScheduledJobs.lot_number), ScheduledJobs.date).group_by(ScheduledJobs.date).order_by(ScheduledJobs.date).all()
+    dates = (
+        db.session.query(
+                db.func.sum(ScheduledJobs.lot_number),
+                ScheduledJobs.date
+            ).group_by(
+                ScheduledJobs.date
+                ).order_by(
+                    ScheduledJobs.date
+                    ).all()
+        )
 
     income_category = []
     for lot_numbers, _ in product_comparison:
@@ -63,9 +96,10 @@ def dashboard():
         dates_label.append(date.strftime("%m-%d-%y"))
         chart3_data.append(lot_number)
 
-    return render_template('dashboard.html',
-                            chart1_data=json.dumps(income_expense),
-                            income_category=json.dumps(income_category),
-                            chart3_data=json.dumps(chart3_data),
-                            dates_label =json.dumps(dates_label)
-                        )
+    return render_template(
+        'dashboard.html', 
+        chart1_data=json.dumps(income_expense),
+        income_category=json.dumps(income_category),
+        chart3_data=json.dumps(chart3_data),
+        dates_label =json.dumps(dates_label)
+        )

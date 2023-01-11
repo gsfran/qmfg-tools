@@ -9,60 +9,25 @@
         <!--  TOP LEFT CORNER  -->
         <div class="corner">LINE</div>
 
-        <!--  WEEK DAYS  -->
-        <div class="weekday_header mon">MON</div>
-        <div class="weekday_header tue">TUE</div>
-        <div class="weekday_header wed">WED</div>
-        <div class="weekday_header thu">THU</div>
-        <div class="weekday_header fri">FRI</div>
-        <div class="weekday_header sat">SAT</div>
-        <div class="weekday_header sun">SUN</div>
+        <!--  WEEKDAY HEADERS  -->
+        {% for day in weekdays %}
+            <div class="weekday_header {{ day.lower() }}">{{ day }}</div>
+        {% endfor %}
+
 
         <!--  PRODUCTION LINES  -->
-        <div class="machine_index line_5">5</div>
-        <div class="machine_index line_6">6</div>
-        <div class="machine_index line_7">7</div>
-        <div class="machine_index line_8">8</div>
-        <div class="machine_index line_9">9</div>
-
-        <!--  EMPTY CELL FILLERS -->
-        <!-- <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div>
-        <div class="day"></div> -->
+        {% for line in lines %}
+            <div class="machine_index line_{{ line }}">{{ line }}</div>
+            {% for day in weekdays %}
+                {% for hour in range(24) %}
+                    <div class="hour {{ day }}{{ hour }}" style="grid-row: line_{{ line }};">
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        {% endfor %}
         
-        <li class="work_order blue_product" style="grid-column: mon / thu; grid-row: line_7;">Lot 123 ABC</li>
+        <!-- <li class="work_order blue_product" style="grid-column: mon / thu; grid-row: line_7;">Lot 123 ABC</li> -->
+        <!-- <li class="work_order green_product" style="grid-column-start: MON1; grid-column-end: TUE15; grid-row: line_7;">Lot 456 RSV</li> -->
     </div>
     <div class="parking_lot">
         <div class="parking_lot_header">Parking Lot</div>

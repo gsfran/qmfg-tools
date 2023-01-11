@@ -12,9 +12,9 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
 
   {% if title %}
-    <title>Data Viewer - {{ title }}</title>
+    <title>test - {{ title }}</title>
   {% else %}
-    <title>Data Viewer</title>
+    <title>test</title>
   {% endif %}
 </head>
 
@@ -25,7 +25,7 @@
         <header class="mb-4">
           <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #774def;">
             <a class="navbar-brand" href="{{ url_for('index') }}">
-              <img src="/static/logo.png" style="width: auto; height: auto;max-width: 200px;max-height: 50px; margin-right: 20px;"/>Production Dashboard</a>
+              <img src="/static/logo.png" style="width: auto; height: auto; max-width: 240px; max-height: 50px; margin-right: 20px; margin-block: 2px;"/>Production Dashboard</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
               aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
               <span class="navbar-toggler-icon"></span>

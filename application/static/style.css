@@ -80,8 +80,8 @@ h2 {
 
 .weekly-byline {
     grid-template-columns:
-        [machine_index] .25fr
-        [mon] 1fr [tue] 1fr [wed] 1fr [thu] 1fr [fri] 1fr [sat] 1fr [sun] 1fr [end-col];
+        [machine_index] .25fr repeat(168, 1fr) [end-col];
+        /* [mon] 1fr [tue] 1fr [wed] 1fr [thu] 1fr [fri] 1fr [sat] 1fr [sun] 1fr [end-col]; */
     grid-template-rows:
         [weekday_header] .20fr 
         [line_5] 1fr 
@@ -130,22 +130,15 @@ h2 {
 }
 
 .day {
-    display: inline-grid;
+    display: inline-block;
     grid-gap: none;
-    grid-template-columns:
-        [hour_0] 1fr [hour_1] 1fr [hour_2] 1fr [hour_3] 1fr 
-        [hour_4] 1fr [hour_5] 1fr [hour_6] 1fr [hour_7] 1fr 
-        [hour_8] 1fr [hour_9] 1fr [hour_10] 1fr [hour_11] 1fr 
-        [hour_12] 1fr [hour_13] 1fr [hour_14] 1fr [hour_15] 1fr 
-        [hour_16] 1fr [hour_17] 1fr [hour_18] 1fr [hour_19] 1fr 
-        [hour_20] 1fr [hour_21] 1fr [hour_22] 1fr [hour_23] 1fr [end-col];
     background-color: #f0f0f0;
     border-radius: 10px;
 }
 
 .hour {
     background-color: #f0f0f0;
-    /* position: relative; */
+    position: relative;
     /* grid-column: auto; */
     /* grid-row: 1; */
     display: inline-block;
@@ -153,7 +146,7 @@ h2 {
 }
 
 .work_order {
-    position: relative;
+    position:relative;
     /* height: 2em;
     line-height: 2em; */
     width: auto;
@@ -174,31 +167,38 @@ h2 {
 
 /* #region WEEKDAY SELECTORS */
 .mon {
-    grid-area: weekday_header / mon;
+    grid-row: weekday_header;
+    grid-column: 2 / span 24;
 }
 
 .tue {
-    grid-area: weekday_header / tue;
+    grid-row: weekday_header;
+    grid-column: 26 / span 24;
 }
 
 .wed {
-    grid-area: weekday_header / wed;
+    grid-row: weekday_header;
+    grid-column: 50 / span 24;
 }
 
 .thu {
-    grid-area: weekday_header / thu;
+    grid-row: weekday_header;
+    grid-column: 74 / span 24;
 }
 
 .fri {
-    grid-area: weekday_header / fri;
+    grid-row: weekday_header;
+    grid-column: 98 / span 24;
 }
 
 .sat {
-    grid-area: weekday_header / sat;
+    grid-row: weekday_header;
+    grid-column: 122 / span 24;
 }
 
 .sun {
-    grid-area: weekday_header / sun;
+    grid-row: weekday_header;
+    grid-column: 146 / span 24;
 }
 /* # endregion */
 
