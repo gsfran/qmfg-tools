@@ -7,13 +7,7 @@
 
 body {
     background-color: #fff;
-    font: 1em sans-serif;
     min-width: 600px;
-}
-
-h2 {
-    font-family: Verdana, Geneva, Tahoma, sans-serif;
-    font-size: 2.5em;
 }
 
 .main_block {
@@ -42,24 +36,26 @@ h2 {
     text-align: center;
     padding: 10px;
     margin-left: 35px;
-    border: 2px dotted #222;
+    border: 1.5px dotted #888;
     border-radius: 5px;
 }
 
 .parking_lot li {
-    /* line-height: 1fr; */
     width: auto;
     list-style: none;
-    margin: 10px;
+    margin-block: 5px;
+    margin-inline: 25px;    
+    height: 2em;
+    line-height: 2em;
 }
 
 .parking_lot_header {
-    background-color: #fff;
     font-size: 1.25em;
     font-weight: bolder;
     width: auto;
     margin-bottom: 10px;
-    border-bottom: 1px solid #000;
+    border-bottom: 1px solid #888;
+    color: #000;
     padding: 5px;
 }
 
@@ -67,11 +63,11 @@ h2 {
 /* Week View */
 .schedule {
     display: grid;
-    grid-column-gap: 2px;
-    grid-row-gap: 3px;
+    /* grid-row-gap: 5px; */
     width: 75%;
-    /* min-width: 600px; */
+    min-width: 600px;
     height: 100%;
+    position: relative;
 
     aspect-ratio: 2.5 / 1;
 
@@ -79,9 +75,9 @@ h2 {
 }
 
 .weekly-byline {
+    margin: 0px;
     grid-template-columns:
         [machine_index] .25fr repeat(168, 1fr) [end-col];
-        /* [mon] 1fr [tue] 1fr [wed] 1fr [thu] 1fr [fri] 1fr [sat] 1fr [sun] 1fr [end-col]; */
     grid-template-rows:
         [weekday_header] .20fr 
         [line_5] 1fr 
@@ -99,70 +95,114 @@ h2 {
 
 /* GENERAL ITEM SETUP */
 .schedule li {
-    padding: 0.5rem;
-    display: inline-block;
+    padding: 1em;
 }
+
 .corner {
     color: #000;
     background-color: #fff;
     font-weight: bold;
     text-align: center;
     font-family: Verdana, Geneva, Tahoma, sans-serif;
-    /* border-bottom: 2px solid #000; */
+    margin-top: 10px;
+    margin-inline: 2px;
+    font-size: .75em;
 }
 .weekday_header {
     background-color: #fff;
-    text-align: center;
     color: #000;
+
+    text-align: center;
     font-weight: bolder;
+
     /* border-bottom: 1px solid #000; */
-    border-radius: 5px;
+    /* border-radius: 5px; */
 }
 .machine_index {
-    background-color: #666;
-    color: #fff;
+    background-color: #eee;
+    color: #000;
+
+    margin-inline: 4px;
+    margin-block: 10px;
+
     line-height: 3em;
     font-size: 1.5em;
     text-align: center;
-    font-weight: bolder;
-    font-family: Verdana, Geneva, Tahoma, sans-serif;
-    border-radius: 10px;
-}
 
-.day {
-    display: inline-block;
-    grid-gap: none;
-    background-color: #f0f0f0;
-    border-radius: 10px;
+    font-weight: bold;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+
+    border-radius: 20px;
+    border: 1px solid #aaa;
 }
 
 .hour {
-    background-color: #f0f0f0;
-    position: relative;
-    /* grid-column: auto; */
-    /* grid-row: 1; */
-    display: inline-block;
-    padding: 0px;
+    background-color: #fff;
+    border-block: .5px solid #aaa;
+    z-index: 0;
+}
+
+.start_of_day {
+    border-left: 1px solid #000;
+}
+
+.current_hour {
+    border-inline: 2px solid #774defc0;
+    background-color: #774def80;
 }
 
 .work_order {
-    position:relative;
-    /* height: 2em;
-    line-height: 2em; */
     width: auto;
-    margin: 2px;
-    border-radius: 13px;
+    font-weight: bold;
+    text-align: center;
+    list-style: none;
+    
+    margin-block: 15px;
+    margin-inline: 2px;
+    border-radius: 35px;
+
+    /* padding: auto; */
+    opacity: 1;
+    z-index: 2;
+    /* position: relative; */
+}
+
+.work_order.bg {
+    background-color: #fff;
+    z-index: 1;
+    opacity: 1;
 }
 
 /* WORK ORDER TYPES */
+
+.work_order.flu {
+    background-color: #32cd3240;
+    border: 1px solid limegreen;
+}
+
+.work_order.abc {
+    background-color: #ff149340;
+    border: 1px solid deeppink;
+}
+
+.work_order.sars {
+    background-color: #b2222240;
+    border: 1px solid crimson;
+}
+
+.work_order.rsv {
+    background-color: #ffa50040;
+    border: 1px solid orange;
+}
+
+.work_order.strep_aplus {
+    background-color: #9400d340;
+    border: 1px solid darkviolet;
+}
+
 .work_order.blue_product {
     background-color: #00bfff40;
     border: 1px solid deepskyblue;
-}
-
-.work_order.green_product {
-    background-color: #9acd3230;
-    border: 1px solid yellowgreen;
 }
 
 /* #region WEEKDAY SELECTORS */

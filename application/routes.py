@@ -8,7 +8,7 @@ import json
 
 @app.route('/')
 def index():
-    weekdays = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
+    weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     lines = range(5, 10)
     entries = ScheduledJobs.query.order_by(ScheduledJobs.date.desc()).all()
 
@@ -47,8 +47,8 @@ def delete(entry_id):
     flash(f'Entry deleted.', 'danger')
     return redirect(url_for('view_work_orders'))
 
-@app.route('/dashboard')
-def dashboard():
+@app.route('/performance')
+def performance():
     type_comparison = (
         db.session.query(
                 db.func.sum(ScheduledJobs.lot_number),

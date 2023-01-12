@@ -1,41 +1,78 @@
 {% extends 'layout.html' %}
 {% block content %}
 <link rel="stylesheet" href="/static/style.css" />
-<div class="col-sm-10" style="text-align: center;">
+<div class="col-sm-10">
     <h2>Week Schedule - iTrak</h2>
-    <div class="main_block">
-    <div class="schedule weekly-byline" id="grid_div">
+    <div class="card card-style mb-2">
+        <div class="card-body" style="display: inline-flex">
+    <!-- <div class="main_block"> -->
+        <div class="schedule weekly-byline">
 
-        <!--  TOP LEFT CORNER  -->
-        <div class="corner">LINE</div>
+            <!--  CURRENT HOUR -->
+            {% set current_hour = 56 %}
 
-        <!--  WEEKDAY HEADERS  -->
-        {% for day in weekdays %}
-            <div class="weekday_header {{ day.lower() }}">{{ day }}</div>
-        {% endfor %}
+            <!--  TOP LEFT CORNER  -->
+            <div class="corner">LINE</div>
 
-
-        <!--  PRODUCTION LINES  -->
-        {% for line in lines %}
-            <div class="machine_index line_{{ line }}">{{ line }}</div>
+            <!--  WEEKDAY HEADERS  -->
             {% for day in weekdays %}
-                {% for hour in range(24) %}
-                    <div class="hour {{ day }}{{ hour }}" style="grid-row: line_{{ line }};">
-                    </div>
+                <div class="weekday_header {{ day.lower()[:3] }}">{{ day }}</div>
+            {% endfor %}
+
+
+            <!--  PRODUCTION LINES  -->
+            {% for line in lines %}
+                <div class="machine_index line_{{ line }}">{{ line }}</div>
+                {% for hour in range(24 * 7) %}
+                    {% set col_num = hour + 2 %}
+                    {% if hour == current_hour %}
+                        <div class="hour current_hour" id="line_{{ line }}_hr_{{ hour }}"
+                            style="grid-row: line_{{ line }}; grid-column: {{ col_num }}"></div>
+                    {% elif hour == 0 %}
+                        <div class="hour" id="line_{{ line }}_hr_{{ hour }}"
+                            style="grid-row: line_{{ line }}; grid-column: {{ col_num }}"></div>
+                    {% elif hour % 24 == 0 %}
+                        <div class="hour start_of_day" id="line_{{ line }}_hr_{{ hour }}"
+                            style="grid-row: line_{{ line }}; grid-column: {{ col_num }}"></div>
+                    {% else %}
+                        <div class="hour" id="line_{{ line }}_hr_{{ hour }}"
+                            style="grid-row: line_{{ line }}; grid-column: {{ col_num }}"></div>
+                    {% endif %}
                 {% endfor %}
             {% endfor %}
-        {% endfor %}
-        
-        <!-- <li class="work_order blue_product" style="grid-column: mon / thu; grid-row: line_7;">Lot 123 ABC</li> -->
-        <!-- <li class="work_order green_product" style="grid-column-start: MON1; grid-column-end: TUE15; grid-row: line_7;">Lot 456 RSV</li> -->
-    </div>
+
+            <!-- {% for entry in entries %}
+                <li class="work_order abc" style="margin: 0px; grid-row: line_{{ line }}; "></li>
+            {% endfor %} -->
+            
+            <li class="work_order abc" style="grid-column: 4 / 50; grid-row: line_6;">ABC 789</li>
+            <li class="work_order bg" style="grid-column: 4 / 50; grid-row: line_6;"></li>
+
+            <li class="work_order flu" style="grid-column: 64 / 128; grid-row: line_7;">Flu 456</li>
+            <li class="work_order bg" style="grid-column: 64 / 128; grid-row: line_7;"></li>
+
+            <li class="work_order blue_product" style="grid-column: 16 / 72; grid-row: line_8;">BLU 123</li>
+            <li class="work_order bg" style="grid-column: 16 / 72; grid-row: line_8;"></li>
+
+            <li class="work_order sars" style="grid-column: 56 / 110; grid-row: line_9;">SARS 456</li>
+            <li class="work_order bg" style="grid-column: 56 / 110; grid-row: line_9;"></li>
+
+            <li class="work_order rsv" style="grid-column: 36 / 100; grid-row: line_5;">RSV 123</li>
+            <li class="work_order bg" style="grid-column: 36 / 100; grid-row: line_5;"></li>
+
+            <li class="work_order strep_aplus" style="grid-column: 90 / 144; grid-row: line_6;">Strep A+ 456</li>
+            <li class="work_order bg" style="grid-column: 90 / 144; grid-row: line_6;"></li>
+        </div>
     <div class="parking_lot">
         <div class="parking_lot_header">Parking Lot</div>
-        <li class="work_order blue_product">Lot 123 ABC</li>
-        <li class="work_order green_product">Lot 456 RSV</li>
-    </div>
-    
+        <li class="work_order abc">ABC 789</li>
+        <li class="work_order rsv">RSV 123</li>
+        <li class="work_order flu">Flu 456</li>
+        <li class="work_order sars">SARS 456</li>
+        <li class="work_order strep_aplus">Strep A+ 456</li>
         
+        <li class="work_order blue_product">BLU 123</li>
+    </div></div>
 </div>
 </div>
 {% endblock %}
