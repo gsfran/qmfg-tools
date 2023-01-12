@@ -97,7 +97,7 @@ def performance():
         chart3_data.append(lot_number)
 
     return render_template(
-        'dashboard.html', 
+        'performance.html', 
         chart1_data=json.dumps(income_expense),
         income_category=json.dumps(income_category),
         chart3_data=json.dumps(chart3_data),
