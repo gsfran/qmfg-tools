@@ -12,7 +12,9 @@ def _make_schedule():
 def index():
     weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     lines = range(5, 10) # 5 - 9
-    parking_lot = ScheduledJobs.query.filter(ScheduledJobs.status == 'Parking Lot').all()
+    parking_lot = ScheduledJobs.query.filter(
+        ScheduledJobs.status == 'Parking Lot'
+        ).order_by(ScheduledJobs.product).all()
     active_jobs = ScheduledJobs.query.filter(ScheduledJobs.status in ['on Line {x}' for x in lines]).all()
 
     return render_template(
