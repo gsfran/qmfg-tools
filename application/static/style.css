@@ -7,7 +7,7 @@
 
 body {
     background-color: #fff;
-    min-width: 600px;
+    min-width: 1000px;
 }
 
 .main_block {
@@ -20,7 +20,6 @@ body {
     min-width: 400px;
     max-width: 1600px;
     min-height: 400px;
-    overflow-inline: auto;
 
     background-color: #fff;
 }
@@ -29,7 +28,7 @@ body {
 .parking_lot {
     display: block;
     width: 25%;
-    min-width: 200px;
+    min-width: 240px;
     height: auto;
     overflow: auto;
 
@@ -123,7 +122,7 @@ body {
     color: #000;
 
     margin-inline: 4px;
-    margin-block: 10px;
+    margin-block: 6px;
 
     line-height: 3em;
     font-size: 1.5em;
@@ -153,6 +152,7 @@ body {
 
 .work_order {
     width: auto;
+    min-width: 180px;
     font-weight: bold;
     text-align: center;
     list-style: none;
@@ -176,32 +176,32 @@ body {
 /* WORK ORDER TYPES */
 
 .work_order.flu {
-    background-color: #32cd3240;
+    background-color: #32cd3260;
     border: 1px solid limegreen;
 }
 
 .work_order.abc {
-    background-color: #ff149340;
-    border: 1px solid deeppink;
+    background-color: #ff00ff50;
+    border: 1px solid fuchsia;
 }
 
 .work_order.sars {
-    background-color: #b2222240;
-    border: 1px solid crimson;
+    background-color: #FF000060;
+    border: 1px solid red;
 }
 
 .work_order.rsv {
-    background-color: #ffa50040;
+    background-color: #ffa50070;
     border: 1px solid orange;
 }
 
 .work_order.strep_aplus {
-    background-color: #9400d340;
+    background-color: #9400d360;
     border: 1px solid darkviolet;
 }
 
-.work_order.blue_product {
-    background-color: #00bfff40;
+.work_order.strep_inline {
+    background-color: #00bfff60;
     border: 1px solid deepskyblue;
 }
 

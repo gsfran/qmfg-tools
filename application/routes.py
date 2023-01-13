@@ -5,16 +5,19 @@ from application.models import ScheduledJobs
 from application import db
 import json
 
+def _make_schedule():
+    pass
 
 @app.route('/')
 def index():
     weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-    lines = range(5, 10)
-    entries = ScheduledJobs.query.order_by(ScheduledJobs.date.desc()).all()
+    lines = range(5, 10) # 5 - 9
+    parking_lot = ScheduledJobs.query.filter(ScheduledJobs.status == 'Parking Lot').all()
+    active_jobs = ScheduledJobs.query.filter(ScheduledJobs.status in ['on Line {x}' for x in lines]).all()
 
     return render_template(
         'index.html', weekdays=weekdays,
-        lines=lines, entries=entries
+        lines=lines, parking_lot=parking_lot
         )
 
 @app.route('/view-all')
@@ -27,24 +30,24 @@ def add_work_order():
     form = UserDataForm()
     if form.validate_on_submit():
         entry = ScheduledJobs(
-            product=form.product.data, category=form.category.data,
-            lot_number=form.lot_number.data
+            product=form.product.data, status=form.status.data,
+            lot_number=form.lot_number.data, lot_id=form.lot_id.data
             )
         db.session.add(entry)
         db.session.commit()
         flash(
-            f'{form.product.data}: Lot #{form.lot_number.data} '
-            f'has been added.', 'success'
+            f'{form.product.data} {form.lot_id.data} (Lot #{form.lot_number.data}) '
+            f'added successfully.', 'success'
             )
-        return redirect(url_for('view_work_orders'))
+        return redirect(url_for('index'))
     return render_template('add.html', title='Add Work Order', form=form)
 
-@app.route('/delete-post/<int:entry_id>')
-def delete(entry_id):
-    entry = ScheduledJobs.query.get_or_404(int(entry_id))
+@app.route('/delete/<int:lot_number>')
+def delete(lot_number):
+    entry = ScheduledJobs.query.get_or_404(int(lot_number))
     db.session.delete(entry)
     db.session.commit()
-    flash(f'Entry deleted.', 'danger')
+    flash(f'Lot {lot_number} deleted.', 'danger')
     return redirect(url_for('view_work_orders'))
 
 @app.route('/performance')
@@ -63,11 +66,11 @@ def performance():
     product_comparison = (
         db.session.query(
                 db.func.sum(ScheduledJobs.lot_number),
-                ScheduledJobs.category
+                ScheduledJobs.status
             ).group_by(
-                ScheduledJobs.category
+                ScheduledJobs.status
                 ).order_by(
-                    ScheduledJobs.category
+                    ScheduledJobs.status
                     ).all()
         )
 

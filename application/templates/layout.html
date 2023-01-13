@@ -25,16 +25,16 @@
         <header class="mb-4">
           <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #774def;">
             <a class="navbar-brand" href="{{ url_for('index') }}">
-              <img src="/static/logo.png" style="width: auto; height: auto; max-width: 240px; max-height: 50px; margin-right: 20px; margin-block: 2px;"/>Production Dashboard</a>
+              <img src="/static/logo.png" style="width: auto; height: auto; max-width: 240px; max-height: 50px; margin-right: 20px; margin-block: 2px;"/>Production Scheduler</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
               aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
               <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
               <div class="navbar-nav ml-auto mr-3">
-                <a class="nav-item nav-link" href="{{ url_for('view_work_orders') }}">View All Work Orders</a>
-                <a class="nav-item nav-link" href="{{ url_for('add_work_order') }}">Add Work Order</a>
-                <a class="nav-item nav-link" href="{{ url_for('performance') }}">Performance</a>
+                <a class="nav-item nav-link" style="margin-inline: 10px;" href="{{ url_for('view_work_orders') }}">All Work Orders</a>
+                <a class="nav-item nav-link" style="margin-inline: 10px;" href="{{ url_for('add_work_order') }}">New Work Order</a>
+                <a class="nav-item nav-link" style="margin-inline: 10px;" href="{{ url_for('performance') }}">Performance</a>
               </div>
             </div>
           </nav>

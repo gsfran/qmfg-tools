@@ -5,25 +5,25 @@
     <table class="table table-striped">
         <thead style="background-color: #555; color: #ffffff;">
             <tr>
-                <th scope="col">ID</th>
-                <th scope="col">Date Added</th>
                 <th scope="col">Product</th>
-                <th scope="col">Category</th>
+                <th scope="col">Lot ID</th>
                 <th scope="col">Lot Number</th>
+                <th scope="col">Added</th>
+                <th scope="col">Status</th>
                 <th scope="col"></th>
             </tr>
         </thead>
         <tbody>
             {% for entry in entries %}
             <tr>
-                <th scope="row">{{ loop.index }}</th>
-                <td>{{ entry.date.strftime("%m-%d-%Y") }}</td>
                 <td>{{ entry.product }}</td>
-                <td>{{ entry.category }}</td>
-                <td>{{ entry.lot_number }}</td>
-                <td><a href="{{ url_for('delete', entry_id = entry.id) }}"
+                <td>{{ entry.lot_id }}
+                <th scope="row">{{ entry.lot_number }}</th>
+                <td>{{ entry.date.strftime("%m-%d-%Y") }}</td>
+                <td>{{ entry.status }}</td>
+                <td><a href="{{ url_for('delete', lot_number = entry.lot_number) }}"
                     class="btn btn-outline-dark btn-sm">Edit</a>
-                    <a href="{{ url_for('delete', entry_id = entry.id) }}"
+                    <a href="{{ url_for('delete', lot_number = entry.lot_number) }}"
                         class="btn btn-outline-danger btn-sm">Remove</a></td>
             </tr>
             {% endfor %}

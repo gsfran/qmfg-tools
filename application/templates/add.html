@@ -1,13 +1,22 @@
 {% extends 'layout.html' %}
 {% block content %}
 <div class="col-xs-10 col-sm-6 col-md-6">
-    <h2>New Work Order</h2>
+
+    <h2>Schedule New Work Order</h2>
+
     <div class="card card-style mb-2">
         <div class="card-body">
             <form action="" method="POST">
                 {{ form.csrf_token() }}
                 <fieldset class="form-group">
+
                     <legend class="mb-4">Work Order Info</legend>
+
+                    <div class="form-group">
+                        {{ form.product.label(class = "form-control-label") }}
+                        {{ form.product(class = "form-control form-control-md") }}
+                    </div>
+
                     <div class="form-group">
                         {{ form.lot_number.label(class="form-control-label") }}
                         {% if form.lot_number.errors %}
@@ -23,13 +32,22 @@
                     </div>
 
                     <div class="form-group">
-                        {{ form.product.label(class = "form-control-label") }}
-                        {{ form.product(class = "form-control form-control-sm") }}
+                        {{ form.lot_id.label(class="form-control-label") }}
+                        {% if form.lot_id.errors %}
+                            {{ form.lot_id(class="form-control form-control-sm is-invalid") }}
+                            {% for error in form.lot_id.errors %}
+                                <div class="invalid-feedback">
+                                    <span>{{ error }}</span>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            {{ form.lot_id(class="form-control form-control-sm") }}
+                        {% endif %}
                     </div>
 
                     <div class="form-group">
-                        {{ form.category.label(class = "form-control-label") }}
-                        {{ form.category(class = "form-control form-control-sm") }}
+                        {{ form.status.label(class = "form-control-label") }}
+                        {{ form.status(class = "form-control form-control-sm") }}
                     </div>
 
                     <div class="form-group border-bottom pb-3">
