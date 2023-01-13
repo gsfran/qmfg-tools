@@ -15,7 +15,9 @@ def index():
     parking_lot = ScheduledJobs.query.filter(
         ScheduledJobs.status == 'Parking Lot'
         ).order_by(ScheduledJobs.product).all()
-    active_jobs = ScheduledJobs.query.filter(ScheduledJobs.status in ['on Line {x}' for x in lines]).all()
+    active_jobs = ScheduledJobs.query.filter(
+        ScheduledJobs.status in ['on Line {x}' for x in lines]
+        ).all()
 
     return render_template(
         'index.html', weekdays=weekdays,
