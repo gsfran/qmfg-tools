@@ -1,16 +1,26 @@
-from application import app
-from flask import render_template, url_for, redirect, flash, get_flashed_messages
+import json
+
+from datetime import datetime as dt
+from flask import (flash, redirect, render_template, url_for)
+
+from application import app, db
 from application.form import UserDataForm
 from application.models import ScheduledJobs
-from application import db
-import json
+
 
 def _make_schedule():
     pass
 
+def current_hour():
+    """Returns integer representing the hour of the week."""
+    return dt.now().weekday() * 24 + dt.now().hour
+
 @app.route('/')
 def index():
-    weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    weekdays = [
+        'Monday', 'Tuesday', 'Wednesday',
+        'Thursday', 'Friday', 'Saturday', 'Sunday'
+        ]
     lines = range(5, 10) # 5 - 9
     parking_lot = ScheduledJobs.query.filter(
         ScheduledJobs.status == 'Parking Lot'
@@ -20,8 +30,8 @@ def index():
         ).all()
 
     return render_template(
-        'index.html', weekdays=weekdays,
-        lines=lines, parking_lot=parking_lot
+        'index.html', weekdays=weekdays, lines=lines,
+        parking_lot=parking_lot, current_hour=current_hour()
         )
 
 @app.route('/view-all')
@@ -34,14 +44,17 @@ def add_work_order():
     form = UserDataForm()
     if form.validate_on_submit():
         entry = ScheduledJobs(
-            product=form.product.data, status=form.status.data,
-            lot_number=form.lot_number.data, lot_id=form.lot_id.data
+            product=form.product.data, lot_id=form.lot_id.data,
+            lot_number=form.lot_number.data,
+            strip_lot_number=form.strip_lot_number.data,
+            status=form.status.data
             )
         db.session.add(entry)
         db.session.commit()
         flash(
-            f'{form.product.data} {form.lot_id.data} (Lot #{form.lot_number.data}) '
-            f'added successfully.', 'success'
+            f'{form.product.data} {form.lot_id.data} '
+            f'(Lot #{form.lot_number.data}) added successfully.',
+            'success'
             )
         return redirect(url_for('index'))
     return render_template('add.html', title='Add Work Order', form=form)

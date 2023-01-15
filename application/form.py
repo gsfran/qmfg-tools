@@ -18,9 +18,11 @@ class UserDataForm(FlaskForm):
             ]
         )
 
-    lot_number = StringField('Pouch Lot #', validators=[DataRequired()])
-
     lot_id = StringField('Lot ID', validators=[DataRequired()])
+
+    lot_number = StringField('Pouch Lot #', validators=[DataRequired()])
+    
+    strip_lot_number = StringField('Strip Lot #', validators=[DataRequired()])
 
     status = SelectField(
         'Save to', validators=[DataRequired()],

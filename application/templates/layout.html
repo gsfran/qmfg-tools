@@ -8,13 +8,14 @@
 
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
     integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <link rel="stylesheet" href="/static/style.css" />
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
 
   {% if title %}
-    <title>test - {{ title }}</title>
+  <title>test - {{ title }}</title>
   {% else %}
-    <title>test</title>
+  <title>test</title>
   {% endif %}
 </head>
 
@@ -23,18 +24,18 @@
     <div class="row">
       <div class="col-md-12 p-0">
         <header class="mb-4">
-          <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #774def;">
-            <a class="navbar-brand" href="{{ url_for('index') }}">
-              <img src="/static/logo.png" style="width: auto; height: auto; max-width: 240px; max-height: 50px; margin-right: 20px; margin-block: 2px;"/>Production Scheduler</a>
+          <nav class="navbar navbar-expand-xl navbar-dark p-3" style="background-color: #774def;">
+            <a class="navbar-brand" href="{{ url_for('index') }}" style="font-size: 110%;">
+              <img src="/static/logo.png" class="nav-logo" />Production Scheduler</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
               aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
               <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-              <div class="navbar-nav ml-auto mr-3">
-                <a class="nav-item nav-link" style="margin-inline: 10px;" href="{{ url_for('view_work_orders') }}">All Work Orders</a>
-                <a class="nav-item nav-link" style="margin-inline: 10px;" href="{{ url_for('add_work_order') }}">New Work Order</a>
-                <a class="nav-item nav-link" style="margin-inline: 10px;" href="{{ url_for('performance') }}">Performance</a>
+              <div class="navbar-nav ml-auto">
+                <a class="nav-item nav-link qmfg-nav-link" href="{{ url_for('view_work_orders') }}">All Work Orders</a>
+                <a class="nav-item nav-link qmfg-nav-link" href="{{ url_for('add_work_order') }}">New Work Order</a>
+                <a class="nav-item nav-link qmfg-nav-link" href="{{ url_for('performance') }}">Performance</a>
               </div>
             </div>
           </nav>
@@ -43,20 +44,22 @@
     </div>
 
     <div class="row justify-content-center">
-      <div class="col-md-10">
+      <div class="col-lg-6">
         {% with messages = get_flashed_messages(with_categories = True) %}
-          {% if messages %}
-            {% for category, message in messages %}
-              <div class="alert alert-{{ category }}">
-                {{ message }}
-              </div>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+          {{ message }}
         </div>
-    {% block content %}
-    {% endblock %}
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+      </div>
     </div>
+    <div class="row justify-content-center">
+      {% block content %}
+      {% endblock %}
+  </div>
   </div>
 
   <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"

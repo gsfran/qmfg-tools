@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 # implement a hash key pls
 app.config['SECRET_KEY'] = 'andaksfhgfsdghmsDFGDFGMSDGFHmnsgfnmafdgmsdfbs'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///testDB.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ScheduleDB.db'
 
 db = SQLAlchemy(app)
 

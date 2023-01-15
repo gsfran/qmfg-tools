@@ -3,10 +3,11 @@ from datetime import datetime
 
 class ScheduledJobs(db.Model):
     product = db.Column(db.String(30), nullable=False)
+    lot_id = db.Column(db.String(5), nullable=False)
     lot_number = db.Column(db.Integer, primary_key=True)
-    lot_id = db.Column(db.String(5), nullable = False)
-    status = db.Column(db.String(30), nullable = False, default='Parking Lot')
-    date = db.Column(db.DateTime, nullable = False, default = datetime.utcnow)
+    strip_lot_number = db.Column(db.Integer, nullable=False)
+    status = db.Column(db.String(30), nullable=False, default='Parking Lot')
+    date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
 
 

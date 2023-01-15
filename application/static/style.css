@@ -7,18 +7,32 @@
 
 body {
     background-color: #fff;
-    min-width: 1000px;
+}
+
+h3 {
+    margin-top: 20px;
+    margin-left: 20px;
+}
+
+.nav-logo {
+    width: auto;
+    height: auto;
+    max-width: 220px;
+    max-height: 35px;
+    margin-right: 20px;
+}
+
+.qmfg-nav-link {
+    margin-inline: 10px;
+    /* min-width: 200px; */
 }
 
 .main_block {
     display: inline-flex;
-    margin-top: 50px;
     float: center;
 
     width: 100%;
-    height: auto;
-    min-width: 400px;
-    max-width: 1600px;
+    max-width: 1200px;
     min-height: 400px;
 
     background-color: #fff;
@@ -64,11 +78,11 @@ body {
     display: grid;
     /* grid-row-gap: 5px; */
     width: 75%;
-    min-width: 600px;
+    /* min-width: 600px; */
     height: 100%;
     position: relative;
 
-    aspect-ratio: 2.5 / 1;
+    /* aspect-ratio: 2.5 / 1; */
 
     /* float: left; */
 }
@@ -141,11 +155,11 @@ body {
     z-index: 0;
 }
 
-.start_of_day {
+.hour.start_of_day {
     border-left: 1px solid #000;
 }
 
-.current_hour {
+.hour.current_hour {
     border-inline: 2px solid #774defc0;
     background-color: #774def80;
 }
