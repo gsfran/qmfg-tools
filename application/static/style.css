@@ -39,56 +39,62 @@ h3 {
 }
 
 /* Parking Lot */
-.parking_lot {
+.parking-lot-column {
     display: block;
+    align-content: center;
+
     width: 25%;
     min-width: 240px;
-    height: auto;
-    overflow: auto;
 
+    height: 100%;
+    max-height: 400px;
+}
+
+.parking_lot {
     text-align: center;
     padding: 10px;
-    margin-left: 35px;
     border: 1.5px dotted #888;
     border-radius: 5px;
+
+    height: 94%;
+    overflow-y: scroll;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
+
+.parking_lot::-webkit-scrollbar {
+    display: none;
+  }
 
 .parking_lot li {
     width: auto;
+    height: auto;
+    min-width: 180px;
+    max-width: 300px;
     list-style: none;
-    margin-block: 5px;
-    margin-inline: 25px;    
-    height: 2em;
-    line-height: 2em;
+    margin-inline: 25px; 
+    line-height: 2.4rem;
 }
 
 .parking_lot_header {
-    font-size: 1.25em;
-    font-weight: bolder;
-    width: auto;
-    margin-bottom: 10px;
-    border-bottom: 1px solid #888;
+    font-size: 1.2em;
+    font-weight: bold;
     color: #000;
-    padding: 5px;
+    text-align: center;
+    /* width: auto; */
 }
 
 
 /* Week View */
 .schedule {
     display: grid;
-    /* grid-row-gap: 5px; */
     width: 75%;
-    /* min-width: 600px; */
     height: 100%;
     position: relative;
-
-    /* aspect-ratio: 2.5 / 1; */
-
-    /* float: left; */
 }
 
 .weekly-byline {
-    margin: 0px;
+    margin-right: 10px;
     grid-template-columns:
         [machine_index] .25fr repeat(168, 1fr) [end-col];
     grid-template-rows:
@@ -121,6 +127,7 @@ h3 {
     margin-inline: 2px;
     font-size: .75em;
 }
+
 .weekday_header {
     background-color: #fff;
     color: #000;
@@ -128,30 +135,31 @@ h3 {
     text-align: center;
     font-weight: bolder;
 
-    /* border-bottom: 1px solid #000; */
+    border-bottom: 1px solid #222;
     /* border-radius: 5px; */
 }
+
 .machine_index {
-    background-color: #eee;
+    /* background-color: #eee; */
     color: #000;
 
-    margin-inline: 4px;
-    margin-block: 6px;
+    margin-right: 8px;
+    /* margin-block: 10px; */
 
-    line-height: 3em;
+    line-height: 3.1em;
     font-size: 1.5em;
     text-align: center;
 
     font-weight: bold;
     font-family: Verdana, Geneva, Tahoma, sans-serif;
 
-    border-radius: 20px;
-    border: 1px solid #aaa;
+    /* border-radius: 20px; */
+    /* border: 1px solid #aaa; */
 }
 
 .hour {
     background-color: #fff;
-    border-block: .5px solid #aaa;
+    border-bottom: 1px solid #222;
     z-index: 0;
 }
 
@@ -159,26 +167,29 @@ h3 {
     border-left: 1px solid #000;
 }
 
+.hour.midday {
+    border-left: 1px dashed #000;
+}
+
 .hour.current_hour {
     border-inline: 2px solid #774defc0;
     background-color: #774def80;
 }
 
+.hour.elapsed {
+    background-color: #f5f5f5;
+}
+
 .work_order {
     width: auto;
-    min-width: 180px;
     font-weight: bold;
     text-align: center;
     list-style: none;
     
-    margin-block: 15px;
-    margin-inline: 2px;
+    margin-block: 6px;
     border-radius: 35px;
 
-    /* padding: auto; */
-    opacity: 1;
     z-index: 2;
-    /* position: relative; */
 }
 
 .work_order.bg {
@@ -190,33 +201,57 @@ h3 {
 /* WORK ORDER TYPES */
 
 .work_order.flu {
-    background-color: #32cd3260;
-    border: 1px solid limegreen;
+    background-color: #55d50070;
+    border: 2px solid #55d000;
+}
+
+.flu:hover {
+    background-color: #55d000d0;
 }
 
 .work_order.abc {
-    background-color: #ff00ff50;
-    border: 1px solid fuchsia;
+    background-color: #ff00ff70;
+    border: 2px solid fuchsia;
+}
+
+.abc:hover {
+    background-color: #ff00ffa0;
 }
 
 .work_order.sars {
-    background-color: #FF000060;
-    border: 1px solid red;
+    background-color: #FF000080;
+    border: 2px solid red;
+}
+
+.sars:hover {
+    background-color: #FF0000b0;
 }
 
 .work_order.rsv {
-    background-color: #ffa50070;
-    border: 1px solid orange;
+    background-color: #ffa50080;
+    border: 2px solid orange;
+}
+
+.rsv:hover {
+    background-color: #ffa500c0;
 }
 
 .work_order.strep_aplus {
-    background-color: #9400d360;
-    border: 1px solid darkviolet;
+    background-color: #9400d370;
+    border: 2px solid darkviolet;
+}
+
+.strep_aplus:hover {
+    background-color: #9400d3a0;
 }
 
 .work_order.strep_inline {
     background-color: #00bfff60;
     border: 1px solid deepskyblue;
+}
+
+.strep_inline:hover {
+    background-color: #00bfff90;
 }
 
 /* #region WEEKDAY SELECTORS */

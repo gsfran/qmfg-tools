@@ -1,7 +1,7 @@
 {% extends 'layout.html' %}
 {% block content %}
-<div class="card card-style mb-2 col-lg-8" style="min-width: 992px">
-    <h3>Week Schedule - iTrak</h3>
+<div class="card card-style mb-2 col-lg-9" style="min-width: 992px">
+    <h3>Schedule - iTrak Lines</h3>
     <div class="main-block card-body" style="display: inline-flex;">
         <div class="schedule weekly-byline">
 
@@ -21,20 +21,25 @@
                 <div class="machine_index line_{{ line }}">{{ line }}</div>
                 {% for hour in range(24 * 7) %}
                     {% set col_num = hour + 2 %}
-                    {% if hour == current_hour %}
-                        <div class="hour current_hour" id="line_{{ line }}_hr_{{ hour }}"
-                            style="grid-row: line_{{ line }}; grid-column: {{ col_num }}"></div>
-                    {% elif hour == 0 %}
-                        <div class="hour" id="line_{{ line }}_hr_{{ hour }}"
-                            style="grid-row: line_{{ line }}; grid-column: {{ col_num }}"></div>
-                    {% elif hour % 24 == 0 %}
-                        <div class="hour start_of_day" id="line_{{ line }}_hr_{{ hour }}"
-                            style="grid-row: line_{{ line }}; grid-column: {{ col_num }}"></div>
-                    {% else %}
-                        <div class="hour" id="line_{{ line }}_hr_{{ hour }}"
-                            style="grid-row: line_{{ line }}; grid-column: {{ col_num }}"></div>
-                    {% endif %}
-                {% endfor %}
+                    <div class=
+                        "hour 
+
+                        {% if hour == current_hour %}
+                            current_hour 
+                        {% endif %}
+                        {% if hour != 0 %}
+                            {% if hour % 24 == 0 %}
+                                start_of_day
+                            {% elif hour % 24 == 12 %}
+                                midday 
+                            {% endif %}
+                        {% endif %}
+                        {% if hour < current_hour %}
+                            elapsed 
+                        {% endif %}"
+                        style="grid-row: line_{{ line }}; grid-column: {{ col_num }}">
+            </div>
+            {% endfor %}
             {% endfor %}
 
             <!-- {% for entry in entries %}
@@ -61,15 +66,15 @@
             <li class="work_order bg" style="grid-column: 90 / 144; grid-row: line_6;"></li>
         </div>
 
-        <div class="parking_lot">
+        <div class="col parking-lot-column">
             <div class="parking_lot_header">Parking Lot</div>
-            {% for lot in parking_lot %}
-                {{ lot.lot_id.data }}
-                <li class="work_order {{ lot.product }}">{{ lot.product }} {{ lot.lot_id }}</li>
-            {% endfor %}
-
+            <div class="parking_lot">
+                {% for lot in parking_lot %}
+                    <li class="work_order {{ lot.product }}"
+                        id="{{ lot.lot_number }}">{{ lot.product }} {{ lot.lot_id }}</li>
+                {% endfor %}
+            </div>
         </div>
     </div>
 </div>
-{# </div> #}
 {% endblock %}

@@ -4,7 +4,7 @@ from datetime import datetime as dt
 from flask import (flash, redirect, render_template, url_for)
 
 from application import app, db
-from application.form import UserDataForm
+from application.form import NewWorkOrder
 from application.models import ScheduledJobs
 
 
@@ -12,8 +12,20 @@ def _make_schedule():
     pass
 
 def current_hour():
-    """Returns integer representing the hour of the week."""
+    """
+    Returns integer representing the hour of the week.
+    """
     return dt.now().weekday() * 24 + dt.now().hour
+
+def parking_lot():
+    """
+    Returns database query for all 'Parking Lot' jobs.
+    """
+    return (
+        ScheduledJobs.query.filter(
+            ScheduledJobs.status == 'Parking Lot'
+            ).order_by(ScheduledJobs.date.desc()).all()
+        )
 
 @app.route('/')
 def index():
@@ -22,42 +34,39 @@ def index():
         'Thursday', 'Friday', 'Saturday', 'Sunday'
         ]
     lines = range(5, 10) # 5 - 9
-    parking_lot = ScheduledJobs.query.filter(
-        ScheduledJobs.status == 'Parking Lot'
-        ).order_by(ScheduledJobs.product).all()
     active_jobs = ScheduledJobs.query.filter(
         ScheduledJobs.status in ['on Line {x}' for x in lines]
         ).all()
 
     return render_template(
         'index.html', weekdays=weekdays, lines=lines,
-        parking_lot=parking_lot, current_hour=current_hour()
+        parking_lot=parking_lot(), current_hour=current_hour()
         )
 
 @app.route('/view-all')
-def view_work_orders():
+def all_work_orders():
     entries = ScheduledJobs.query.order_by(ScheduledJobs.date.desc()).all()
     return render_template('workorders.html', entries=entries)
 
 @app.route('/add', methods=["POST", "GET"])
 def add_work_order():
-    form = UserDataForm()
-    if form.validate_on_submit():
+    new_work_order_form = NewWorkOrder()
+    if new_work_order_form.validate_on_submit():
         entry = ScheduledJobs(
-            product=form.product.data, lot_id=form.lot_id.data,
-            lot_number=form.lot_number.data,
-            strip_lot_number=form.strip_lot_number.data,
-            status=form.status.data
+            product=new_work_order_form.product.data, lot_id=new_work_order_form.lot_id.data,
+            lot_number=new_work_order_form.lot_number.data,
+            strip_lot_number=new_work_order_form.strip_lot_number.data,
+            status=new_work_order_form.status.data
             )
         db.session.add(entry)
         db.session.commit()
         flash(
-            f'{form.product.data} {form.lot_id.data} '
-            f'(Lot #{form.lot_number.data}) added successfully.',
+            f'{new_work_order_form.product.data} {new_work_order_form.lot_id.data} '
+            f'(Lot #{new_work_order_form.lot_number.data}) added successfully.',
             'success'
             )
         return redirect(url_for('index'))
-    return render_template('add.html', title='Add Work Order', form=form)
+    return render_template('add.html', title='Add Work Order', form=new_work_order_form)
 
 @app.route('/delete/<int:lot_number>')
 def delete(lot_number):

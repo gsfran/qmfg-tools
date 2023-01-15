@@ -3,7 +3,7 @@ from wtforms import StringField, SelectField, SubmitField, IntegerField
 from wtforms.validators import DataRequired
 
 
-class UserDataForm(FlaskForm):
+class NewWorkOrder(FlaskForm):
 
     product = SelectField(
         'Product Type', validators=[DataRequired()],
