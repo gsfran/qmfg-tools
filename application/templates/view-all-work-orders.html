@@ -9,24 +9,20 @@
                     <th scope="col">Product</th>
                     <th scope="col">Lot ID</th>
                     <th scope="col">Lot Number</th>
-                    <th scope="col">Strip Lot Number</th>
-                    <th scope="col">Added</th>
                     <th scope="col">Status</th>
                     <th scope="col"></th>
                 </tr>
             </thead>
             <tbody>
-                {% for entry in entries %}
+                {% for work_order in work_orders %}
                 <tr>
-                    <td>{{ entry.product }}</td>
-                    <td>{{ entry.lot_id }}
-                    <th scope="row">{{ entry.lot_number }}</th>
-                    <td>{{ entry.strip_lot_number }}
-                    <td>{{ entry.date.strftime("%m-%d-%Y") }}</td>
-                    <td>{{ entry.status }}</td>
-                    <td><a href="{{ url_for('delete', lot_number = entry.lot_number) }}"
-                            class="btn btn-outline-dark btn-sm">Edit</a>
-                        <a href="{{ url_for('delete', lot_number = entry.lot_number) }}"
+                    <td>{{ work_order.product }}</td>
+                    <td>{{ work_order.lot_id }}</td>
+                    <th scope="row">{{ work_order.lot_number }}</th>
+                    <td>{{ work_order.status }}</td>
+                    <td><a href="{{ url_for('view_work_order', lot_number = work_order.lot_number) }}"
+                            class="btn btn-outline-dark btn-sm">View</a>
+                        <a href="{{ url_for('delete', lot_number = work_order.lot_number) }}"
                             class="btn btn-outline-danger btn-sm">Delete</a>
                     </td>
                 </tr>

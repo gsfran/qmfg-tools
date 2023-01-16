@@ -1,4 +1,6 @@
+import datetime
 import json
+
 
 from datetime import datetime as dt
 from flask import (flash, redirect, render_template, url_for)
@@ -11,11 +13,27 @@ from application.models import ScheduledJobs
 def _make_schedule():
     pass
 
-def current_hour():
+def current_hour() -> int:
     """
-    Returns integer representing the hour of the week.
+    Returns integer representing the current hour
+    of the week. Ranges from 0 - 167, with 0 representing
+    12AM - 1AM Monday morning.
     """
     return dt.now().weekday() * 24 + dt.now().hour
+
+def current_year_week() -> dt:
+   """
+   Returns the year and week number of the current datetime
+   """
+   return dt.now().strftime('%Y-%V')
+
+def get_current_week() -> dt:
+    
+    today_ = dt.now().date()
+    week_start_date = today_ - datetime.timedelta(days=today_.weekday())
+    
+    return [week_start_date + datetime.timedelta(days=_) for _ in range(7)]
+
 
 def parking_lot():
     """
@@ -26,14 +44,20 @@ def parking_lot():
             ScheduledJobs.status == 'Parking Lot'
             ).order_by(ScheduledJobs.date.desc()).all()
         )
+    
+def on_line(line_number: int):
+    return (
+        ScheduledJobs.query.filter(
+            ScheduledJobs.status == f'on Line {line_number}'
+        ).order_by(ScheduledJobs.date.desc()).all()
+    )
 
 @app.route('/')
 def index():
-    weekdays = [
-        'Monday', 'Tuesday', 'Wednesday',
-        'Thursday', 'Friday', 'Saturday', 'Sunday'
-        ]
+    
+    weekdays = get_current_week()
     lines = range(5, 10) # 5 - 9
+
     active_jobs = ScheduledJobs.query.filter(
         ScheduledJobs.status in ['on Line {x}' for x in lines]
         ).all()
@@ -43,38 +67,59 @@ def index():
         parking_lot=parking_lot(), current_hour=current_hour()
         )
 
-@app.route('/view-all')
-def all_work_orders():
-    entries = ScheduledJobs.query.order_by(ScheduledJobs.date.desc()).all()
-    return render_template('workorders.html', entries=entries)
+@app.route('/view-all-work-orders')
+def view_all_work_orders():
+    work_orders = ScheduledJobs.query.order_by(
+        ScheduledJobs.date.desc()
+        ).all()
+    return render_template('view-all-work-orders.html', work_orders=work_orders)
 
-@app.route('/add', methods=["POST", "GET"])
+@app.route('/view-work-order/<int:lot_number>')
+def view_work_order(lot_number):
+    work_order = ScheduledJobs.query.get_or_404(int(lot_number))
+    return render_template(
+        'view-work-order.html', title=f'Lot {lot_number}',
+        work_order=work_order
+        )
+
+@app.route('/add-work-order', methods=["POST", "GET"])
 def add_work_order():
-    new_work_order_form = NewWorkOrder()
-    if new_work_order_form.validate_on_submit():
+    form = NewWorkOrder()
+    if form.validate_on_submit():
         entry = ScheduledJobs(
-            product=new_work_order_form.product.data, lot_id=new_work_order_form.lot_id.data,
-            lot_number=new_work_order_form.lot_number.data,
-            strip_lot_number=new_work_order_form.strip_lot_number.data,
-            status=new_work_order_form.status.data
+            product=form.product.data,
+            lot_id=form.lot_id.data,
+            lot_number=form.lot_number.data,
+            strip_lot_number=form.strip_lot_number.data,
+            status=form.status.data
             )
         db.session.add(entry)
         db.session.commit()
         flash(
-            f'{new_work_order_form.product.data} {new_work_order_form.lot_id.data} '
-            f'(Lot #{new_work_order_form.lot_number.data}) added successfully.',
+            f'Lot #{form.lot_number.data} '
+            f'({form.product.data} '
+            f'{form.lot_id.data}) '
+            f'added successfully.',
             'success'
             )
+
         return redirect(url_for('index'))
-    return render_template('add.html', title='Add Work Order', form=new_work_order_form)
+
+    return render_template(
+        'add-work-order.html', title='Add Work Order',
+        form=form
+        )
 
 @app.route('/delete/<int:lot_number>')
 def delete(lot_number):
     entry = ScheduledJobs.query.get_or_404(int(lot_number))
     db.session.delete(entry)
     db.session.commit()
-    flash(f'Lot {lot_number} deleted.', 'danger')
-    return redirect(url_for('view_work_orders'))
+    flash(
+        f'Lot #{lot_number} ({entry.product} '
+        f'#{entry.lot_id}) deleted.', 'danger'
+        )
+    return redirect(url_for('view_all_work_orders'))
 
 @app.route('/performance')
 def performance():

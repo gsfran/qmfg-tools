@@ -5,7 +5,7 @@
     <div class="main-block card-body" style="display: inline-flex;">
         <div class="schedule weekly-byline">
 
-            <!--  OVERRIDE current_hour (dev only)-->
+            <!--  OVERRIDE current_hour (dev)-->
             {# {% set current_hour = 56 %} #}
 
             <!--  TOP LEFT CORNER  -->
@@ -13,20 +13,29 @@
 
             <!--  WEEKDAY HEADERS  -->
             {% for day in weekdays %}
-                <div class="weekday_header {{ day.lower()[:3] }}">{{ day[:3] }}</div>
+                <div class="weekday_header {{ day.strftime('%a').lower() }}">
+                    <div>{{ day.strftime('%a') }}</div>
+                    <div style="font-size: 85%">{{ day.strftime('%b %d') }}</div>
+                </div>
             {% endfor %}
 
             <!--  PRODUCTION LINES  -->
             {% for line in lines %}
                 <div class="machine_index line_{{ line }}">{{ line }}</div>
+
+                <!-- HOURS OF THE WEEK-->
                 {% for hour in range(24 * 7) %}
                     {% set col_num = hour + 2 %}
                     <div class=
                         "hour 
 
+                        {# This block allocates CSS classes #}
+                        {# to each hour based on conditionals. #}
+
                         {% if hour == current_hour %}
                             current_hour 
                         {% endif %}
+
                         {% if hour != 0 %}
                             {% if hour % 24 == 0 %}
                                 start_of_day
@@ -34,6 +43,7 @@
                                 midday 
                             {% endif %}
                         {% endif %}
+
                         {% if hour < current_hour %}
                             elapsed 
                         {% endif %}"
@@ -70,8 +80,11 @@
             <div class="parking_lot_header">Parking Lot</div>
             <div class="parking_lot">
                 {% for lot in parking_lot %}
-                    <li class="work_order {{ lot.product }}"
-                        id="{{ lot.lot_number }}">{{ lot.product }} {{ lot.lot_id }}</li>
+                    <a href="/view-work-order/{{ lot.lot_number }}">
+                        <li class="work_order {{ lot.product }}" id="{{ lot.lot_number }}">
+                        {{ lot.product }}  {{ lot.lot_id }}
+                        </li>
+                    </a>
                 {% endfor %}
             </div>
         </div>

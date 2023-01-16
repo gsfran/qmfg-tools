@@ -1,0 +1,44 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="card card-style mb-2 col-sm-10 col-md-8 col-lg-6 col-xl-4">
+    <h3>Work Order Details</h3>
+    <div class="main-block card-body" style="display: inline-flex;">
+        <table class="table">
+            <tbody>
+                <tr>
+                    <td>Product Type: </td>
+                    <td>{{ work_order.product }}</td>
+                </tr>
+                <tr>
+                    <td>Lot ID: </td>
+                    <td>{{ work_order.lot_id }}</td>
+                </tr>
+                <tr>
+                    <td>Pouch Lot Number: </td>
+                    <td>{{ work_order.lot_number }}</td>
+                </tr>
+                <tr>
+                    <td>Strip Lot Number: </td>
+                    <td>{{ work_order.strip_lot_number }}</td>
+                </tr>
+                <tr>
+                    <td>Date Added: </td>
+                    <td>{{ work_order.date.strftime("%m-%d-%Y") }}</td>
+                </tr>
+                <tr>
+                    <td>Status: </td>
+                    <td>{{ work_order.status }}</td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="text-align: center;"><a href="{{ url_for('delete', lot_number = work_order.lot_number) }}"
+                            class="btn btn-outline-dark" style="width: 75%">Edit</a></td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="text-align: center;"><a href="{{ url_for('delete', lot_number = work_order.lot_number) }}"
+                        class="btn btn-outline-danger" style="width: 75%">Delete</a></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

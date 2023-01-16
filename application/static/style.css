@@ -14,6 +14,16 @@ h3 {
     margin-left: 20px;
 }
 
+a {
+    color: #000;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #444;
+    text-decoration: none;
+}
+
 .nav-logo {
     width: auto;
     height: auto;
@@ -44,7 +54,7 @@ h3 {
     align-content: center;
 
     width: 25%;
-    min-width: 240px;
+    min-width: 260px;
 
     height: 100%;
     max-height: 400px;
@@ -69,7 +79,7 @@ h3 {
 .parking_lot li {
     width: auto;
     height: auto;
-    min-width: 180px;
+    min-width: 160px;
     max-width: 300px;
     list-style: none;
     margin-inline: 25px; 
@@ -186,7 +196,7 @@ h3 {
     text-align: center;
     list-style: none;
     
-    margin-block: 6px;
+    margin-block: 8px;
     border-radius: 35px;
 
     z-index: 2;
@@ -201,57 +211,57 @@ h3 {
 /* WORK ORDER TYPES */
 
 .work_order.flu {
-    background-color: #55d50070;
+    background-color: #55d000d0;
     border: 2px solid #55d000;
 }
 
 .flu:hover {
-    background-color: #55d000d0;
+    background-color: #55d50070;
 }
 
 .work_order.abc {
-    background-color: #ff00ff70;
+    background-color: #ff00ffa0;
     border: 2px solid fuchsia;
 }
 
 .abc:hover {
-    background-color: #ff00ffa0;
+    background-color: #ff00ff70;
 }
 
 .work_order.sars {
-    background-color: #FF000080;
+    background-color: #FF0000b0;
     border: 2px solid red;
 }
 
 .sars:hover {
-    background-color: #FF0000b0;
+    background-color: #FF000080;
 }
 
 .work_order.rsv {
-    background-color: #ffa50080;
+    background-color: #ffa500c0;
     border: 2px solid orange;
 }
 
 .rsv:hover {
-    background-color: #ffa500c0;
+    background-color: #ffa50080;
 }
 
 .work_order.strep_aplus {
-    background-color: #9400d370;
+    background-color: #9400d3a0;
     border: 2px solid darkviolet;
 }
 
 .strep_aplus:hover {
-    background-color: #9400d3a0;
+    background-color: #9400d370;
 }
 
 .work_order.strep_inline {
-    background-color: #00bfff60;
+    background-color: #00bfff90;
     border: 1px solid deepskyblue;
 }
 
 .strep_inline:hover {
-    background-color: #00bfff90;
+    background-color: #00bfff60;
 }
 
 /* #region WEEKDAY SELECTORS */
