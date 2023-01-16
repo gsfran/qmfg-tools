@@ -12,7 +12,7 @@
             <div class="corner">LINE</div>
 
             <!--  WEEKDAY HEADERS  -->
-            {% for day in weekdays %}
+            {% for day in dates %}
                 <div class="weekday_header {{ day.strftime('%a').lower() }}">
                     <div>{{ day.strftime('%a') }}</div>
                     <div style="font-size: 85%">{{ day.strftime('%b %d') }}</div>

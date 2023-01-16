@@ -22,6 +22,14 @@
                     <td>{{ work_order.strip_lot_number }}</td>
                 </tr>
                 <tr>
+                    <td>Strip Quantity: </td>
+                    <td>{{ work_order.quantity }}</td>
+                </tr>
+                <tr>
+                    <td>Quantity Made: </td>
+                    <td>{{ work_order.qty_made }}</td>
+                </tr>
+                <tr>
                     <td>Date Added: </td>
                     <td>{{ work_order.date.strftime("%m-%d-%Y") }}</td>
                 </tr>

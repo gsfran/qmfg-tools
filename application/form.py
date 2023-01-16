@@ -69,6 +69,16 @@ class NewWorkOrder(FlaskForm):
             int(strip_lot_number.data)
         except ValueError:
             raise ValidationError('Please enter a valid number.')
+        
+    quantity = StringField('Strip Qty.', validators=[DataRequired()])
+    
+    def validate_quantity(
+        form: FlaskForm, quantity: StringField
+        ) -> None:
+        try:
+            int(quantity.data)
+        except ValueError:
+            raise ValidationError('Please enter a valid number.')
 
     status = SelectField(
         'Save to', validators=[DataRequired()],

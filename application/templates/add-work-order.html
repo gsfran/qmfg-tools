@@ -7,11 +7,13 @@
             {{ form.csrf_token() }}
             <fieldset class="form-group">
 
+                <!-- PRODUCT TYPE FIELD -->
                 <div class="form-group">
                     {{ form.product.label(class = "form-control-label") }}
                     {{ form.product(class = "form-control form-control-md") }}
                 </div>
-
+                
+                <!-- LOT ID FIELD -->
                 <div class="form-group">
                     {{ form.lot_id.label(class="form-control-label") }}
                     {% if form.lot_id.errors %}
@@ -26,6 +28,7 @@
                     {% endif %}
                 </div>
 
+                <!-- LOT NUMBER FIELD -->
                 <div class="form-group">
                     {{ form.lot_number.label(class="form-control-label") }}
                     {% if form.lot_number.errors %}
@@ -40,6 +43,7 @@
                     {% endif %}
                 </div>
 
+                <!-- STRIP LOT NUMBER FIELD -->
                 <div class="form-group">
                     {{ form.strip_lot_number.label(class="form-control-label") }}
                     {% if form.strip_lot_number.errors %}
@@ -54,11 +58,28 @@
                     {% endif %}
                 </div>
 
+                <!-- STRIP QUANTITY FIELD -->
+                <div class="form-group">
+                    {{ form.quantity.label(class="form-control-label") }}
+                    {% if form.quantity.errors %}
+                        {{ form.quantity(class="form-control form-control-sm is-invalid") }}
+                        {% for error in form.quantity.errors %}
+                            <div class="invalid-feedback">
+                                <span>{{ error }}</span>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        {{ form.quantity(class="form-control form-control-sm") }}
+                    {% endif %}
+                </div>
+                
+                <!-- STATUS FIELD -->
                 <div class="form-group">
                     {{ form.status.label(class = "form-control-label") }}
                     {{ form.status(class = "form-control form-control-sm") }}
                 </div>
 
+                <!-- SUBMIT BUTTON -->
                 <div class="form-group border-bottom pb-3">
                     {{ form.submit(class="btn btn-outline-info", style="width: 100%")}}
                 </div>

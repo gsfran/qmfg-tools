@@ -7,76 +7,35 @@ from flask import (flash, redirect, render_template, url_for)
 
 from application import app, db
 from application.form import NewWorkOrder
-from application.models import ScheduledJobs
+from application.models import WorkOrders
+from application.schedule import Schedule, CurrentSchedule
 
-
-def _make_schedule():
-    pass
-
-def current_hour() -> int:
-    """
-    Returns integer representing the current hour
-    of the week. Ranges from 0 - 167, with 0 representing
-    12AM - 1AM Monday morning.
-    """
-    return dt.now().weekday() * 24 + dt.now().hour
-
-def current_year_week() -> dt:
-   """
-   Returns the year and week number of the current datetime
-   """
-   return dt.now().strftime('%Y-%V')
-
-def get_current_week() -> dt:
-    
-    today_ = dt.now().date()
-    week_start_date = today_ - datetime.timedelta(days=today_.weekday())
-    
-    return [week_start_date + datetime.timedelta(days=_) for _ in range(7)]
-
-
-def parking_lot():
-    """
-    Returns database query for all 'Parking Lot' jobs.
-    """
-    return (
-        ScheduledJobs.query.filter(
-            ScheduledJobs.status == 'Parking Lot'
-            ).order_by(ScheduledJobs.date.desc()).all()
-        )
-    
-def on_line(line_number: int):
-    return (
-        ScheduledJobs.query.filter(
-            ScheduledJobs.status == f'on Line {line_number}'
-        ).order_by(ScheduledJobs.date.desc()).all()
-    )
 
 @app.route('/')
 def index():
     
-    weekdays = get_current_week()
+    schedule = CurrentSchedule()
     lines = range(5, 10) # 5 - 9
 
-    active_jobs = ScheduledJobs.query.filter(
-        ScheduledJobs.status in ['on Line {x}' for x in lines]
+    active_jobs = WorkOrders.query.filter(
+        WorkOrders.status in ['on Line {x}' for x in lines]
         ).all()
 
     return render_template(
-        'index.html', weekdays=weekdays, lines=lines,
-        parking_lot=parking_lot(), current_hour=current_hour()
+        'index.html', dates=schedule.dates, lines=lines,
+        parking_lot=schedule.parking_lot(), current_hour=schedule.current_hour()
         )
 
 @app.route('/view-all-work-orders')
 def view_all_work_orders():
-    work_orders = ScheduledJobs.query.order_by(
-        ScheduledJobs.date.desc()
+    work_orders = WorkOrders.query.order_by(
+        WorkOrders.date.desc()
         ).all()
     return render_template('view-all-work-orders.html', work_orders=work_orders)
 
 @app.route('/view-work-order/<int:lot_number>')
 def view_work_order(lot_number):
-    work_order = ScheduledJobs.query.get_or_404(int(lot_number))
+    work_order = WorkOrders.query.get_or_404(int(lot_number))
     return render_template(
         'view-work-order.html', title=f'Lot {lot_number}',
         work_order=work_order
@@ -86,11 +45,12 @@ def view_work_order(lot_number):
 def add_work_order():
     form = NewWorkOrder()
     if form.validate_on_submit():
-        entry = ScheduledJobs(
+        entry = WorkOrders(
             product=form.product.data,
             lot_id=form.lot_id.data,
             lot_number=form.lot_number.data,
             strip_lot_number=form.strip_lot_number.data,
+            quantity=form.quantity.data,
             status=form.status.data
             )
         db.session.add(entry)
@@ -112,7 +72,7 @@ def add_work_order():
 
 @app.route('/delete/<int:lot_number>')
 def delete(lot_number):
-    entry = ScheduledJobs.query.get_or_404(int(lot_number))
+    entry = WorkOrders.query.get_or_404(int(lot_number))
     db.session.delete(entry)
     db.session.commit()
     flash(
@@ -125,34 +85,34 @@ def delete(lot_number):
 def performance():
     type_comparison = (
         db.session.query(
-                db.func.sum(ScheduledJobs.lot_number),
-                ScheduledJobs.product
+                db.func.sum(WorkOrders.lot_number),
+                WorkOrders.product
             ).group_by(
-                ScheduledJobs.product
+                WorkOrders.product
                 ).order_by(
-                    ScheduledJobs.product
+                    WorkOrders.product
                     ).all()
         )
 
     product_comparison = (
         db.session.query(
-                db.func.sum(ScheduledJobs.lot_number),
-                ScheduledJobs.status
+                db.func.sum(WorkOrders.lot_number),
+                WorkOrders.status
             ).group_by(
-                ScheduledJobs.status
+                WorkOrders.status
                 ).order_by(
-                    ScheduledJobs.status
+                    WorkOrders.status
                     ).all()
         )
 
     dates = (
         db.session.query(
-                db.func.sum(ScheduledJobs.lot_number),
-                ScheduledJobs.date
+                db.func.sum(WorkOrders.lot_number),
+                WorkOrders.date
             ).group_by(
-                ScheduledJobs.date
+                WorkOrders.date
                 ).order_by(
-                    ScheduledJobs.date
+                    WorkOrders.date
                     ).all()
         )
 
