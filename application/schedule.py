@@ -8,7 +8,7 @@ from application.models import WorkOrders
 
 class Schedule:
     
-    def __init__(self, date_: datetime.date, lines: list(int)) -> None:
+    def __init__(self, date_: datetime.date, lines: list[int]) -> None:
         self.year_week = date_.strftime('%Y-%V')
         self.lines = lines
         self.set_week_dates(date_)
@@ -33,7 +33,7 @@ class Schedule:
             ).order_by(WorkOrders.start_datetime.desc()).all()
             
     def set_schedule(self) -> None:
-        self.schedule_frame = pd.DataFrame(index=self.lines, names=range(168))
+        self.schedule_frame = pd.DataFrame(index=self.lines, columns=range(168))
         
         
     @staticmethod
@@ -49,7 +49,7 @@ class Schedule:
         
 class CurrentSchedule(Schedule):
 
-    def __init__(self, lines: list(int)) -> None:
+    def __init__(self, lines: list[int]) -> None:
         super().__init__(dt.now().date(), lines)
         
     def current_hour(self) -> int:
