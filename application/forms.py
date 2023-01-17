@@ -56,7 +56,7 @@ class NewWorkOrderForm(FlaskForm):
 class LoadWorkOrderForm(FlaskForm):
 
     line = SelectField(
-        'Load to', validators=[DataRequired()],
+        'Poucher', validators=[DataRequired()],
         choices=[
             ('5', 'Line 5'),
             ('6', 'Line 6'),
@@ -74,4 +74,4 @@ class LoadWorkOrderForm(FlaskForm):
         'Start Time',  default=dt.now().time()
     )
     
-    submit = SubmitField('Load Work Order')
+    submit = SubmitField('Load to Poucher')
