@@ -24,7 +24,7 @@
     <div class="row">
       <div class="col-md-12 p-0">
         <header class="mb-4">
-          <nav class="navbar navbar-expand-xl navbar-dark p-3" style="background-color: #774def;">
+          <nav class="navbar navbar-expand-xl navbar-dark p-2" style="background-color: #774def;">
             <a class="navbar-brand" href="{{ url_for('index') }}" style="font-size: 110%;">
               <img src="/static/logo.png" class="nav-logo" />Production Scheduler</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
@@ -43,7 +43,7 @@
       </div>
     </div>
 
-    <div class="row justify-content-center">
+    <div class="row justify-content-center" style="margin-block: 15px;">
       <div class="col-lg-10">
         {% with messages = get_flashed_messages(with_categories = True) %}
         {% if messages %}

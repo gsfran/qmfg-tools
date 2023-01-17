@@ -33,5 +33,10 @@ products = {
             'item_number': 1094000,
             'name': 'Strep Inline',
             'std_rate': 3500
+        },
+        'other': {
+            'item_number': 999999,
+            'name': 'Other Cassette',
+            'std_rate': 5000,
         }
     }

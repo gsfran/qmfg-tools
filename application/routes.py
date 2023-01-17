@@ -1,7 +1,7 @@
 import datetime
 import json
-from datetime import datetime as dt
 
+from datetime import datetime as dt
 from flask import flash, redirect, render_template, url_for
 from math import ceil
 
@@ -14,8 +14,8 @@ from application.products import products
 
 @app.route('/')
 def index() -> str:
-    schedule = CurrentSchedule()
-    lines = range(5, 10) # 5 - 9
+    lines = range(5, 10)
+    schedule = CurrentSchedule(lines)
     
     return render_template(
         'index.html.jinja',

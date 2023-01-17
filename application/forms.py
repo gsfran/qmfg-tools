@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime as dt
 from flask_wtf import FlaskForm
-from wtforms import StringField, SelectField, SubmitField, DateTimeField
+from wtforms import StringField, SelectField, SubmitField
 from wtforms.validators import DataRequired, ValidationError
 from wtforms.fields.datetime import DateField, TimeField
 
@@ -17,7 +17,7 @@ class NewWorkOrderForm(FlaskForm):
             ('strep_aplus', 'Strep A+ - 1330700'),
             ('rsv', 'RSV - 1175000'),
             ('sars', 'SARS - 1440700'),
-            ('strep_inline', 'Strep InLine - 1094000'),
+            ('strep_inline', 'Strep Inline - 1094000'),
             ('other', 'Other')
             ]
         )
@@ -28,7 +28,7 @@ class NewWorkOrderForm(FlaskForm):
     strip_qty = StringField('Strip Qty.', validators=[DataRequired()])
 
     
-    submit = SubmitField('Save Work Order')
+    submit = SubmitField('Add Work Order')
 
     def validate_lot_number(form: NewWorkOrderForm, lot_number: int):
         try:

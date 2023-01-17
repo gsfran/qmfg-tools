@@ -1,6 +1,6 @@
 {% extends 'layout.html' %}
 {% block content %}
-<div class="card card-style mb-2 col-sm-10 col-md-9 col-lg-7 col-xl-5">
+<div class="card card-style mb-2 col-md-12 col-lg-10 col-xl-8" style="max-width: 720px;">
     <h3>Work Order Details</h3>
     <div class="main-block card-body" style="display: inline-flex;">
         <table class="table">
@@ -77,21 +77,26 @@
                 
                 
                 {% if work_order.status == 'Parking Lot' %}
-                <tr style="margin-top: 50px;">
+                <tr>
                     <td colspan="2">
                     <a href="{{ url_for('load_work_order', lot_number = work_order.lot_number) }}"
                             class="btn btn-outline-info" style="width: 100%">Load to Poucher</a></td>
                 </tr>
                 {% endif %}
-                <tr style="margin-top: 50px;">
+                <tr>
+                    <td colspan="2">
+                    <a href="{{ url_for('delete', lot_number = work_order.lot_number) }}"
+                        class="btn btn-outline-warning" style="width: 100%">Edit Work Order</a></td>
+                </tr>
+                <tr>
                     <td colspan="2">
                     <a href="{{ url_for('delete', lot_number = work_order.lot_number) }}"
                         class="btn btn-outline-danger" style="width: 100%">Delete Work Order</a></td>
                 </tr>
-                <tr style="margin-top: 50px;">
+                <tr>
                     <td colspan="2">
                     <a href="{{ url_for('view_all_work_orders') }}"
-                            class="btn btn-outline-dark" style="width: 100%">Back to All</a></td>
+                            class="btn btn-outline-dark" style="width: 100%">View All Work Orders</a></td>
                 </tr>
             </tbody>
         </table>

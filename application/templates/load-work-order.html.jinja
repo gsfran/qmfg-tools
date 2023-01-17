@@ -1,6 +1,6 @@
 {% extends 'layout.html' %}
 {% block content %}
-<div class="card card-style mb-2 col-sm-8 col-md-6 col-lg-4">
+<div class="card card-style mb-2 col-sm-10 col-md-8 col-lg-6" style="max-width: 540px;">
     <h3>Load Work Order</h3>
     <h3 class="sub">Lot #{{ work_order.lot_number }} ({{ work_order.product_name }} #{{ work_order.lot_id }})</h3>
     <div class="card-body">
@@ -27,13 +27,13 @@
                 </div>
 
                 <!-- SUBMIT BUTTON -->
-                <div class="form-group border-bottom pb-3" style="margin-top: 50px">
+                <div class="form-group border-bottom pb-3">
                     {{ form.submit(class="btn btn-outline-info", style="width: 100%")}}
                 </div>
                 
                 <div>
                     <a href="{{ url_for('view_all_work_orders') }}"
-                            class="btn btn-outline-dark" style="width: 100%">Back to All</a>
+                            class="btn btn-outline-secondary" style="width: 100%">Cancel</a>
                 </div>
 
             </fieldset>
