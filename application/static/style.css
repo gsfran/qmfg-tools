@@ -14,6 +14,10 @@ h3 {
     margin-left: 20px;
 }
 
+h3.sub {
+    font-size: 100%;
+}
+
 a {
     color: #000;
     text-decoration: none;
@@ -127,6 +131,10 @@ a:hover {
     padding: 1em;
 }
 
+.schedule a {
+    position: relative;
+}
+
 .corner {
     color: #000;
     background-color: #fff;
@@ -200,6 +208,19 @@ a:hover {
     border-radius: 35px;
 
     z-index: 2;
+    opacity: .90;
+}
+
+.work_order.week_start {
+    border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
+    border-left: none;
+}
+
+.work_order.week_end {
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+    border-right: none;
 }
 
 .work_order.bg {

@@ -1,0 +1,38 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="card card-style mb-2 col-sm-8 col-md-6 col-lg-4">
+    <h3>Load Work Order</h3>
+    <h3 class="sub">Pouch Lot #{{ work_order.lot_number }}</h3>
+    <div class="card-body">
+        <form action="" method="POST">
+            {{ form.csrf_token() }}
+            <fieldset class="form-group">
+
+                <!-- LINE FIELD -->
+                <div class="form-group">
+                    {{ form.line.label(class="form-control-label") }}
+                    {{ form.line(class="form-control form-control-md") }}
+                </div>
+
+                <!-- START DATE FIELD -->
+                <div class="form-group">
+                    {{ form.start_date.label(class="form-control-label") }}
+                    {{ form.start_date(class="form-control form-control-md") }}
+                </div>
+
+                <!-- START TIME FIELD -->
+                <div class="form-group">
+                    {{ form.start_time.label(class="form-control-label") }}
+                    {{ form.start_time(class="form-control form-control-md") }}
+                </div>
+
+                <!-- SUBMIT BUTTON -->
+                <div class="form-group border-bottom pb-3" style="margin-top: 50px">
+                    {{ form.submit(class="btn btn-outline-info", style="width: 100%")}}
+                </div>
+
+            </fieldset>
+        </form>
+    </div>
+</div>
+{% endblock %}

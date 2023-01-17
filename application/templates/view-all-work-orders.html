@@ -16,14 +16,21 @@
             <tbody>
                 {% for work_order in work_orders %}
                 <tr>
-                    <td>{{ work_order.product }}</td>
+                    <td>{{ work_order.product_name }}</td>
                     <td>{{ work_order.lot_id }}</td>
                     <th scope="row">{{ work_order.lot_number }}</th>
-                    <td>{{ work_order.status }}</td>
-                    <td><a href="{{ url_for('view_work_order', lot_number = work_order.lot_number) }}"
-                            class="btn btn-outline-dark btn-sm">View</a>
-                        <a href="{{ url_for('delete', lot_number = work_order.lot_number) }}"
-                            class="btn btn-outline-danger btn-sm">Delete</a>
+                    <td>
+                        {{ work_order.status }}{% if work_order.status == 'Pouching' %}: Line
+                        {{ work_order.line}}
+                        {% endif %}
+                    </td>
+                    <td style="text-align: right">
+                        {% if work_order.status == 'Parking Lot' %}
+                        <a href="{{ url_for('load_work_order', lot_number = work_order.lot_number) }}"
+                            class="btn btn-outline-success btn-sm">Load to Poucher</a>
+                        {% endif %}
+                        <a href="{{ url_for('view_work_order', lot_number = work_order.lot_number) }}"
+                            class="btn btn-outline-dark btn-sm">View Details</a>
                     </td>
                 </tr>
                 {% endfor %}

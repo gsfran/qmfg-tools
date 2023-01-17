@@ -1,49 +1,94 @@
 {% extends 'layout.html' %}
 {% block content %}
-<div class="card card-style mb-2 col-sm-10 col-md-8 col-lg-6 col-xl-4">
+<div class="card card-style mb-2 col-sm-10 col-md-9 col-lg-7 col-xl-5">
     <h3>Work Order Details</h3>
     <div class="main-block card-body" style="display: inline-flex;">
         <table class="table">
+        <style>
+            .left_col {
+                width: 40%;
+                font-weight: bolder;
+            }
+            .right_col {
+                text-align: center;
+            }
+        </style>
             <tbody>
                 <tr>
-                    <td>Product Type: </td>
-                    <td>{{ work_order.product }}</td>
+                    <td class="left_col">Product (Lot ID)</td>
+                    <td class="right_col">{{ work_order.product_name }}
+                        ({{ work_order.lot_id }})
+                    </td>
                 </tr>
                 <tr>
-                    <td>Lot ID: </td>
-                    <td>{{ work_order.lot_id }}</td>
+                    <td class="left_col">Pouch Item Number</td>
+                    <td class="right_col">{{ work_order.item_number }}</td>
                 </tr>
                 <tr>
-                    <td>Pouch Lot Number: </td>
-                    <td>{{ work_order.lot_number }}</td>
+                    <td class="left_col">Lot Numbers (Pouch / Strip)</td>
+                    <td class="right_col">{{ work_order.lot_number }}
+                        / {{ work_order.strip_lot_number }}
+                    </td>
                 </tr>
                 <tr>
-                    <td>Strip Lot Number: </td>
-                    <td>{{ work_order.strip_lot_number }}</td>
+                    <td class="left_col">Qty. Strips Yielded</td>
+                    <td class="right_col">{{ work_order.strip_qty }}</td>
                 </tr>
                 <tr>
-                    <td>Strip Quantity: </td>
-                    <td>{{ work_order.quantity }}</td>
+                    <td class="left_col">Standard Rate</td>
+                    <td class="right_col">{{ work_order.standard_rate }} / hr</td>
                 </tr>
                 <tr>
-                    <td>Quantity Made: </td>
-                    <td>{{ work_order.qty_made }}</td>
+                    <td class="left_col">Standard Time</td>
+                    <td class="right_col">{{ work_order.standard_time }}.0 hr</td>
                 </tr>
                 <tr>
-                    <td>Date Added: </td>
-                    <td>{{ work_order.date.strftime("%m-%d-%Y") }}</td>
+                    <td class="left_col">Status</td>
+                    <td class="right_col">{{ work_order.status }}</td>
+                </tr>
+                {% if work_order.line %}
+                <tr>
+                    <td class="left_col">Poucher</td>
+                    <td class="right_col">Line {{ work_order.line }}</td>
                 </tr>
                 <tr>
-                    <td>Status: </td>
-                    <td>{{ work_order.status }}</td>
+                    <tr>
+                        <td class="left_col">Qty. Remaining</td>
+                        <td class="right_col">{{ work_order.remaining_qty }}</td>
+                    </tr>
+                    <tr>
+                        <td class="left_col">Time Remaining</td>
+                        <td class="right_col">{{ work_order.remaining_time }}.0 hr</td>
+                    </tr>
+                    <td class="left_col">Job Started</td>
+                    <td class="right_col">{{ work_order.start_datetime.strftime('%H:%M %m/%d/%y') }}</td>
                 </tr>
                 <tr>
-                    <td colspan="2" style="text-align: center;"><a href="{{ url_for('delete', lot_number = work_order.lot_number) }}"
-                            class="btn btn-outline-dark" style="width: 75%">Edit</a></td>
+                    <td class="left_col">Est. Completion Time</td>
+                    <td class="right_col">{{ work_order.end_datetime.strftime('%H:%M %m/%d/%y') }}</td>
                 </tr>
+                {% endif %}
                 <tr>
-                    <td colspan="2" style="text-align: center;"><a href="{{ url_for('delete', lot_number = work_order.lot_number) }}"
-                        class="btn btn-outline-danger" style="width: 75%">Delete</a></td>
+                    <td class="left_col">Work Order Created</td>
+                    <td class="right_col">
+                        {{ work_order.add_datetime.strftime('%H:%M %m/%d/%y') }}
+                    </td>
+                </tr>
+                
+                <tr style="margin-top: 50px;">
+                    <td colspan="2">
+                    <a href="{{ url_for('load_work_order', lot_number = work_order.lot_number) }}"
+                            class="btn btn-outline-info" style="width: 100%">Load to Poucher</a></td>
+                </tr>
+                <tr style="margin-top: 50px;">
+                    <td colspan="2">
+                    <a href="{{ url_for('delete', lot_number = work_order.lot_number) }}"
+                        class="btn btn-outline-danger" style="width: 100%">Delete Work Order</a></td>
+                </tr>
+                <tr style="margin-top: 50px;">
+                    <td colspan="2">
+                    <a href="{{ url_for('view_all_work_orders') }}"
+                            class="btn btn-outline-secondary" style="width: 100%">Back to All</a></td>
                 </tr>
             </tbody>
         </table>

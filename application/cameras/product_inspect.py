@@ -299,7 +299,6 @@ class ProductInspectData:
         """
         _t = dt.now()
         print(f'{_t}: Running all stats...\t\t\t', end='')
-        # self._all_stats = {}
 
         self._all_stats = (
             self.cycle_stats
@@ -857,7 +856,6 @@ class ProductInspectData:
         """
         self.data['part_count'] = self.data['part_present'].cumsum()
         return self.data['part_count']
-
 
     def prod_to_xls(self) -> None:
         """

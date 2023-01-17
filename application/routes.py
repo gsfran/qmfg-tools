@@ -1,85 +1,132 @@
 import datetime
 import json
-
-
 from datetime import datetime as dt
-from flask import (flash, redirect, render_template, url_for)
+
+from flask import flash, redirect, render_template, url_for
+from math import ceil
 
 from application import app, db
-from application.form import NewWorkOrder
+from application.forms import NewWorkOrderForm, LoadWorkOrderForm
 from application.models import WorkOrders
-from application.schedule import Schedule, CurrentSchedule
+from application.schedule import CurrentSchedule, Schedule
+from application.products import products
 
 
 @app.route('/')
-def index():
-    
+def index() -> str:
     schedule = CurrentSchedule()
     lines = range(5, 10) # 5 - 9
-
-    active_jobs = WorkOrders.query.filter(
-        WorkOrders.status in ['on Line {x}' for x in lines]
-        ).all()
-
+    
     return render_template(
-        'index.html', dates=schedule.dates, lines=lines,
-        parking_lot=schedule.parking_lot(), current_hour=schedule.current_hour()
+        'index.html',
+        schedule=schedule,
+        lines=lines
         )
 
 @app.route('/view-all-work-orders')
-def view_all_work_orders():
-    work_orders = WorkOrders.query.order_by(
-        WorkOrders.date.desc()
-        ).all()
-    return render_template('view-all-work-orders.html', work_orders=work_orders)
+def view_all_work_orders() -> str:
+    work_orders = (
+        WorkOrders.query.order_by(WorkOrders.status.desc()).all()
+        )
+    return render_template(
+        'view-all-work-orders.html', work_orders=work_orders
+        )
 
 @app.route('/view-work-order/<int:lot_number>')
 def view_work_order(lot_number):
-    work_order = WorkOrders.query.get_or_404(int(lot_number))
+    work_order = WorkOrders.query.get_or_404(lot_number)
     return render_template(
         'view-work-order.html', title=f'Lot {lot_number}',
         work_order=work_order
         )
 
 @app.route('/add-work-order', methods=["POST", "GET"])
-def add_work_order():
-    form = NewWorkOrder()
+def add_work_order() -> str:
+    form = NewWorkOrderForm()
     if form.validate_on_submit():
-        entry = WorkOrders(
-            product=form.product.data,
+        product = form.product.data
+        
+        product_name = products[product].get('name')
+        item_number = products[product].get('item_number')
+        standard_rate = products[product].get('std_rate')
+        
+        strip_qty=int(form.strip_qty.data)
+        standard_time = ceil(strip_qty / standard_rate)
+
+        work_order = WorkOrders(
+            product=product,
+            product_name=product_name,
+            item_number = item_number,
+            
             lot_id=form.lot_id.data,
-            lot_number=form.lot_number.data,
-            strip_lot_number=form.strip_lot_number.data,
-            quantity=form.quantity.data,
-            status=form.status.data
+            lot_number=int(form.lot_number.data),
+            strip_lot_number=int(form.strip_lot_number.data),
+            
+            strip_qty=strip_qty,
+            remaining_qty=strip_qty,
+            standard_rate=standard_rate,
+            standard_time=standard_time,
+            remaining_time=standard_time
             )
-        db.session.add(entry)
+        
+        db.session.add(work_order)
         db.session.commit()
+        
         flash(
-            f'Lot #{form.lot_number.data} '
-            f'({form.product.data} '
-            f'{form.lot_id.data}) '
-            f'added successfully.',
+            f'Lot #{form.lot_number.data} ({product_name} '
+            f'{form.lot_id.data}) added successfully.',
+            'info'
+            )
+        return redirect(url_for('index'))
+
+    return render_template(
+        'add-work-order.html', title='Add Work Order', form=form
+        )
+
+@app.route('/delete/<int:lot_number>')
+def delete(lot_number: int) -> app.response_class:
+    work_order = WorkOrders.query.get_or_404(lot_number)
+    db.session.delete(work_order)
+    db.session.commit()
+    flash(
+        f'Lot #{lot_number} ({work_order.product_name} '
+        f'#{work_order.lot_id}) deleted.', 'danger'
+        )
+    return redirect(url_for('view_all_work_orders'))
+
+@app.route('/load-work-order/<int:lot_number>', methods=["POST", "GET"])
+def load_work_order(lot_number: int) -> str:
+    work_order = WorkOrders.query.get_or_404(lot_number)
+    
+    form = LoadWorkOrderForm()
+    if form.validate_on_submit():
+        work_order.line = form.line.data
+        work_order.start_datetime = dt.combine(
+            form.start_date.data, form.start_time.data
+        )
+        work_order.end_datetime = (
+            work_order.start_datetime
+            + datetime.timedelta(hours=work_order.remaining_time)
+            )
+
+        work_order.load_datetime = dt.now()
+        work_order.status = 'Pouching'
+        work_order.pouched_qty = 0
+        db.session.commit()
+
+        flash(
+            f'Lot #{work_order.lot_number} ({work_order.product_name} '
+            f'{work_order.lot_id}) successfully loaded to '
+            f'Line {work_order.line}.',
             'success'
             )
 
         return redirect(url_for('index'))
 
     return render_template(
-        'add-work-order.html', title='Add Work Order',
-        form=form
+        'load-work-order.html', title='Load Work Order', form=form,
+        work_order=work_order
         )
-
-@app.route('/delete/<int:lot_number>')
-def delete(lot_number):
-    entry = WorkOrders.query.get_or_404(int(lot_number))
-    db.session.delete(entry)
-    db.session.commit()
-    flash(
-        f'Lot #{lot_number} ({entry.product} '
-        f'#{entry.lot_id}) deleted.', 'danger'
-        )
-    return redirect(url_for('view_all_work_orders'))
 
 @app.route('/performance')
 def performance():
@@ -93,7 +140,6 @@ def performance():
                     WorkOrders.product
                     ).all()
         )
-
     product_comparison = (
         db.session.query(
                 db.func.sum(WorkOrders.lot_number),
@@ -104,18 +150,16 @@ def performance():
                     WorkOrders.status
                     ).all()
         )
-
     dates = (
         db.session.query(
                 db.func.sum(WorkOrders.lot_number),
-                WorkOrders.date
+                WorkOrders.add_datetime
             ).group_by(
-                WorkOrders.date
+                WorkOrders.add_datetime
                 ).order_by(
-                    WorkOrders.date
+                    WorkOrders.add_datetime
                     ).all()
         )
-
     income_category = []
     for lot_numbers, _ in product_comparison:
         income_category.append(lot_numbers)

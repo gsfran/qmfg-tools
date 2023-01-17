@@ -6,16 +6,16 @@
         <div class="schedule weekly-byline">
 
             <!--  OVERRIDE current_hour (dev)-->
-            {# {% set current_hour = 56 %} #}
+            {% set current_hour = 56 %} 
 
             <!--  TOP LEFT CORNER  -->
             <div class="corner">LINE</div>
 
             <!--  WEEKDAY HEADERS  -->
-            {% for day in dates %}
+            {% for day in schedule.dates %}
                 <div class="weekday_header {{ day.strftime('%a').lower() }}">
                     <div>{{ day.strftime('%a') }}</div>
-                    <div style="font-size: 85%">{{ day.strftime('%b %d') }}</div>
+                    <div style="font-size: 90%">{{ day.strftime('%b %d') }}</div>
                 </div>
             {% endfor %}
 
@@ -32,7 +32,7 @@
                         {# This block allocates CSS classes #}
                         {# to each hour based on conditionals. #}
 
-                        {% if hour == current_hour %}
+                        {% if hour == schedule.current_hour() %}
                             current_hour 
                         {% endif %}
 
@@ -44,7 +44,7 @@
                             {% endif %}
                         {% endif %}
 
-                        {% if hour < current_hour %}
+                        {% if hour < schedule.current_hour() %}
                             elapsed 
                         {% endif %}"
                         style="grid-row: line_{{ line }}; grid-column: {{ col_num }}">
@@ -52,37 +52,60 @@
             {% endfor %}
             {% endfor %}
 
-            <!-- {% for entry in entries %}
-            <li class="work_order abc" style="margin: 0px; grid-row: line_{{ line }}; "></li>
-        {% endfor %} -->
-
-            <li class="work_order abc" style="grid-column: 4 / 50; grid-row: line_6;">ABC 789</li>
-            <li class="work_order bg" style="grid-column: 4 / 50; grid-row: line_6;"></li>
-
-            <li class="work_order flu" style="grid-column: 64 / 128; grid-row: line_7;">Flu 456</li>
-            <li class="work_order bg" style="grid-column: 64 / 128; grid-row: line_7;"></li>
-
-            <li class="work_order strep_inline" style="grid-column: 16 / 72; grid-row: line_8;">Strep IL 123</li>
-            <li class="work_order bg" style="grid-column: 16 / 72; grid-row: line_8;"></li>
-
-            <li class="work_order sars" style="grid-column: 56 / 110; grid-row: line_9;">SARS 456</li>
-            <li class="work_order bg" style="grid-column: 56 / 110; grid-row: line_9;"></li>
-
-            <li class="work_order rsv" style="grid-column: 36 / 100; grid-row: line_5;">RSV 123</li>
-            <li class="work_order bg" style="grid-column: 36 / 100; grid-row: line_5;"></li>
-
-            <li class="work_order strep_aplus" style="grid-column: 90 / 144; grid-row: line_6;">Strep A+ 456
-            </li>
-            <li class="work_order bg" style="grid-column: 90 / 144; grid-row: line_6;"></li>
+            {% for work_order in schedule.work_orders %}
+                <!-- WORK ORDERS THAT STARTED THE PREVIOUS WEEK -->
+                {% if work_order.start_datetime.date() < schedule.start_date %}
+                    {% set start_col = 2 %}
+                    {% set end_col = (work_order.end_datetime.weekday() * 24 + work_order.end_datetime.hour + 2) %}
+                        <div id="sched_{{ work_order.lot_number }}" style="grid-column-start: {{ start_col }};
+                            grid-column-end: {{ end_col }}; grid-row: line_{{ work_order.line }};">
+                            <a href="/view-work-order/{{ work_order.lot_number }}">
+                                <li class="work_order {{ work_order.product }} week_start" 
+                                    style="grid-column-start: {{ start_col }}; grid-column-end: {{ end_col }};
+                                    grid-row: line_{{ work_order.line }};">
+                                        {{ work_order.product_name }}  {{ work_order.lot_id }}
+                                </li>
+                            </a>
+                        </div>
+                <!-- WORK ORDERS THAT WILL END THE FOLLOWING WEEK -->
+                {% elif work_order.end_datetime.date() > schedule.end_date %}
+                    {% set start_col = (work_order.start_datetime.weekday() * 24 + work_order.start_datetime.hour + 2) %}
+                    {% set end_col = 169 %}
+                        <div id="sched_{{ work_order.lot_number }}" style="grid-column-start: {{ start_col }};
+                            grid-column-end: {{ end_col }}; grid-row: line_{{ work_order.line }};">
+                            <a href="/view-work-order/{{ work_order.lot_number }}">
+                                <li class="work_order {{ work_order.product }} week_end" 
+                                    style="grid-column-start: {{ start_col }}; grid-column-end: {{ end_col }};
+                                    grid-row: line_{{ work_order.line }};">
+                                        {{ work_order.product_name }}  {{ work_order.lot_id }}
+                                </li>
+                            </a>
+                        </div>
+                <!-- WORK ORDERS THAT START AND END THIS WEEK -->
+                {% else %}
+                    {% set start_col = (work_order.start_datetime.weekday() * 24 + work_order.start_datetime.hour + 2) %}
+                    {% set end_col = (work_order.end_datetime.weekday() * 24 + work_order.end_datetime.hour + 2) %}
+                        <div id="sched_{{ work_order.lot_number }}" style="grid-column-start: {{ start_col }};
+                            grid-column-end: {{ end_col }}; grid-row: line_{{ work_order.line }};">
+                            <a href="/view-work-order/{{ work_order.lot_number }}">
+                                <li class="work_order {{ work_order.product }}" 
+                                    style="grid-column-start: {{ start_col }}; grid-column-end: {{ end_col }};
+                                    grid-row: line_{{ work_order.line }};">
+                                        {{ work_order.product_name }}  {{ work_order.lot_id }}
+                                </li>
+                            </a>
+                        </div>
+                {% endif %}
+            {% endfor %}
         </div>
 
         <div class="col parking-lot-column">
             <div class="parking_lot_header">Parking Lot</div>
             <div class="parking_lot">
-                {% for lot in parking_lot %}
-                    <a href="/view-work-order/{{ lot.lot_number }}">
-                        <li class="work_order {{ lot.product }}" id="{{ lot.lot_number }}">
-                        {{ lot.product }}  {{ lot.lot_id }}
+                {% for work_order in schedule.parking_lot() %}
+                    <a href="/view-work-order/{{ work_order.lot_number }}">
+                        <li class="work_order {{ work_order.product }}" id="park_{{ work_order.lot_number }}">
+                        {{ work_order.product_name }}  {{ work_order.lot_id }}
                         </li>
                     </a>
                 {% endfor %}

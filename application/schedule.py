@@ -9,27 +9,35 @@ class Schedule:
     
     def __init__(self, date_: datetime.date) -> None:
         self.year_week = date_.strftime('%Y-%V')
-        self.set_dates(date_)
-        self.jobs = self.get_jobs()
+        self.set_week_dates(date_)
+        self.set_work_orders()
 
-    def set_dates(self, date_: dt) -> None:
+    def set_week_dates(self, date_: dt) -> None:
         self.start_date = date_ - datetime.timedelta(days=date_.weekday())
-        self.dates = [self.start_date + datetime.timedelta(days=_) for _ in range(7)]
-    
-    def get_jobs(self):
-        return None
-        self.active_jobs = WorkOrders.query.filter(
-                (WorkOrders.start_date <= self.dates[-1])
-                or (WorkOrders.end_date >= self.dates[0])
-            ).order_by(WorkOrders.date.desc()).all()
+        self.dates = [
+            self.start_date
+            + datetime.timedelta(days=_)
+            for _ in range(7)
+            ]
+        self.end_date = self.dates[-1]
+
+    def set_work_orders(self) -> None:
+        self.work_orders = WorkOrders.query.filter(
+                WorkOrders.end_datetime >= self.start_date
+            ).filter(
+                WorkOrders.start_datetime <= self.end_date
+            ).order_by(WorkOrders.start_datetime.desc()).all()
         
-    def on_line(line_number: int):
+    @staticmethod
+    def parking_lot():
+        """
+        Returns database query for all 'Parking Lot' jobs.
+        """
         return (
             WorkOrders.query.filter(
-                WorkOrders.status == f'on Line {line_number}'
-            ).order_by(WorkOrders.date.desc()).all()
-        )
-        
+                WorkOrders.status == 'Parking Lot'
+                ).order_by(WorkOrders.add_datetime.desc()).all()
+            )
         
 class CurrentSchedule(Schedule):
 
@@ -43,13 +51,3 @@ class CurrentSchedule(Schedule):
         12AM - 1AM Monday morning.
         """
         return (dt.now().weekday() * 24) + dt.now().hour
-    
-    def parking_lot(self):
-        """
-        Returns database query for all 'Parking Lot' jobs.
-        """
-        return (
-            WorkOrders.query.filter(
-                WorkOrders.status == 'Parking Lot'
-                ).order_by(WorkOrders.date.desc()).all()
-            )
