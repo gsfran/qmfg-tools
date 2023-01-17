@@ -18,7 +18,7 @@ def index() -> str:
     lines = range(5, 10) # 5 - 9
     
     return render_template(
-        'index.html',
+        'index.html.jinja',
         schedule=schedule,
         lines=lines
         )
@@ -29,14 +29,14 @@ def view_all_work_orders() -> str:
         WorkOrders.query.order_by(WorkOrders.status.desc()).all()
         )
     return render_template(
-        'view-all-work-orders.html', work_orders=work_orders
+        'view-all-work-orders.html.jinja', work_orders=work_orders
         )
 
 @app.route('/view-work-order/<int:lot_number>')
 def view_work_order(lot_number):
     work_order = WorkOrders.query.get_or_404(lot_number)
     return render_template(
-        'view-work-order.html', title=f'Lot {lot_number}',
+        'view-work-order.html.jinja', title=f'Lot {lot_number}',
         work_order=work_order
         )
 
@@ -80,7 +80,7 @@ def add_work_order() -> str:
         return redirect(url_for('index'))
 
     return render_template(
-        'add-work-order.html', title='Add Work Order', form=form
+        'add-work-order.html.jinja', title='Add Work Order', form=form
         )
 
 @app.route('/delete/<int:lot_number>')
@@ -124,7 +124,7 @@ def load_work_order(lot_number: int) -> str:
         return redirect(url_for('index'))
 
     return render_template(
-        'load-work-order.html', title='Load Work Order', form=form,
+        'load-work-order.html.jinja', title='Load Work Order', form=form,
         work_order=work_order
         )
 
