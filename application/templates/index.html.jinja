@@ -1,6 +1,6 @@
-{% extends 'layout.html' %}
+{% extends 'layout.html.jinja' %}
 {% block content %}
-<div class="card card-style mb-2 col-md-12 col-lg-10" style="min-width: 992px; max-width: 1140">
+<div class="card card-style mb-2 col-md-12 col-lg-11" style="min-width: 992px; max-width: 1600px;">
     <h3>Schedule - iTrak Lines</h3>
     <div class="main-block card-body" style="display: inline-flex;">
         <div class="schedule weekly-byline">
@@ -49,8 +49,8 @@
             {% endfor %}
 
             {% for work_order in schedule.work_orders %}
-                <!-- WORK ORDERS THAT STARTED THE PREVIOUS WEEK -->
                 {% if work_order.start_datetime.date() < schedule.start_date %}
+                <!-- WORK ORDERS THAT STARTED THE PREVIOUS WEEK -->
                     {% set start_col = 2 %}
                     {% set end_col = (work_order.end_datetime.weekday() * 24 + work_order.end_datetime.hour + 2) %}
                         <div id="sched_{{ work_order.lot_number }}" style="grid-column-start: {{ start_col }};
@@ -63,8 +63,8 @@
                                 </li>
                             </a>
                         </div>
-                <!-- WORK ORDERS THAT WILL END THE FOLLOWING WEEK -->
                 {% elif work_order.end_datetime.date() > schedule.end_date %}
+                <!-- WORK ORDERS THAT WILL END THE FOLLOWING WEEK -->
                     {% set start_col = (work_order.start_datetime.weekday() * 24 + work_order.start_datetime.hour + 2) %}
                     {% set end_col = 169 %}
                         <div id="sched_{{ work_order.lot_number }}" style="grid-column-start: {{ start_col }};
@@ -77,8 +77,9 @@
                                 </li>
                             </a>
                         </div>
-                <!-- WORK ORDERS THAT START AND END THIS WEEK -->
+
                 {% else %}
+                <!-- WORK ORDERS -->
                     {% set start_col = (work_order.start_datetime.weekday() * 24 + work_order.start_datetime.hour + 2) %}
                     {% set end_col = (work_order.end_datetime.weekday() * 24 + work_order.end_datetime.hour + 2) %}
                         <div id="sched_{{ work_order.lot_number }}" style="grid-column-start: {{ start_col }};
@@ -92,6 +93,7 @@
                             </a>
                         </div>
                 {% endif %}
+
             {% endfor %}
         </div>
 
