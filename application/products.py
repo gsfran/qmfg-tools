@@ -31,7 +31,7 @@ products = {
 
         'strep_inline': {
             'item_number': 1094000,
-            'name': 'Strep Inline',
+            'name': 'Strep IL',
             'std_rate': 3500
         },
         'other': {

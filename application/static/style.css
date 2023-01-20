@@ -164,7 +164,7 @@ a:hover {
     margin-right: 8px;
     /* margin-block: 10px; */
 
-    line-height: 3.1em;
+    line-height: 80px;
     font-size: 1.5em;
     text-align: center;
 
@@ -180,6 +180,7 @@ a:hover {
     background-color: #fff;
     border-bottom: 1px solid #222;
     z-index: 0;
+    height: 80px;
 }
 
 .hour.start_of_day {
@@ -205,12 +206,19 @@ a:hover {
     font-weight: bold;
     text-align: center;
     list-style: none;
+    height: 60px;
+    line-height: 17px;
     
-    margin-block: 6px;
+    margin-block: 10px;
     border-radius: 35px;
 
     z-index: 2;
     opacity: .80;
+
+}
+
+.schedule .work_order {
+    font-size: 20px;
 }
 
 .work_order.week_start {
@@ -234,7 +242,7 @@ a:hover {
 /* PRODUCT TYPES */
 
 .work_order.flu {
-    background-color: #55d000f0;
+    background-color: #55d000e0;
     border: 2px solid #55d000;
 }
 
