@@ -66,7 +66,7 @@
                                 <li class="work_order {{ work_order.product }} week_start" 
                                     style="grid-column-start: {{ start_col }}; grid-column-end: {{ end_col }};
                                     grid-row: line_{{ work_order.line }};">
-                                        {{ work_order.product_name }}  {{ work_order.lot_id }}
+                                        {{ work_order.short_name }}  {{ work_order.lot_id }}
                                 </li>
                             </a>
                         </div>
@@ -80,7 +80,7 @@
                                 <li class="work_order {{ work_order.product }} week_end" 
                                     style="grid-column-start: {{ start_col }}; grid-column-end: {{ end_col }};
                                     grid-row: line_{{ work_order.line }};">
-                                        {{ work_order.product_name }}  {{ work_order.lot_id }}
+                                        {{ work_order.short_name }}  {{ work_order.lot_id }}
                                 </li>
                             </a>
                         </div>
@@ -94,7 +94,7 @@
                                 <li class="work_order {{ work_order.product }}" 
                                     style="grid-column-start: {{ start_col }}; grid-column-end: {{ end_col }};
                                     grid-row: line_{{ work_order.line }};">
-                                        {{ work_order.product_name }}  {{ work_order.lot_id }}
+                                        {{ work_order.short_name }}  {{ work_order.lot_id }}
                                 </li>
                             </a>
                         </div>
@@ -110,7 +110,7 @@
                 {% for work_order in schedule.parking_lot() %}
                     <a href="/view-work-order/{{ work_order.lot_number }}">
                         <li class="work_order {{ work_order.product }}" id="park_{{ work_order.lot_number }}">
-                        {{ work_order.product_name }}  {{ work_order.lot_id }}
+                        {{ work_order.short_name }}  {{ work_order.lot_id }}
                         </li>
                     </a>
                 {% endfor %}

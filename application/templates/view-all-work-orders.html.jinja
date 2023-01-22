@@ -1,9 +1,9 @@
 {% extends 'layout.html.jinja' %}
 {% block content %}
-<div class="card card-style mb-2 col-sm-10 col-lg-8" style="min-width: 992px; max-width: 1280px;">
+<div class="card card-style mb-2 col-sm-10 col-lg-9" style="min-width: 992px; max-width: 1280px;">
     <h3>All Work Orders</h3>
     <div class="main-block card-body" style="display: inline-flex;">
-        <table class="table table-striped" style="text-align: center">
+        <table class="table table-striped" style="text-align: center;">
             <thead style="background-color: #333; color: #ffffff;">
                 <tr>
                     <th scope="col">Pouch Lot #</th>
@@ -13,7 +13,7 @@
                     <th scope="col"></th>
                 </tr>
             </thead>
-            <tbody style="">
+            <tbody>
                 {% for work_order in work_orders %}
                 <tr>
                     <th scope="row">{{ work_order.lot_number }}</th>
@@ -24,7 +24,7 @@
                         {{ work_order.line}}
                         {% endif %}
                     </td>
-                    <td style="text-align: right">
+                    <td style="text-align: right;">
                         {% if work_order.status == 'Parking Lot' %}
                         <a href="{{ url_for('load_work_order', lot_number = work_order.lot_number) }}"
                             class="btn btn-outline-info btn-sm">Load to Poucher</a>

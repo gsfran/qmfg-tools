@@ -45,8 +45,6 @@ a:hover {
 
 .main-block {
     display: inline-flex;
-    float: center;
-
     width: 100%;
     max-width: 1600px;
     min-height: 400px;
@@ -59,14 +57,15 @@ a:hover {
 
     width: 25%;
     min-width: 260px;
+    max-width: 400px;
 
     height: 100%;
     max-height: 400px;
 }
 
 .parking_lot {
-    text-align: center;
-    padding: 6px;
+    display: block;
+    padding: 4px;
     border: 2px dotted #888;
     border-radius: 5px;
 
@@ -84,7 +83,6 @@ a:hover {
     width: auto;
     height: auto;
     min-width: 160px;
-    max-width: 300px;
     list-style: none;
     margin-inline: 25px; 
     line-height: 2.4rem;
@@ -95,7 +93,6 @@ a:hover {
     font-weight: bold;
     text-align: center;
     margin-block: 8px;
-    /* width: auto; */
 }
 
 
@@ -171,12 +168,13 @@ a:hover {
 }
 
 .hour.current_hour {
-    border-inline: 2px solid #774defc0;
+    border-inline: 1px solid #774defc0;
     background-color: #774def80;
+    opacity: 1;
 }
 
 .hour.elapsed {
-    background-color: #e0e0e0;
+    background-color: #eee;
 }
 
 .hour.last_hour {
@@ -206,7 +204,7 @@ a:hover {
     padding-inline: 8px;
 
     z-index: 2;
-    opacity: .80;
+    opacity: .90;
 }
 
 .schedule .work_order {
@@ -234,12 +232,13 @@ a:hover {
 /* PRODUCT TYPES */
 
 .work_order.flu {
-    background-color: #55d000e0;
+    background-color: #55d000c0;
     border: 2px solid #55d000;
 }
 
 .flu:hover {
-    background-color: #55d500a0;
+    background-color: #55d50090;
+    border: 2px solid #55d000c0;
 }
 
 .work_order.abc {
@@ -249,6 +248,7 @@ a:hover {
 
 .abc:hover {
     background-color: #ff00ff70;
+    border: 2px solid #ff00ffa0;
 }
 
 .work_order.sars {
@@ -258,6 +258,7 @@ a:hover {
 
 .sars:hover {
     background-color: #FF0000b0;
+    border: 2px solid #FF0000d0;
 }
 
 .work_order.rsv {
@@ -267,6 +268,7 @@ a:hover {
 
 .rsv:hover {
     background-color: #ffa50090;
+    border: 2px solid #ffa500d0;
 }
 
 .work_order.strep_aplus {
@@ -276,6 +278,7 @@ a:hover {
 
 .strep_aplus:hover {
     background-color: #9400d370;
+    border: 2px solid #9400d3b0;
 }
 
 .work_order.strep_inline {
@@ -285,6 +288,7 @@ a:hover {
 
 .strep_inline:hover {
     background-color: #00bfff80;
+    border: 2px solid #00bfffc0;
 }
 
 .work_order.other {
@@ -294,6 +298,7 @@ a:hover {
 
 .other:hover {
     background-color: #cccccc60;
+    border: 2px solid #cccccc90;
 }
 
 /* WEEKDAY SELECTORS */

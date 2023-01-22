@@ -15,12 +15,12 @@ class NewWorkOrderForm(FlaskForm):
     product = SelectField(
         'Product', validators=[DataRequired()],
         choices=[
-            ('flu', 'Flu - 1169100'),
-            ('abc', 'ABC - 1451300'),
-            ('strep_aplus', 'Strep A+ - 1330700'),
-            ('rsv', 'RSV - 1175000'),
-            ('sars', 'SARS - 1440700'),
-            ('strep_inline', 'Strep Inline - 1094000'),
+            ('flu', '1169100 - Flu A/B'),
+            ('abc', '1451300 - ABC (Flu+SARS)'),
+            ('strep_aplus', '1330700 - Strep A+'),
+            ('rsv', '1175000 - RSV'),
+            ('sars', '1440700 - SARS Antigen'),
+            ('strep_inline', '1094000 - Strep Inline'),
             ('other', 'Other')
             ]
         )

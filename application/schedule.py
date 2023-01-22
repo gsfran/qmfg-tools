@@ -1,25 +1,39 @@
-from datetime import date, time, timedelta
+from dataclasses import dataclass, field
+from datetime import date
 from datetime import datetime as dt
+from datetime import time, timedelta
+
 import pandas as pd
 
 from application import db
 from application.models import WorkOrders
 
 
+@dataclass
 class Schedule:
+    """Schedule object for a single production week.
 
-    def __init__(self, datetime_: dt, lines: list[int]) -> None:
-        self.year_week = datetime_.strftime('%Y-%V')
-        self.lines = lines
-        
-        self._set_dates(datetime_)
+    Returns:
+        None 
+    """
+    year_week: str
+    lines: list = field(default_factory=list)
+    workday_start: time = time(6)
+    workday_end: time = time(23)
+    
+    def __post_init__(self) -> None:
+        self._build_week()
         self._update_work_orders()
         self._init_schedule_frame()
 
     def _init_schedule_frame(self) -> None:
         self._schedule_frame = pd.DataFrame(
-            index=self.lines, columns=range(168)
+            columns=self.lines, index=pd.date_range(
+                start=self.start_datetime, end=self.end_datetime,
+                freq='h'
+                )
             )
+        self._schedule_frame['scheduled'] = False
         self._update_frame()
         
     def _update_frame(self) -> None:
@@ -33,30 +47,26 @@ class Schedule:
             work_order._start = self.grid_hour(work_order.start_datetime)
             work_order._end = self.grid_hour(work_order.end_datetime)
 
-    def _set_dates(self, datetime_: dt) -> None:
-        self.start_date = datetime_ - timedelta(days=datetime_.weekday())
-        self.start_datetime = dt.combine(self.start_date, time(0))
-        self.dates = [
-            self.start_date + timedelta(days=_) for _ in range(7)
-            ]
-        self.end_date = self.dates[-1]
-        self.end_datetime = dt.combine(
-            self.end_date, time(23, 59, 59, 999999)
+    def _build_week(self) -> None:
+        self.start_datetime = dt.strptime(f'{self.year_week}-Mon', '%G-%V-%a')
+        self.end_datetime = self.start_datetime + timedelta(days=7)
+        self.dates = pd.date_range(
+            self.start_datetime, self.end_datetime,
+            freq='d'
             )
 
     def _update_work_orders(self) -> None:
         self.work_orders = WorkOrders.query.filter(
-                WorkOrders.end_datetime >= self.start_date
+                WorkOrders.end_datetime >= self.start_datetime
             ).filter(
-                WorkOrders.start_datetime <= self.end_date
+                WorkOrders.start_datetime <= self.end_datetime
             ).order_by(WorkOrders.start_datetime.desc()).all()
-
-    def get_schedule(self) -> pd.DataFrame:
-        self.update_schedule()
-        return self._schedule_frame
-
-    def update_schedule(self) -> None:
-        pass
+            
+    def _refresh(self) -> None:
+        self.__init__(
+            self.year_week, self.lines,
+            self.workday_start, self.workday_end
+            )
 
     @staticmethod
     def parking_lot() -> list[WorkOrders]:
@@ -82,7 +92,8 @@ class Schedule:
 class CurrentSchedule(Schedule):
 
     def __init__(self, lines: list[int]) -> None:
-        super().__init__(dt.now(), lines)
+        year_week = dt.strftime(dt.now(), '%G-%V')
+        super().__init__(year_week=year_week, lines=lines)
 
     def current_hour(self) -> int:
         return self.grid_hour(dt.now())

@@ -18,9 +18,7 @@ def index() -> str:
     schedule = CurrentSchedule(lines)
 
     return render_template(
-        'index.html.jinja',
-        schedule=schedule,
-        lines=lines
+        'index.html.jinja', schedule=schedule, lines=lines
         )
 
 @app.route('/view-all-work-orders')
@@ -29,7 +27,8 @@ def view_all_work_orders() -> str:
         WorkOrders.query.order_by(WorkOrders.status.desc()).all()
         )
     return render_template(
-        'view-all-work-orders.html.jinja', work_orders=work_orders
+        'view-all-work-orders.html.jinja', title='All Work Orders',
+        work_orders=work_orders
         )
 
 @app.route('/view-work-order/<int:lot_number>')
@@ -47,6 +46,7 @@ def add_work_order() -> str:
         product = form.product.data
 
         product_name = products[product].get('name')
+        short_name = products[product].get('short_name')
         item_number = products[product].get('item_number')
         standard_rate = products[product].get('std_rate')
 
@@ -56,6 +56,7 @@ def add_work_order() -> str:
         work_order = WorkOrders(
             product=product,
             product_name=product_name,
+            short_name=short_name,
             item_number = item_number,
 
             lot_id=form.lot_id.data,
@@ -73,14 +74,15 @@ def add_work_order() -> str:
         db.session.commit()
 
         flash(
-            f'Lot #{form.lot_number.data} ({product_name} '
-            f'{form.lot_id.data}) added successfully.',
-            'info'
+            f'{short_name} {form.lot_id.data} '
+            f'(Lot {form.lot_number.data}) added.',
+            'success'
             )
         return redirect(url_for('index'))
 
     return render_template(
-        'add-work-order.html.jinja', title='Add Work Order', form=form
+        'add-work-order.html.jinja', title='Add Work Order',
+        form=form
         )
 
 @app.route('/delete/<int:lot_number>')
@@ -89,8 +91,8 @@ def delete(lot_number: int) -> app.response_class:
     db.session.delete(work_order)
     db.session.commit()
     flash(
-        f'Lot #{lot_number} ({work_order.product_name} '
-        f'#{work_order.lot_id}) deleted.', 'danger'
+        f'{work_order.short_name} {work_order.lot_id}'
+        f'(Lot {lot_number}) deleted.', 'danger'
         )
     return redirect(url_for('view_all_work_orders'))
 
@@ -115,17 +117,17 @@ def load_work_order(lot_number: int) -> str:
         db.session.commit()
 
         flash(
-            f'Lot #{work_order.lot_number} ({work_order.product_name} '
-            f'{work_order.lot_id}) successfully loaded to '
+            f'{work_order.short_name} {work_order.lot_id} '
+            f'(Lot {lot_number}) loaded to '
             f'Line {work_order.line}.',
-            'success'
+            'info'
             )
 
         return redirect(url_for('index'))
 
     return render_template(
-        'load-work-order.html.jinja', title='Load Work Order', form=form,
-        work_order=work_order
+        'load-work-order.html.jinja', title='Load Work Order',
+        form=form, work_order=work_order
         )
 
 @app.route('/performance')

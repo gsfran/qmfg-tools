@@ -4,6 +4,7 @@ from datetime import datetime
 class WorkOrders(db.Model):
     product = db.Column(db.String(30), nullable=False)
     product_name = db.Column(db.String(30), nullable=False)
+    short_name = db.Column(db.String(10), nullable=False)
     item_number = db.Column(db.String(30), nullable=False)
     
     lot_id = db.Column(db.String(5), nullable=False)
