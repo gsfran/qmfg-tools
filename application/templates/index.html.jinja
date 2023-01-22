@@ -66,7 +66,7 @@
                 {% elif work_order.end_datetime.date() > schedule.end_date %}
                 <!-- WORK ORDERS THAT WILL END THE FOLLOWING WEEK -->
                     {% set start_col = (work_order.start_datetime.weekday() * 24 + work_order.start_datetime.hour + 2) %}
-                    {% set end_col = 169 %}
+                    {% set end_col = 170 %}
                         <div id="sched_{{ work_order.lot_number }}" style="grid-column-start: {{ start_col }};
                             grid-column-end: {{ end_col }}; grid-row: line_{{ work_order.line }};">
                             <a href="/view-work-order/{{ work_order.lot_number }}">

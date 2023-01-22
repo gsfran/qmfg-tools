@@ -1,15 +1,15 @@
 import datetime
 import json
-
 from datetime import datetime as dt
-from flask import flash, redirect, render_template, url_for
 from math import ceil
 
+from flask import flash, redirect, render_template, url_for
+
 from application import app, db
-from application.forms import NewWorkOrderForm, LoadWorkOrderForm
+from application.forms import LoadWorkOrderForm, NewWorkOrderForm
 from application.models import WorkOrders
-from application.schedule import CurrentSchedule, Schedule
 from application.products import products
+from application.schedule import CurrentSchedule, Schedule
 
 
 @app.route('/')
@@ -33,7 +33,7 @@ def view_all_work_orders() -> str:
         )
 
 @app.route('/view-work-order/<int:lot_number>')
-def view_work_order(lot_number):
+def view_work_order(lot_number) -> str:
     work_order = WorkOrders.query.get_or_404(lot_number)
     return render_template(
         'view-work-order.html.jinja', title=f'Lot {lot_number}',
@@ -59,7 +59,7 @@ def add_work_order() -> str:
             item_number = item_number,
             
             lot_id=form.lot_id.data,
-            lot_number=int(form.lot_number.data),
+            lot_number=form.lot_number.data,
             strip_lot_number=int(form.strip_lot_number.data),
             
             strip_qty=strip_qty,
@@ -129,7 +129,7 @@ def load_work_order(lot_number: int) -> str:
         )
 
 @app.route('/performance')
-def performance():
+def performance() -> str:
     type_comparison = (
         db.session.query(
                 db.func.sum(WorkOrders.lot_number),

@@ -44,10 +44,10 @@ class ProductInspectCamera:
         'STANDARD_RATE_HZ': 5000 / 3600,
 
         # stop duration information [s]
-        'MAX_CYCLE_TIME': 1.1,
-        'SHORT_STOP_LIMIT': 120,
-        'SHORT_STOP_BIN_WIDTH': 2,
-        'LONG_STOP_BIN_WIDTH': 60
+        'MAX_CYCLE_TIME_SECONDS': 1.1,
+        'SHORT_STOP_LIMIT_SECONDS': 120,
+        'SHORT_STOP_BIN_WIDTH_SECONDS': 2,
+        'LONG_STOP_BIN_WIDTH_SECONDS': 60
         }
     # endregion
     ...
@@ -538,7 +538,7 @@ class ProductInspectData:
         except AttributeError:
             self._stops = (
                 self.data[self.data['cycle_time']
-                > self.process_vars['MAX_CYCLE_TIME']]
+                > self.process_vars['MAX_CYCLE_TIME_SECONDS']]
             )
             return self._stops
 
@@ -553,7 +553,7 @@ class ProductInspectData:
         except AttributeError:
             self._run_cycles = (
                 self.data[self.data['cycle_time']
-                < self.process_vars['MAX_CYCLE_TIME']]
+                < self.process_vars['MAX_CYCLE_TIME_SECONDS']]
             )
             return self._run_cycles
 
@@ -613,9 +613,9 @@ class ProductInspectData:
         except AttributeError:
             drop_rows = pd.concat([
                 self.data[self.data['cycle_time']
-                > self.process_vars['SHORT_STOP_LIMIT']],
+                > self.process_vars['SHORT_STOP_LIMIT_SECONDS']],
                 self.data[self.data['cycle_time']
-                < self.process_vars['MAX_CYCLE_TIME']]
+                < self.process_vars['MAX_CYCLE_TIME_SECONDS']]
             ]).index
             self._short_stops = self.data.drop(drop_rows).dropna()
             return self._short_stops
@@ -652,7 +652,7 @@ class ProductInspectData:
         except AttributeError:
             drop_rows = self.data[
                 self.data['cycle_time']
-                < self.process_vars['SHORT_STOP_LIMIT']
+                < self.process_vars['SHORT_STOP_LIMIT_SECONDS']
                 ].index
             self._long_stops = self.data.drop(drop_rows).dropna()
             return self._long_stops

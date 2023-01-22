@@ -1,16 +1,19 @@
 from __future__ import annotations
 
 from datetime import datetime as dt
+
 from flask_wtf import FlaskForm
-from wtforms import StringField, SelectField, SubmitField
-from wtforms.validators import DataRequired, ValidationError
+from wtforms import (IntegerField, RadioField, SelectField, StringField,
+                     SubmitField)
 from wtforms.fields.datetime import DateField, TimeField
+from wtforms.validators import (DataRequired, Length, NumberRange,
+                                ValidationError)
 
 
 class NewWorkOrderForm(FlaskForm):
 
     product = SelectField(
-        'Product Type', validators=[DataRequired()],
+        'Product', validators=[DataRequired()],
         choices=[
             ('flu', 'Flu - 1169100'),
             ('abc', 'ABC - 1451300'),
@@ -22,12 +25,28 @@ class NewWorkOrderForm(FlaskForm):
             ]
         )
 
-    lot_id = StringField('Lot ID', validators=[DataRequired()])
-    lot_number = StringField('Pouch Lot #', validators=[DataRequired()])
-    strip_lot_number = StringField('Strip Lot #', validators=[DataRequired()])
-    strip_qty = StringField('Strip Qty.', validators=[DataRequired()])
+    lot_id = StringField(
+        'Lot ID', validators=[DataRequired(), Length(2, 5)]
+        )
+    lot_number = StringField(
+        'Pouch Lot #', validators=[
+            DataRequired(), Length(6, 6),
+            # NumberRange(min=1, max=999999)
+            ]
+        )
+    strip_lot_number = StringField(
+        'Strip Lot #', validators=[
+            DataRequired(), Length(6, 6),
+            # NumberRange(min=1, max=999999)
+            ]
+        )
+    strip_qty = IntegerField(
+        'Strip Qty.', validators=[
+            DataRequired(),
+            NumberRange(min=1, max=999999)
+            ]
+        )
 
-    
     submit = SubmitField('Add Work Order')
 
     def validate_lot_number(form: NewWorkOrderForm, lot_number: int):
@@ -51,7 +70,7 @@ class NewWorkOrderForm(FlaskForm):
             int(strip_qty.data)
         except ValueError:
             raise ValidationError('Please enter a valid number.')
-        
+
 
 class LoadWorkOrderForm(FlaskForm):
 
@@ -65,13 +84,21 @@ class LoadWorkOrderForm(FlaskForm):
             ('9', 'Line 9')
             ]
         )
-    
+    priority = RadioField(
+        validators=[DataRequired()],
+        choices=[
+            ('replace_job', 'Replace current work order'),
+            ('schedule_next', 'Schedule after current work order'),
+            ('schedule_append', 'Schedule after all work orders')
+        ], default='schedule_append'
+    )
     start_date = DateField(
-        'Start Date', default=dt.now().date()
+        'Start Date', validators=[DataRequired()],
+        default=dt.now().date()
     )
-    
     start_time = TimeField(
-        'Start Time',  default=dt.now().time()
+        'Start Time', validators=[DataRequired()],
+        default=dt.now().time()
     )
-    
+
     submit = SubmitField('Load to Poucher')
