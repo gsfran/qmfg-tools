@@ -43,12 +43,12 @@ a:hover {
     /* min-width: 200px; */
 }
 
-.main_block {
+.main-block {
     display: inline-flex;
     float: center;
 
     width: 100%;
-    max-width: 1200px;
+    max-width: 1600px;
     min-height: 400px;
 }
 
@@ -121,13 +121,7 @@ a:hover {
         [end-row];
 }
 
-/* Use a Stacked Area Chart, separated by line. */
-/* .weekly-byproduct {
-    display: grid;
-} */
-
 /* GENERAL ITEM SETUP */
-
 /* SCHEDULE BLOCKS */
 .corner {
     background-color: #fff;
@@ -169,11 +163,11 @@ a:hover {
 }
 
 .hour.start_of_day {
-    border-left: 1px solid #000;
+    border-left: 1px solid #222;
 }
 
 .hour.midday {
-    border-left: 1px dashed #000;
+    border-left: 1px dashed #222;
 }
 
 .hour.current_hour {
@@ -183,6 +177,15 @@ a:hover {
 
 .hour.elapsed {
     background-color: #e0e0e0;
+}
+
+.hour.last_hour {
+    border-right: 1px solid #222;
+}
+
+.hour.not-scheduled {
+    background-color: #bbb;
+    z-index: 3;
 }
 
 /* WORK ORDER TYPES */
@@ -217,9 +220,9 @@ a:hover {
 }
 
 .work_order.week_end {
+    border-right: none;
     border-top-right-radius: 0px;
     border-bottom-right-radius: 0px;
-    border-right: none;
 }
 
 .work_order.bg {

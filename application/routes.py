@@ -16,7 +16,7 @@ from application.schedule import CurrentSchedule, Schedule
 def index() -> str:
     lines = range(5, 10)
     schedule = CurrentSchedule(lines)
-    
+
     return render_template(
         'index.html.jinja',
         schedule=schedule,
@@ -45,11 +45,11 @@ def add_work_order() -> str:
     form = NewWorkOrderForm()
     if form.validate_on_submit():
         product = form.product.data
-        
+
         product_name = products[product].get('name')
         item_number = products[product].get('item_number')
         standard_rate = products[product].get('std_rate')
-        
+
         strip_qty=int(form.strip_qty.data)
         standard_time = ceil(strip_qty / standard_rate)
 
@@ -57,21 +57,21 @@ def add_work_order() -> str:
             product=product,
             product_name=product_name,
             item_number = item_number,
-            
+
             lot_id=form.lot_id.data,
             lot_number=form.lot_number.data,
             strip_lot_number=int(form.strip_lot_number.data),
-            
+
             strip_qty=strip_qty,
             remaining_qty=strip_qty,
             standard_rate=standard_rate,
             standard_time=standard_time,
             remaining_time=standard_time
             )
-        
+
         db.session.add(work_order)
         db.session.commit()
-        
+
         flash(
             f'Lot #{form.lot_number.data} ({product_name} '
             f'{form.lot_id.data}) added successfully.',
@@ -97,7 +97,7 @@ def delete(lot_number: int) -> app.response_class:
 @app.route('/load-work-order/<int:lot_number>', methods=["POST", "GET"])
 def load_work_order(lot_number: int) -> str:
     work_order = WorkOrders.query.get_or_404(lot_number)
-    
+
     form = LoadWorkOrderForm()
     if form.validate_on_submit():
         work_order.line = form.line.data

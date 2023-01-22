@@ -28,28 +28,26 @@ class NewWorkOrderForm(FlaskForm):
     lot_id = StringField(
         'Lot ID', validators=[DataRequired(), Length(2, 5)]
         )
+
     lot_number = StringField(
-        'Pouch Lot #', validators=[
-            DataRequired(), Length(6, 6),
-            # NumberRange(min=1, max=999999)
-            ]
+        'Pouch Lot #', validators=[DataRequired(), Length(6, 6)]
         )
+
     strip_lot_number = StringField(
-        'Strip Lot #', validators=[
-            DataRequired(), Length(6, 6),
-            # NumberRange(min=1, max=999999)
-            ]
+        'Strip Lot #', validators=[DataRequired(), Length(6, 6)]
         )
+
     strip_qty = IntegerField(
         'Strip Qty.', validators=[
-            DataRequired(),
-            NumberRange(min=1, max=999999)
+            DataRequired(), NumberRange(min=1, max=999999)
             ]
         )
 
     submit = SubmitField('Add Work Order')
 
-    def validate_lot_number(form: NewWorkOrderForm, lot_number: int):
+    def validate_lot_number(
+        form: NewWorkOrderForm, lot_number: StringField
+        ) -> None:
         try:
             int(lot_number.data)
         except ValueError:
@@ -60,14 +58,6 @@ class NewWorkOrderForm(FlaskForm):
         ) -> None:
         try:
             int(strip_lot_number.data)
-        except ValueError:
-            raise ValidationError('Please enter a valid number.')
-
-    def validate_strip_qty(
-        form: NewWorkOrderForm, strip_qty: StringField
-        ) -> None:
-        try:
-            int(strip_qty.data)
         except ValueError:
             raise ValidationError('Please enter a valid number.')
 
