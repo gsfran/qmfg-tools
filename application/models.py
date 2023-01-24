@@ -9,7 +9,7 @@ class WorkOrders(db.Model):
     
     lot_id = db.Column(db.String(5), nullable=False)
     lot_number = db.Column(db.Integer, primary_key=True)
-    strip_lot_number = db.Column(db.Integer, nullable=False)
+    strip_lot_number = db.Column(db.Integer, nullable=False, unique=True)
 
     strip_qty = db.Column(db.Integer, nullable=False)
     standard_rate = db.Column(db.Integer, nullable=False)

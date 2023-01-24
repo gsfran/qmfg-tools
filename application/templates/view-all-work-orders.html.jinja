@@ -17,10 +17,10 @@
                 {% for work_order in work_orders %}
                 <tr>
                     <th scope="row">{{ work_order.lot_number }}</th>
-                    <td>{{ work_order.product_name }}</td>
+                    <td>{{ work_order.short_name }}</td>
                     <td>{{ work_order.lot_id }}</td>
                     <td>
-                        {{ work_order.status }}{% if work_order.status == 'Pouching' %}: Line
+                        {{ work_order.status }}{% if work_order.line %}: Line
                         {{ work_order.line}}
                         {% endif %}
                     </td>

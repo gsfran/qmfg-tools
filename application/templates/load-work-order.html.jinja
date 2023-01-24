@@ -4,8 +4,8 @@
     <h3>Load Work Order</h3>
     <h3 class="sub">Lot #{{ work_order.lot_number }} ({{ work_order.product_name }} #{{ work_order.lot_id }})</h3>
     <div class="card-body">
-        <form action="" method="POST">
-            {{ form.csrf_token() }}
+        <form action="" method="POST" novalidate>
+            {{ form.hidden_tag() }}
             <fieldset class="form-group">
 
                 <!-- LINE FIELD -->
@@ -32,7 +32,7 @@
                 </div>
                 
                 <div>
-                    <a href="{{ url_for('view_all_work_orders') }}"
+                    <a href="{{ url_for('index') }}"
                             class="btn btn-outline-secondary" style="width: 100%">Cancel</a>
                 </div>
 

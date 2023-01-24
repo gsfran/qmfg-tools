@@ -3,8 +3,8 @@
 <div class="card card-style mb-2 col-sm-10 col-md-8 col-lg-6" style="max-width: 540px;">
     <h3>Add Work Order</h3>
     <div class="card-body">
-        <form action="" method="POST">
-            {{ form.csrf_token() }}
+        <form action="" method="POST" novalidate>
+            {{ form.hidden_tag() }}
             <fieldset class="form-group">
 
                 <!-- PRODUCT TYPE FIELD -->
@@ -79,7 +79,7 @@
                 </div>
                 
                 <div>
-                    <a href="{{ url_for('view_all_work_orders') }}"
+                    <a href="{{ url_for('index') }}"
                             class="btn btn-outline-secondary" style="width: 100%">Cancel</a>
                 </div>
 

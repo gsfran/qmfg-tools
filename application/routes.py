@@ -39,7 +39,7 @@ def view_work_order(lot_number) -> str:
         work_order=work_order
         )
 
-@app.route('/add-work-order', methods=["POST", "GET"])
+@app.route('/add-work-order', methods=['GET', 'POST'])
 def add_work_order() -> str:
     form = NewWorkOrderForm()
     if form.validate_on_submit():
@@ -50,14 +50,14 @@ def add_work_order() -> str:
         item_number = products[product].get('item_number')
         standard_rate = products[product].get('std_rate')
 
-        strip_qty=int(form.strip_qty.data)
+        strip_qty = int(form.strip_qty.data)
         standard_time = ceil(strip_qty / standard_rate)
 
         work_order = WorkOrders(
             product=product,
             product_name=product_name,
             short_name=short_name,
-            item_number = item_number,
+            item_number=item_number,
 
             lot_id=form.lot_id.data,
             lot_number=form.lot_number.data,
@@ -94,9 +94,10 @@ def delete(lot_number: int) -> app.response_class:
         f'{work_order.short_name} {work_order.lot_id}'
         f'(Lot {lot_number}) deleted.', 'danger'
         )
-    return redirect(url_for('view_all_work_orders'))
+    return redirect(url_for('index'))
 
-@app.route('/load-work-order/<int:lot_number>', methods=["POST", "GET"])
+
+@app.route('/load-work-order/<int:lot_number>', methods=['GET', 'POST'])
 def load_work_order(lot_number: int) -> str:
     work_order = WorkOrders.query.get_or_404(lot_number)
 

@@ -11,10 +11,10 @@ from application.models import WorkOrders
 
 @dataclass
 class Schedule:
-    """Schedule object for a single production week.
+    """Schedule for a single production week.
 
     Returns:
-        None 
+        Instance of Schedule class. 
     """
     year_week: str
     lines: list = field(default_factory=list)
