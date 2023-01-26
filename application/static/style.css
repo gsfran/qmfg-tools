@@ -107,7 +107,7 @@ a:hover {
 .weekly-byline {
     margin-right: 10px;
     grid-template-columns:
-        [machine_index] .25fr repeat(168, 1fr) [end-col];
+        [machine_index] 5fr repeat(168, 1fr) [last_col] 5fr [end-col];
     grid-template-rows:
         [weekday_header] .20fr 
         [line_5] 1fr 

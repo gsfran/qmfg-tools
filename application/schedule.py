@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import date
 from datetime import datetime as dt
@@ -14,13 +16,13 @@ class Schedule:
     """Schedule for a single production week.
 
     Returns:
-        Instance of Schedule class. 
+        Instance of Schedule class.
     """
     year_week: str
     lines: list = field(default_factory=list)
     workday_start: time = time(6)
     workday_end: time = time(23)
-    
+
     def __post_init__(self) -> None:
         self._build_week()
         self._update_work_orders()
@@ -35,7 +37,7 @@ class Schedule:
             )
         self._schedule_frame['scheduled'] = False
         self._update_frame()
-        
+
     def _update_frame(self) -> None:
         self._update_work_orders()
         for work_order in self.work_orders:
@@ -49,7 +51,8 @@ class Schedule:
 
     def _build_week(self) -> None:
         self.start_datetime = dt.strptime(f'{self.year_week}-Mon', '%G-%V-%a')
-        self.end_datetime = self.start_datetime + timedelta(days=7)
+        self.end_date = self.start_datetime + timedelta(days=6)
+        self.end_datetime = dt.combine(self.end_date, time().max)
         self.dates = pd.date_range(
             self.start_datetime, self.end_datetime,
             freq='d'
@@ -61,12 +64,19 @@ class Schedule:
             ).filter(
                 WorkOrders.start_datetime <= self.end_datetime
             ).order_by(WorkOrders.start_datetime.desc()).all()
-            
+
     def _refresh(self) -> None:
         self.__init__(
             self.year_week, self.lines,
             self.workday_start, self.workday_end
             )
+        
+    def previous_year_week(self) -> str:
+        prev_week_start = self.start_datetime - timedelta(days=7)
+        prev_year_week = dt.strftime(prev_week_start, '%G-%V')
+        
+        return prev_year_week
+        
 
     @staticmethod
     def parking_lot() -> list[WorkOrders]:

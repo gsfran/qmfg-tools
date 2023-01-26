@@ -9,7 +9,7 @@
         <!-- SCHEDULE -->
         <div class="schedule weekly-byline">
             <!--  TOP LEFT CORNER  -->
-            <div class="corner">LINE</div>
+            <a href="/"><div class="corner"><<</div></a>
 
             <!--  WEEKDAY HEADERS  -->
             {% for day in schedule.dates %}
@@ -18,6 +18,8 @@
                     <div style="font-size: 90%">{{ day.strftime('%b %d') }}</div>
                 </div>
             {% endfor %}
+
+            <a href="/"><div class="corner">>></div></a>
 
             <!--  PRODUCTION LINES  -->
             {% for line in lines %}
