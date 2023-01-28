@@ -10,6 +10,16 @@ body {
     color: #000;
 }
 
+a {
+    color: #000;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #222;
+    text-decoration: none;
+}
+
 h3 {
     margin-top: 20px;
     margin-left: 20px;
@@ -26,14 +36,19 @@ h3.sub {
     text-align: right;
 }
 
-a {
-    color: #000;
-    text-decoration: none;
+.h3-sub-right-add {
+    width: 40px;
+    height: 30px;
+    border: 2px solid #333;
+    border-radius: 5px;
+    text-align: center;
+    float: right;
 }
 
-a:hover {
-    color: #222;
-    text-decoration: none;
+.h3-sub-right-add:hover {
+    color: #fff;
+    background-color: #333;
+    border: 2px solid #51515105;
 }
 
 .nav-logo {
@@ -92,8 +107,8 @@ a:hover {
     height: 40px;
     min-width: 160px;
     list-style: none;
-    margin-inline: 25px; 
-    line-height: 2.4rem;
+    margin-inline: 15px; 
+    line-height: 2.2rem;
     cursor: grab;
 }
 
@@ -105,16 +120,26 @@ a:hover {
 }
 
 .parking_lot .add {
-    display:block;
-    height: 36px;
-    line-height: 25px;
+    /* display: block; */
+    height: 40px;
+    line-height: 2.2rem;
     width: auto;
-    margin-block: 6px;
-    margin-inline: 25px;
+
+    margin-block: 8px;
+    margin-inline: 15px;
+
     text-align: center;
     font-weight: bolder;
-    border-radius: 20px;
-    border: 2px solid;
+    
+    border-radius: 12px;
+    border: 2px solid #00ced1;
+    color: #00CED1;
+}
+
+.parking_lot .add:hover {
+    background-color: #00ced1d0;
+    border: 2px solid #00ced110;
+    color: #fff;
 }
 
 /* Week View */
@@ -217,7 +242,7 @@ a:hover {
     line-height: 56px;
 
     margin-block: 6px;
-    border-radius: 35px;
+    border-radius: 12px;
 
     text-align: center;
     font-weight: bold;
@@ -266,7 +291,7 @@ a:hover {
 
 .work_order.abc {
     background-color: #ff00ffa0;
-    border: 2px solid fuchsia;
+    border: 2px solid #ff00ffa0;
 }
 
 .abc:hover {

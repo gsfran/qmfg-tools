@@ -1,7 +1,18 @@
 {% extends 'layout.html.jinja' %}
 {% block content %}
 <div class="card card-style mb-2 col-sm-10 col-lg-9" style="min-width: 992px; max-width: 1280px;">
-    <h3>All Work Orders</h3>
+    <div style="display: inline-flex;">
+        <div>
+            <h3>All Work Orders</h3>
+        </div>
+        <div style="width: 70%; margin-top: 25px; text-align: right;">
+            <a href="{{ url_for('add_work_order') }}">
+                <div class="h3-sub-right h3-sub-right-add">
+                    +
+                </div>
+            </a>
+        </div>
+    </div>
     <div class="main-block card-body" style="display: inline-flex;">
         <table class="table table-striped" style="text-align: center;">
             <thead style="background-color: #333; color: #ffffff;">
@@ -10,10 +21,7 @@
                     <th scope="col">Product</th>
                     <th scope="col">Lot ID</th>
                     <th scope="col">Status</th>
-                    <th scope="col" style="text-align: right;">
-                    <a href="{{ url_for('add_work_order') }}"
-                                class="btn btn-outline-light btn-sm"
-                                style="margin-inline: 10px; height: 25px; width: 40px; line-height: 13px; text-align: center;">+</a></th>
+                    <th scope="col"></th>
                 </tr>
             </thead>
             <tbody>

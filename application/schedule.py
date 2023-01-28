@@ -22,7 +22,7 @@ class Schedule:
     workday_start: time = time(6)
     workday_end: time = time(23)
     non_production_days: list = field(default_factory=list)
-    
+
     _year_week_format = '%G-%V'
 
     def __post_init__(self) -> None:
@@ -51,7 +51,7 @@ class Schedule:
     def update_hours(self, workday_start: time, workday_end: time) -> None:
         self.workday_start = workday_start
         self.workday_end = workday_end
-        
+
     def _refresh_sched_hours(self) -> None:
         self._schedule_frame['scheduled'].loc[self.workday_start:self.workday_end,
             ] = True
@@ -93,10 +93,12 @@ class Schedule:
         elif self.start_datetime > dt.now():
             self.schedule_type = 'future'
         else:
-            raise Exception('Error establishing week type (Current/Past/Future).')
-        
+            raise Exception('Error setting week type (Current/Past/Future).')
+
     def is_this_week(self, datetime_: dt) -> bool:
-        if dt.strftime(datetime_, Schedule._year_week_format) == self.year_week:
+        if dt.strftime(
+            datetime_, Schedule._year_week_format
+            ) == self.year_week:
             return True
         return False
 
@@ -141,7 +143,7 @@ class Schedule:
         12AM - 1AM Monday morning.
         """
         return (datetime_.weekday() * 24) + datetime_.hour
-    
+
     def __str__(self):
         return (
             f'{self.start_datetime:%b %d, %Y} - '
