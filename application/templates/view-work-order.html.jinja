@@ -42,38 +42,38 @@
                 </tr>
                 <tr>
                     <td class="left_col">Qty. Strips Yielded</td>
-                    <td class="right_col">{{ work_order.strip_qty }}</td>
+                    <td class="right_col">{{ '{:,}'.format(work_order.strip_qty) }}</td>
                 </tr>
                 <tr>
                     <td class="left_col">Standard Rate</td>
-                    <td class="right_col">{{ work_order.standard_rate }} / hr</td>
+                    <td class="right_col">{{ '{:,}'.format(work_order.standard_rate) }}/hr.</td>
                 </tr>
                 <tr>
                     <td class="left_col">Standard Time</td>
-                    <td class="right_col">{{ work_order.standard_time }}.0 hr</td>
+                    <td class="right_col">{{ '{:.1f}'.format(work_order.standard_time) }} hr.</td>
                 </tr>
-                <tr style="border-bottom: 2px solid #000">
+                <tr>
                     <td class="left_col">Status</td>
                     <td class="right_col">{{ work_order.status }}</td>
                 </tr>
                 {% if work_order.status == 'Pouching' %}
-                <tr>
+                <tr style="border-top: 2px solid #000">
                     <td class="left_col">Poucher</td>
                     <td class="right_col">Line {{ work_order.line }}</td>
                 </tr>
                 <tr>
                     <tr>
                         <td class="left_col">Qty. Remaining</td>
-                        <td class="right_col">{{ work_order.remaining_qty }}</td>
+                        <td class="right_col">{{ '{:,}'.format(work_order.remaining_qty) }}</td>
                     </tr>
                     <tr>
                         <td class="left_col">Time Remaining</td>
-                        <td class="right_col">{{ work_order.remaining_time }}.0 hr</td>
+                        <td class="right_col">{{ '{:.1f}'.format(work_order.remaining_time) }} hr.</td>
                     </tr>
                     <td class="left_col">Job Started</td>
                     <td class="right_col">{{ work_order.start_datetime.strftime('%H:%M %m/%d/%y') }}</td>
                 </tr>
-                <tr style="border-bottom: 2px solid #000">
+                <tr>
                     <td class="left_col">Est. Completion Time</td>
                     <td class="right_col">{{ work_order.end_datetime.strftime('%H:%M %m/%d/%y') }}</td>
                 </tr>
@@ -89,8 +89,8 @@
                 {% endif %}
                 <tr>
                     <td colspan="2">
-                    <a href="{{ url_for('delete', lot_number = work_order.lot_number) }}"
-                        class="btn btn-outline-warning" style="width: 100%">Edit Work Order</a></td>
+                    <a href="{{ url_for('unload_work_order', lot_number = work_order.lot_number) }}"
+                        class="btn btn-outline-warning" style="width: 100%">Unload Work Order</a></td>
                 </tr>
                 <tr>
                     <td colspan="2">

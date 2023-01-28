@@ -20,7 +20,7 @@ class Schedule:
     """
     year_week: str
     workday_start: time = time(6)
-    workday_end: time = time(23)
+    workday_end: time = time(22)
     non_production_days: list = field(default_factory=list)
 
     _year_week_format = '%G-%V'
@@ -55,10 +55,11 @@ class Schedule:
     def _refresh_sched_hours(self) -> None:
         self._schedule_frame['scheduled'].loc[self.workday_start:self.workday_end,
             ] = True
-        for _day in self.non_production_days:
-            self._schedule_frame['scheduled'].loc[
-                self._schedule_frame.index.to_series().dt.weekday == _day
-                ] = False
+        # for _day in self.non_production_days:
+        #     self._schedule_frame['scheduled'].loc[
+        #         self._schedule_frame.index.to_series().dt.weekday == _day
+        #         ] = False
+        self.scheduled_hours = self._schedule_frame['scheduled']
 
     def _refresh_work_orders(self) -> None:
         self.work_orders = WorkOrders.query.filter(

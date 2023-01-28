@@ -4,7 +4,7 @@
 
     <div style="display: inline-flex;">
         <div>
-            <h3>Pouching: iTrak</h3>
+            <h3>Pouching - iTrak</h3>
         </div>
         <div class="row" style="width: 70%; margin-top: 25px;">
             <div class="h3-sub-right">
@@ -59,6 +59,10 @@
                             {% endif %}
                         {% elif schedule.schedule_type == 'past' %}
                             elapsed
+                        {% endif %}
+
+                        {% if not schedule.scheduled_hours[hour] %}
+                            not-scheduled
                         {% endif %}
 
                         {% if hour % 24 == 0 %}

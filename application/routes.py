@@ -40,7 +40,7 @@ def view_schedule(year_week: str) -> str:
 @app.route('/view-all-work-orders')
 def view_all_work_orders() -> str:
     work_orders = (
-        WorkOrders.query.order_by(WorkOrders.status.desc()).all()
+        WorkOrders.query.order_by(WorkOrders.lot_number.desc()).all()
         )
     return render_template(
         'view-all-work-orders.html.jinja', title='All Work Orders',
@@ -110,7 +110,7 @@ def delete(lot_number: int) -> app.response_class:
         f'{work_order.short_name} {work_order.lot_id}'
         f'(Lot {lot_number}) deleted.', 'danger'
         )
-    return redirect(url_for('index'))
+    return redirect(url_for('current_schedule'))
 
 @app.route('/load-work-order/<int:lot_number>', methods=['GET', 'POST'])
 def load_work_order(lot_number: int) -> str:
@@ -130,6 +130,9 @@ def load_work_order(lot_number: int) -> str:
         work_order.load_datetime = dt.now()
         work_order.status = 'Pouching'
         work_order.pouched_qty = 0
+        # work_order.log = work_order.log.append(
+        #     f'Loaded to {work_order.line}: {dt.now()}\n'
+        #     )
         db.session.commit()
 
         flash(
@@ -139,12 +142,35 @@ def load_work_order(lot_number: int) -> str:
             'info'
             )
 
-        return redirect(url_for('index'))
+        return redirect(url_for('current_schedule'))
 
     return render_template(
         'load-work-order.html.jinja', title='Load Work Order',
         form=form, work_order=work_order
         )
+    
+@app.route('/unload-work-order/<int:lot_number>')
+def unload_work_order(lot_number: int) -> str:
+    work_order = WorkOrders.query.get_or_404(lot_number)
+    
+    if work_order.status == 'Pouching':
+        flash(
+            f'{work_order.short_name} {work_order.lot_id} '
+            f'(Lot {lot_number}) unloaded from '
+            f'Line {work_order.line}.',
+            'warning'
+            )
+        work_order.status = 'Parking Lot'
+        work_order.line = None
+        work_order.end_datetime = None
+        work_order.load_datetime = None
+        # work_order.log = work_order.log.append(
+        #     f'Unoaded from {work_order.line}: {dt.now()}\n'
+        #     )
+        
+        db.session.commit()
+    
+    return redirect(url_for('current_schedule'))
 
 @app.route('/performance')
 def performance() -> str:

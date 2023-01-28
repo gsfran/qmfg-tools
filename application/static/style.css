@@ -229,7 +229,7 @@ h3.sub {
 }
 
 .hour.not-scheduled {
-    background-color: #bbb;
+    background-color: #00000060;
     z-index: 3;
 }
 
