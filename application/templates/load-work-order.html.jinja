@@ -2,7 +2,7 @@
 {% block content %}
 <div class="card card-style mb-2 col-sm-10 col-md-8 col-lg-6" style="max-width: 540px;">
     <h3>Load Work Order</h3>
-    <h3 class="sub">Lot #{{ work_order.lot_number }} ({{ work_order.product_name }} #{{ work_order.lot_id }})</h3>
+    <h3 class="sub">Lot #{{ work_order.lot_number }} ({{ work_order.short_name }} {{ work_order.lot_id }})</h3>
     <div class="card-body">
         <form action="" method="POST" novalidate>
             {{ form.hidden_tag() }}

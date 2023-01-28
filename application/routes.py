@@ -14,12 +14,28 @@ from application.schedule import CurrentSchedule, Schedule
 
 @app.route('/')
 def index() -> str:
-    lines = range(5, 10)
-    schedule = CurrentSchedule(lines)
+    return current_schedule()
+
+@app.route('/schedule')
+def current_schedule() -> str:
+    schedule = CurrentSchedule()
 
     return render_template(
-        'index.html.jinja', schedule=schedule, lines=lines
+        'schedule.html.jinja', title='Current Schedule',
+        schedule=schedule
         )
+
+@app.route('/schedule/<string:year_week>')
+def view_schedule(year_week: str) -> str:
+
+    if year_week == dt.strftime(dt.now(), '%G-%V'):
+        return redirect(url_for('current_schedule'))
+
+    schedule = Schedule(year_week=year_week)
+    return render_template(
+        'schedule.html.jinja', title='View Schedule',
+        schedule=schedule
+    )
 
 @app.route('/view-all-work-orders')
 def view_all_work_orders() -> str:
@@ -32,7 +48,7 @@ def view_all_work_orders() -> str:
         )
 
 @app.route('/view-work-order/<int:lot_number>')
-def view_work_order(lot_number) -> str:
+def view_work_order(lot_number: int) -> str:
     work_order = WorkOrders.query.get_or_404(lot_number)
     return render_template(
         'view-work-order.html.jinja', title=f'Lot {lot_number}',
@@ -95,7 +111,6 @@ def delete(lot_number: int) -> app.response_class:
         f'(Lot {lot_number}) deleted.', 'danger'
         )
     return redirect(url_for('index'))
-
 
 @app.route('/load-work-order/<int:lot_number>', methods=['GET', 'POST'])
 def load_work_order(lot_number: int) -> str:

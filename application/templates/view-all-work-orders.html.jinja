@@ -10,35 +10,37 @@
                     <th scope="col">Product</th>
                     <th scope="col">Lot ID</th>
                     <th scope="col">Status</th>
-                    <th scope="col"></th>
+                    <th scope="col" style="text-align: right;">
+                    <a href="{{ url_for('add_work_order') }}"
+                                class="btn btn-outline-light btn-sm"
+                                style="margin-inline: 10px; height: 25px; width: 40px; line-height: 13px; text-align: center;">+</a></th>
                 </tr>
             </thead>
             <tbody>
-                {% if not work_order %}
-                <tr>
-                    <td>x</td>
-                </tr>
+                {% if work_orders is defined %}
+                    {% for work_order in work_orders %}
+                    <tr>
+                        <th scope="row">{{ work_order.lot_number }}</th>
+                        <td>{{ work_order.short_name }}</td>
+                        <td>{{ work_order.lot_id }}</td>
+                        <td>
+                            {{ work_order.status }}{% if work_order.line %}: Line
+                            {{ work_order.line }}
+                            {% endif %}
+                        </td>
+                        <td style="text-align: right;">
+                            {% if work_order.status == 'Parking Lot' %}
+                            <a href="{{ url_for('load_work_order', lot_number = work_order.lot_number) }}"
+                                class="btn btn-outline-info btn-sm">Load to Poucher</a>
+                            {% endif %}
+                            <a href="{{ url_for('view_work_order', lot_number = work_order.lot_number) }}"
+                                class="btn btn-outline-dark btn-sm">View Details</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>No work orders.</tr>
                 {% endif %}
-                {% for work_order in work_orders %}
-                <tr>
-                    <th scope="row">{{ work_order.lot_number }}</th>
-                    <td>{{ work_order.short_name }}</td>
-                    <td>{{ work_order.lot_id }}</td>
-                    <td>
-                        {{ work_order.status }}{% if work_order.line %}: Line
-                        {{ work_order.line}}
-                        {% endif %}
-                    </td>
-                    <td style="text-align: right;">
-                        {% if work_order.status == 'Parking Lot' %}
-                        <a href="{{ url_for('load_work_order', lot_number = work_order.lot_number) }}"
-                            class="btn btn-outline-info btn-sm">Load to Poucher</a>
-                        {% endif %}
-                        <a href="{{ url_for('view_work_order', lot_number = work_order.lot_number) }}"
-                            class="btn btn-outline-dark btn-sm">View Details</a>
-                    </td>
-                </tr>
-                {% endfor %}
             </tbody>
         </table>
     </div>

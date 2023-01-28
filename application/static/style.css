@@ -13,10 +13,17 @@ body {
 h3 {
     margin-top: 20px;
     margin-left: 20px;
+    margin-bottom: 0px;
 }
 
 h3.sub {
     font-size: 100%;
+}
+
+.h3-sub-right {
+    font-weight: bolder;
+    width: 100%;
+    text-align: right;
 }
 
 a {
@@ -65,7 +72,8 @@ a:hover {
 
 .parking_lot {
     display: block;
-    padding: 4px;
+    text-align: center;
+    padding: 2px;
     border: 2px dotted #888;
     border-radius: 5px;
 
@@ -81,20 +89,33 @@ a:hover {
 
 .parking_lot .work_order {
     width: auto;
-    height: auto;
+    height: 40px;
     min-width: 160px;
     list-style: none;
     margin-inline: 25px; 
     line-height: 2.4rem;
+    cursor: grab;
 }
 
 .parking_lot_header {
-    font-size: 1.2em;
+    font-size: 19px;
     font-weight: bold;
     text-align: center;
     margin-block: 8px;
 }
 
+.parking_lot .add {
+    display:block;
+    height: 36px;
+    line-height: 25px;
+    width: auto;
+    margin-block: 6px;
+    margin-inline: 25px;
+    text-align: center;
+    font-weight: bolder;
+    border-radius: 20px;
+    border: 2px solid;
+}
 
 /* Week View */
 .schedule {
@@ -104,10 +125,13 @@ a:hover {
     position: relative;
 }
 
+.schedule-str {
+    margin-inline: 5px;
+}
+
 .weekly-byline {
-    margin-right: 10px;
     grid-template-columns:
-        [machine_index] 5fr repeat(168, 1fr) [last_col] 5fr [end-col];
+        [machine_index] 1fr repeat(168, 1fr) [last_col] 1fr [end-col];
     grid-template-rows:
         [weekday_header] .20fr 
         [line_5] 1fr 
@@ -192,7 +216,7 @@ a:hover {
     height: 60px;
     line-height: 56px;
 
-    margin-block: 10px;
+    margin-block: 6px;
     border-radius: 35px;
 
     text-align: center;
@@ -207,6 +231,7 @@ a:hover {
 
 .schedule .work_order {
     font-size: 18px;
+    margin-block: 10px;
 }
 
 .work_order.week_start {
@@ -236,7 +261,7 @@ a:hover {
 
 .flu:hover {
     background-color: #55d50090;
-    border: 2px solid #55d000c0;
+    border: 2px solid #55d00005;
 }
 
 .work_order.abc {
@@ -246,7 +271,7 @@ a:hover {
 
 .abc:hover {
     background-color: #ff00ff70;
-    border: 2px solid #ff00ffa0;
+    border: 2px solid #ff00ff05;
 }
 
 .work_order.sars {
@@ -256,7 +281,7 @@ a:hover {
 
 .sars:hover {
     background-color: #FF0000b0;
-    border: 2px solid #FF0000d0;
+    border: 2px solid #FF000005;
 }
 
 .work_order.rsv {
@@ -266,7 +291,7 @@ a:hover {
 
 .rsv:hover {
     background-color: #ffa50090;
-    border: 2px solid #ffa500d0;
+    border: 2px solid #ffa50005;
 }
 
 .work_order.strep_aplus {
@@ -276,7 +301,7 @@ a:hover {
 
 .strep_aplus:hover {
     background-color: #9400d370;
-    border: 2px solid #9400d3b0;
+    border: 2px solid #9400d305;
 }
 
 .work_order.strep_inline {
@@ -286,7 +311,7 @@ a:hover {
 
 .strep_inline:hover {
     background-color: #00bfff80;
-    border: 2px solid #00bfffc0;
+    border: 2px solid #00bfff05;
 }
 
 .work_order.other {
@@ -296,7 +321,7 @@ a:hover {
 
 .other:hover {
     background-color: #cccccc60;
-    border: 2px solid #cccccc90;
+    border: 2px solid #cccccc05;
 }
 
 /* WEEKDAY SELECTORS */

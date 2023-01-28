@@ -28,10 +28,16 @@
                     <td class="left_col">Pouch Item Number</td>
                     <td class="right_col">{{ work_order.item_number }}</td>
                 </tr>
-                <tr style="border-bottom: 2px solid #000">
+                <tr>
                     <td class="left_col">Pouch Lot # / Strip Lot #</td>
                     <td class="right_col">{{ work_order.lot_number }}
                         / {{ work_order.strip_lot_number }}
+                    </td>
+                </tr>
+                <tr style="border-bottom: 2px solid #000">
+                    <td class="left_col">Created</td>
+                    <td class="right_col">
+                        {{ work_order.add_datetime.strftime('%H:%M %m/%d/%y') }}
                     </td>
                 </tr>
                 <tr>
@@ -72,12 +78,6 @@
                     <td class="right_col">{{ work_order.end_datetime.strftime('%H:%M %m/%d/%y') }}</td>
                 </tr>
                 {% endif %}
-                <tr>
-                    <td class="left_col">Work Order Created</td>
-                    <td class="right_col">
-                        {{ work_order.add_datetime.strftime('%H:%M %m/%d/%y') }}
-                    </td>
-                </tr>
                 
                 
                 {% if work_order.status == 'Parking Lot' %}
