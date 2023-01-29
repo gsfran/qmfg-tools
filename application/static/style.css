@@ -39,10 +39,13 @@ h3.sub {
 .h3-sub-right-add {
     width: 40px;
     height: 30px;
+
     border: 2px solid #333;
     border-radius: 5px;
+
     text-align: center;
     float: right;
+    margin-right: 20px;
 }
 
 .h3-sub-right-add:hover {
@@ -68,7 +71,7 @@ h3.sub {
 .main-block {
     display: inline-flex;
     width: 100%;
-    max-width: 1600px;
+    max-width: 1920px;
     min-height: 400px;
 }
 
@@ -77,9 +80,9 @@ h3.sub {
     display: block;
     align-content: center;
 
-    width: 25%;
-    min-width: 260px;
-    max-width: 400px;
+    width: auto;
+    min-width: 240px;
+    max-width: 320px;
 
     height: 100%;
     max-height: 400px;
@@ -145,7 +148,7 @@ h3.sub {
 /* Week View */
 .schedule {
     display: grid;
-    width: 75%;
+    width: 84%;
     height: 100%;
     position: relative;
 }
@@ -201,36 +204,35 @@ h3.sub {
 /* HOUR TYPES */
 .hour {
     background-color: #fff;
-    border-bottom: 1px solid #222;
+    border-bottom: 1px solid #000;
     z-index: 0;
     height: 80px;
 }
 
-.hour.start_of_day {
-    border-left: 1px solid #222;
+.hour.elapsed {
+    background-color: #00000018;
 }
 
-.hour.midday {
-    border-left: 1px dashed #222;
+.hour.last_hour {
+    border-right: 1px solid #000;
+}
+
+.hour.not-scheduled {
+    background-color: #00000066;
+    /* z-index: 3; */
 }
 
 .hour.current_hour {
     border-inline: 1px solid #774defc0;
-    background-color: #774def80;
-    opacity: 1;
+    background-color: #774defc0;
 }
 
-.hour.elapsed {
-    background-color: #eee;
+.hour.start_of_day {
+    border-left: 1px solid #000;
 }
 
-.hour.last_hour {
-    border-right: 1px solid #222;
-}
-
-.hour.not-scheduled {
-    background-color: #00000060;
-    z-index: 3;
+.hour.midday {
+    border-left: 1px dashed #000;
 }
 
 /* WORK ORDER TYPES */
@@ -251,7 +253,14 @@ h3.sub {
     padding-inline: 8px;
 
     z-index: 2;
-    opacity: .90;
+    opacity: 1;
+    /* color: #fff; */
+	/* -webkit-text-stroke: .75px #000000d5; */
+	/* -webkit-text-fill-color: #ddddddd5; */
+}
+
+.work_order:hover {
+    color: #fff;
 }
 
 .schedule .work_order {
@@ -280,73 +289,73 @@ h3.sub {
 /* PRODUCT TYPES */
 
 .work_order.flu {
-    background-color: #55d000c0;
-    border: 2px solid #55d000;
+    background-color: #55d000ff;
+    border: 2px solid #55d000ff;
 }
 
 .flu:hover {
-    background-color: #55d50090;
-    border: 2px solid #55d00005;
+    background-color: #55d00088;
+    border: 2px solid #55d00001;
 }
 
 .work_order.abc {
-    background-color: #ff00ffa0;
-    border: 2px solid #ff00ffa0;
+    background-color: #ff00ffff;
+    border: 2px solid #ff00ffff;
 }
 
 .abc:hover {
-    background-color: #ff00ff70;
-    border: 2px solid #ff00ff05;
+    background-color: #ff00ff80;
+    border: 2px solid #ff00ff01;
 }
 
 .work_order.sars {
-    background-color: #FF0000d0;
+    background-color: #FF0000ff;
     border: 2px solid red;
 }
 
 .sars:hover {
-    background-color: #FF0000b0;
-    border: 2px solid #FF000005;
+    background-color: #FF000080;
+    border: 2px solid #FF000001;
 }
 
 .work_order.rsv {
-    background-color: #ffa500d0;
+    background-color: #ffa500ff;
     border: 2px solid orange;
 }
 
 .rsv:hover {
-    background-color: #ffa50090;
-    border: 2px solid #ffa50005;
+    background-color: #ffa50080;
+    border: 2px solid #ffa50001;
 }
 
 .work_order.strep_aplus {
-    background-color: #9400d3b0;
+    background-color: #9400d3ff;
     border: 2px solid darkviolet;
 }
 
 .strep_aplus:hover {
-    background-color: #9400d370;
-    border: 2px solid #9400d305;
+    background-color: #9400d380;
+    border: 2px solid #9400d301;
 }
 
 .work_order.strep_inline {
-    background-color: #00bfffc0;
+    background-color: #00bfffff;
     border: 2px solid deepskyblue;
 }
 
 .strep_inline:hover {
     background-color: #00bfff80;
-    border: 2px solid #00bfff05;
+    border: 2px solid #00bfff01;
 }
 
 .work_order.other {
-    background-color: #cccccc90;
-    border: 2px solid #cccccc;
+    background-color: #ccccccff;
+    border: 2px solid #ccccccff;
 }
 
 .other:hover {
-    background-color: #cccccc60;
-    border: 2px solid #cccccc05;
+    background-color: #cccccc80;
+    border: 2px solid #cccccc01;
 }
 
 /* WEEKDAY SELECTORS */

@@ -1,5 +1,6 @@
 import datetime
 import json
+import sqlite3
 from datetime import datetime as dt
 from math import ceil
 
@@ -7,7 +8,7 @@ from flask import flash, redirect, render_template, url_for
 
 from application import app, db
 from application.forms import LoadWorkOrderForm, NewWorkOrderForm
-from application.models import WorkOrders
+from application.models import WorkOrders, WorkWeeks
 from application.products import products
 from application.schedule import CurrentSchedule, Schedule
 
@@ -19,6 +20,9 @@ def index() -> str:
 @app.route('/schedule')
 def current_schedule() -> str:
     schedule = CurrentSchedule()
+    print(schedule.work_orders)
+    for work_order in schedule.work_orders:
+        print(f'{work_order}')
 
     return render_template(
         'schedule.html.jinja', title='Current Schedule',
@@ -27,7 +31,7 @@ def current_schedule() -> str:
 
 @app.route('/schedule/<string:year_week>')
 def view_schedule(year_week: str) -> str:
-
+    
     if year_week == dt.strftime(dt.now(), '%G-%V'):
         return redirect(url_for('current_schedule'))
 
@@ -60,11 +64,16 @@ def add_work_order() -> str:
     form = NewWorkOrderForm()
     if form.validate_on_submit():
         product = form.product.data
-
-        product_name = products[product].get('name')
-        short_name = products[product].get('short_name')
-        item_number = products[product].get('item_number')
-        standard_rate = products[product].get('std_rate')
+        if product == 'other':
+            product_name = form.other_name.data
+            short_name = product.capitalize()
+            item_number = form.other_item_num.data
+            standard_rate = form.other_rate.data
+        else:
+            product_name = products[product].get('name')
+            short_name = products[product].get('short_name')
+            item_number = products[product].get('item_number')
+            standard_rate = products[product].get('std_rate')
 
         strip_qty = int(form.strip_qty.data)
         standard_time = ceil(strip_qty / standard_rate)
@@ -130,9 +139,7 @@ def load_work_order(lot_number: int) -> str:
         work_order.load_datetime = dt.now()
         work_order.status = 'Pouching'
         work_order.pouched_qty = 0
-        # work_order.log = work_order.log.append(
-        #     f'Loaded to {work_order.line}: {dt.now()}\n'
-        #     )
+        work_order.log += f'Loaded to {work_order.line}: {dt.now()}\n'
         db.session.commit()
 
         flash(
@@ -164,9 +171,7 @@ def unload_work_order(lot_number: int) -> str:
         work_order.line = None
         work_order.end_datetime = None
         work_order.load_datetime = None
-        # work_order.log = work_order.log.append(
-        #     f'Unoaded from {work_order.line}: {dt.now()}\n'
-        #     )
+        work_order.log += f'Unoaded from {work_order.line}: {dt.now()}\n'
         
         db.session.commit()
     

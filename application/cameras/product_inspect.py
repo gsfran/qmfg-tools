@@ -20,7 +20,7 @@ class ProductInspectCamera:
     """
     _machine_info: dict = field(default_factory=dict)
 
-    def __post_init__(self) -> None:
+    def __post_init__(self: ProductInspectCamera) -> None:
         self._data_folder = self.machine_info.get('data_folder')
         self._process_vars = self.PROCESS_VARS
         self._process_code = self.process_vars['PROCESS_CODE']
@@ -54,29 +54,31 @@ class ProductInspectCamera:
 
     # region properties
     @property
-    def machine_info(self) -> dict:
+    def machine_info(self: ProductInspectCamera) -> dict:
         return self._machine_info
 
     @property
-    def data_folder(self) -> str:
+    def data_folder(self: ProductInspectCamera) -> str:
         return self._data_folder
 
     @property
-    def process_code(self) -> str:
+    def process_code(self: ProductInspectCamera) -> str:
         return self._process_code
 
     @property
-    def process_vars(self) -> dict:
+    def process_vars(self: ProductInspectCamera) -> dict:
         return self._process_vars
 
     @property
-    def cached_data(self) -> dict:
+    def cached_data(self: ProductInspectCamera) -> dict:
         return self._cached_data
     # endregion
     ...
 
     # region methods
-    def _to_cache(self, key_: datetime.date, data_: pd.DataFrame) -> None:
+    def _to_cache(
+        self: ProductInspectCamera, key_: datetime.date, data_: pd.DataFrame
+        ) -> None:
         """
         Stores the given datetime key and process data in a
         cached DataFrame for further use.
@@ -84,7 +86,7 @@ class ProductInspectCamera:
         self._cached_data.update({key_: data_})
 
     def new_block(
-        self, start_datetime: dt, end_datetime: dt
+        self: ProductInspectCamera, start_datetime: dt, end_datetime: dt
         ) -> ProductInspectData:
         """
         Returns a DataBlock object of process data for the given timespan.
@@ -107,7 +109,9 @@ class ProductInspectCamera:
 
         return ProductInspectData(self, data_, start_datetime, end_datetime)
 
-    def _concatenate_days(self, days: pd.DatetimeIndex) -> pd.DataFrame:
+    def _concatenate_days(
+        self: ProductInspectCamera, days: pd.DatetimeIndex
+        ) -> pd.DataFrame:
         """
         Fetch the data for each item in dates.
         """
@@ -117,7 +121,7 @@ class ProductInspectCamera:
 
         return data_
 
-    def load_data(self, date_: dt) -> pd.DataFrame:
+    def load_data(self: ProductInspectCamera, date_: dt) -> pd.DataFrame:
         """
         Returns cached data if it exists, otherwise loads 
         the data from process data files.
@@ -136,7 +140,9 @@ class ProductInspectCamera:
             self._to_cache(key_, self._load_data_from_file(date_))
             return self.cached_data[key_]
 
-    def _load_data_from_file(self, date_: dt) -> pd.DataFrame:
+    def _load_data_from_file(
+        self: ProductInspectCamera, date_: dt
+        ) -> pd.DataFrame:
         """
         Loads process data file for the given day.
         """
@@ -146,7 +152,7 @@ class ProductInspectCamera:
 
         return ProcessData.load(target_file, self.RAW_DATA_HEADERS)
 
-    def __str__(self) -> str:
+    def __str__(self: ProductInspectCamera) -> str:
         return (f'{self.data_folder}-{self.process_code}')
     # endregion
     ...
@@ -162,12 +168,12 @@ class ProductInspectData:
     _start_datetime: dt
     _end_datetime: dt
 
-    def __post_init__(self) -> None:
+    def __post_init__(self: ProductInspectData) -> None:
         if self.data.empty:
             raise Exception("Empty DataBlock Created.")
         self._init_vars()
 
-    def __str__(self) -> str:
+    def __str__(self: ProductInspectData) -> str:
         return (
             f'{self._data_source}_'
             f'{self._start_datetime:%Y%m%d-%H%M%S}-'
@@ -175,7 +181,7 @@ class ProductInspectData:
         )
 
     # region dicts
-    def _init_vars(self) -> None:
+    def _init_vars(self: ProductInspectData) -> None:
         """
         Initializes variables, properties,
         and dictionaries used within this class.
@@ -235,23 +241,23 @@ class ProductInspectData:
 
     # region properties
     @property
-    def data_source(self) -> ProductInspectCamera:
+    def data_source(self: ProductInspectData) -> ProductInspectCamera:
         return self._data_source
 
     @property
-    def data(self) -> pd.DataFrame:
+    def data(self: ProductInspectData) -> pd.DataFrame:
         return self._data
 
     @property
-    def process_code(self) -> str:
+    def process_code(self: ProductInspectData) -> str:
         return self._process_code
 
     @property
-    def process_vars(self) -> dict:
+    def process_vars(self: ProductInspectData) -> dict:
         return self._process_vars
 
     @property
-    def all_stats(self) -> dict:
+    def all_stats(self: ProductInspectData) -> dict:
         try:
             return self._all_stats
         except AttributeError:
@@ -259,7 +265,7 @@ class ProductInspectData:
             return self._all_stats
 
     @property
-    def cycle_stats(self) -> dict:
+    def cycle_stats(self: ProductInspectData) -> dict:
         try:
             return self._cycle_stats
         except AttributeError:
@@ -267,7 +273,7 @@ class ProductInspectData:
             return self._cycle_stats
 
     @property
-    def parts_stats(self) -> dict:
+    def parts_stats(self: ProductInspectData) -> dict:
         try:
             return self._parts_stats
         except AttributeError:
@@ -275,7 +281,7 @@ class ProductInspectData:
             return self._parts_stats
     
     @property
-    def stops_stats(self) -> dict:
+    def stops_stats(self: ProductInspectData) -> dict:
         try:
             return self._stops_stats
         except AttributeError:
@@ -283,7 +289,7 @@ class ProductInspectData:
             return self._stops_stats
 
     @property
-    def oee_stats(self) -> dict:
+    def oee_stats(self: ProductInspectData) -> dict:
         try:
             return self._oee_stats
         except AttributeError:
@@ -293,7 +299,7 @@ class ProductInspectData:
     ...
 
     # region stats
-    def _run_all_stats(self) -> None:
+    def _run_all_stats(self: ProductInspectData) -> None:
         """
         Calls the corresponding method for each group of stats.
         """
@@ -308,7 +314,7 @@ class ProductInspectData:
             )
         print(f'Done in {dt.now() - _t}')
 
-    def _run_cycle_stats(self) -> None:
+    def _run_cycle_stats(self: ProductInspectData) -> None:
         """
         Calculates statistics related to all machine cycles for the datablock.
         """
@@ -316,7 +322,7 @@ class ProductInspectData:
         for key_, method_ in self._cycle_stats_dict.items():
             self._cycle_stats[key_] = method_
 
-    def _run_parts_stats(self) -> None:
+    def _run_parts_stats(self: ProductInspectData) -> None:
         """
         Calculates statistics related to parts made for the datablock.
         """
@@ -324,7 +330,7 @@ class ProductInspectData:
         for key_, method_ in self._parts_stats_dict.items():
             self._parts_stats[key_] = method_
 
-    def _run_stops_stats(self) -> None:
+    def _run_stops_stats(self: ProductInspectData) -> None:
         """
         Calculates statistics related to machine stops for the datablock.
         """
@@ -332,7 +338,7 @@ class ProductInspectData:
         for key_, method_ in self._stops_stats_dict.items():
             self._stops_stats[key_] = method_
 
-    def _run_oee_stats(self) -> None:
+    def _run_oee_stats(self: ProductInspectData) -> None:
         """
         Calculates statistics related to OEE for the data.
         """
@@ -342,7 +348,7 @@ class ProductInspectData:
 
     # region cycle_stats
     @property
-    def first_cycle(self) -> pd.Timestamp:
+    def first_cycle(self: ProductInspectData) -> pd.Timestamp:
         """
         Returns time of first cycle for the given data.
         """
@@ -354,7 +360,7 @@ class ProductInspectData:
         return self.first_cycle
 
     @property
-    def last_cycle(self) -> pd.Timestamp:
+    def last_cycle(self: ProductInspectData) -> pd.Timestamp:
         """
         Returns time of last cycle for the given data.
         """
@@ -366,7 +372,7 @@ class ProductInspectData:
         return self.last_cycle
 
     @property
-    def all_cycle_time(self) -> float:
+    def all_cycle_time(self: ProductInspectData) -> float:
         """
         Returns the time difference (in seconds)
         between the first and last cycle.
@@ -381,7 +387,7 @@ class ProductInspectData:
         return self.all_cycle_time
 
     @property
-    def cycle_count(self) -> int:
+    def cycle_count(self: ProductInspectData) -> int:
         """
         Returns a cycle count for the given data.
         """
@@ -396,7 +402,7 @@ class ProductInspectData:
 
     # region parts_stats
     @property
-    def parts(self) -> pd.DataFrame:
+    def parts(self: ProductInspectData) -> pd.DataFrame:
         """
         Returns non-empty poucher cycles for the data.
         """
@@ -407,7 +413,7 @@ class ProductInspectData:
             return self._parts
 
     @property
-    def first_part(self) -> pd.Timestamp:
+    def first_part(self: ProductInspectData) -> pd.Timestamp:
         """
         Returns the DatetimeIndex of the first part made.
         """
@@ -420,7 +426,7 @@ class ProductInspectData:
             return self._first_part
 
     @property
-    def last_part(self) -> pd.Timestamp:
+    def last_part(self: ProductInspectData) -> pd.Timestamp:
         """
         Returns the DatetimeIndex of the last part made.
         """
@@ -433,7 +439,7 @@ class ProductInspectData:
             return self._last_part
 
     @property
-    def productive_time(self) -> float:
+    def productive_time(self: ProductInspectData) -> float:
         """
         Returns the time duration (in seconds)
         between the first part and last part.
@@ -447,7 +453,7 @@ class ProductInspectData:
             return self._productive_time
 
     @property
-    def part_count(self) -> int:
+    def part_count(self: ProductInspectData) -> int:
         """
         Returns the number of non-empty cycles for the data.
         """
@@ -458,7 +464,7 @@ class ProductInspectData:
             return self._part_count
 
     @property
-    def empty_cycles(self) -> pd.DataFrame:
+    def empty_cycles(self: ProductInspectData) -> pd.DataFrame:
         """
         Returns all cycles with no part present.
         """
@@ -469,7 +475,7 @@ class ProductInspectData:
             return self._empty_cycles
 
     @property
-    def empty_count(self) -> int:
+    def empty_count(self: ProductInspectData) -> int:
         """
         Returns the number of empty cycles for the data.
         """
@@ -480,7 +486,7 @@ class ProductInspectData:
             return self._empty_count
 
     @property
-    def empty_rate(self) -> float:
+    def empty_rate(self: ProductInspectData) -> float:
         """
         Returns the decimal percentage of empty cycles for the data.
         """
@@ -491,7 +497,7 @@ class ProductInspectData:
             return self._empty_rate
 
     @property
-    def reworks(self) -> pd.DataFrame:
+    def reworks(self: ProductInspectData) -> pd.DataFrame:
         """
         Returns all cycles with duplicate serial numbers.
         """
@@ -504,7 +510,7 @@ class ProductInspectData:
             return self._reworks
 
     @property
-    def rework_count(self) -> int:
+    def rework_count(self: ProductInspectData) -> int:
         """
         Returns the number of parts with duplicate serial numbers.
         """
@@ -515,7 +521,7 @@ class ProductInspectData:
             return self._rework_count
 
     @property
-    def rework_rate(self) -> float:
+    def rework_rate(self: ProductInspectData) -> float:
         """
         Returns the decimal percentage of reworked parts.
         """
@@ -529,7 +535,7 @@ class ProductInspectData:
 
     # region stop_stats
     @property
-    def stops(self) -> pd.DataFrame:
+    def stops(self: ProductInspectData) -> pd.DataFrame:
         """
         Returns all cycles which exceed maximum cycle time.
         """
@@ -544,7 +550,7 @@ class ProductInspectData:
 
 
     @property
-    def run_cycles(self) -> pd.DataFrame:
+    def run_cycles(self: ProductInspectData) -> pd.DataFrame:
         """
         Returns all cycles which do not exceed maximum cycle time.
         """
@@ -558,7 +564,7 @@ class ProductInspectData:
             return self._run_cycles
 
     @property
-    def total_stop_count(self) -> int:
+    def total_stop_count(self: ProductInspectData) -> int:
         """
         Returns the number of stops for the given data.
         """
@@ -569,7 +575,7 @@ class ProductInspectData:
             return self._total_stop_count
 
     @property
-    def total_stop_time(self) -> float:
+    def total_stop_time(self: ProductInspectData) -> float:
         """
         Returns the sum of cycle times greater than the maximum.
         """
@@ -580,7 +586,7 @@ class ProductInspectData:
             return self._total_stop_time
 
     @property
-    def total_run_time(self) -> float:
+    def total_run_time(self: ProductInspectData) -> float:
         """
         Returns the sum of cycle times less than the maximum.
         """
@@ -591,7 +597,7 @@ class ProductInspectData:
             return self._total_run_time
 
     @property
-    def uptime_percentage(self) -> float:
+    def uptime_percentage(self: ProductInspectData) -> float:
         """
         Returns the decimal percentage of uptime for the data.
         """
@@ -604,7 +610,7 @@ class ProductInspectData:
             return self._uptime_percentage
 
     @property
-    def short_stops(self) -> pd.DataFrame:
+    def short_stops(self: ProductInspectData) -> pd.DataFrame:
         """
         Returns all stops with duration shorter than SHORT_STOP_LIMIT.
         """
@@ -621,7 +627,7 @@ class ProductInspectData:
             return self._short_stops
 
     @property
-    def short_stop_count(self) -> int:
+    def short_stop_count(self: ProductInspectData) -> int:
         """
         Returns the number of short stops for the data.
         """
@@ -632,7 +638,7 @@ class ProductInspectData:
             return self._short_stop_count
 
     @property
-    def short_stop_time(self) -> float:
+    def short_stop_time(self: ProductInspectData) -> float:
         """
         Returns the total time in seconds of all short stops.
         """
@@ -643,7 +649,7 @@ class ProductInspectData:
             return self._short_stop_time
 
     @property
-    def long_stops(self) -> pd.DataFrame:
+    def long_stops(self: ProductInspectData) -> pd.DataFrame:
         """
         Returns all stops with duration longer than SHORT_STOP_LIMIT.
         """
@@ -658,7 +664,7 @@ class ProductInspectData:
             return self._long_stops
     
     @property
-    def long_stop_count(self) -> int:
+    def long_stop_count(self: ProductInspectData) -> int:
         """
         Returns the number of long stops for the data.
         """
@@ -669,7 +675,7 @@ class ProductInspectData:
             return self._long_stop_count
 
     @property
-    def long_stop_time(self) -> float:
+    def long_stop_time(self: ProductInspectData) -> float:
         """
         Returns the total time in seconds of all long stops.
         """
@@ -683,7 +689,7 @@ class ProductInspectData:
 
     # region oee_stats
     @property
-    def oee_run_time(self) -> float:
+    def oee_run_time(self: ProductInspectData) -> float:
         """
         Returns OEE Net Run Time, which ignores stops
         with a duration shorter than SHORT_STOP_LIMIT.
@@ -695,7 +701,7 @@ class ProductInspectData:
             return self._oee_run_time
 
     @property
-    def availability_rate(self) -> float:
+    def availability_rate(self: ProductInspectData) -> float:
         """
         Returns the OEE Availability Rate for the data
         as a decimal percentage.
@@ -710,7 +716,7 @@ class ProductInspectData:
             return self.availability_rate
 
     @property
-    def performance_rate(self) -> float:
+    def performance_rate(self: ProductInspectData) -> float:
         """
         Returns the OEE Performance Rate for the data
         as a decimal percentage.
@@ -725,7 +731,7 @@ class ProductInspectData:
             return self._performance_rate
 
     @property
-    def quality_rate(self) -> float:
+    def quality_rate(self: ProductInspectData) -> float:
         """
         Returns the OEE Quality Rate for the data
         as a decimal percentage.
@@ -740,7 +746,7 @@ class ProductInspectData:
             return self._quality_rate
 
     @property
-    def oee_rate(self) -> float:
+    def oee_rate(self: ProductInspectData) -> float:
         """
         Returns the OEE for the data as a decimal percentage.
         """
@@ -759,7 +765,7 @@ class ProductInspectData:
     ...
 
     # region to_excel
-    def stats_to_xls(self) -> None:
+    def stats_to_xls(self: ProductInspectData) -> None:
         """
         Dumps the stats DataFrame to .xlsx file.
         """
@@ -775,7 +781,7 @@ class ProductInspectData:
                 index=self.all_stats.keys()
             ).T.to_excel(path_)
 
-    def stops_to_xls(self) -> None:
+    def stops_to_xls(self: ProductInspectData) -> None:
         """
         Dumps the stops DataFrame to .xlsx file.
         """
@@ -792,7 +798,7 @@ class ProductInspectData:
 
     # region productivity
     @property
-    def productivity(self, freq: str='s') -> pd.DataFrame:
+    def productivity(self: ProductInspectData, freq: str='s') -> pd.DataFrame:
         """
         Returns production yields vs. standard yields
         at the given frequency (default per second).
@@ -812,7 +818,7 @@ class ProductInspectData:
         finally:
             print(f'Done in {dt.now() - _t}')
 
-    def _get_productivity(self, freq: str) -> pd.DataFrame:
+    def _get_productivity(self: ProductInspectData, freq: str) -> pd.DataFrame:
         """
         Returns the productivity at each interval
         of the given frequency.
@@ -850,14 +856,14 @@ class ProductInspectData:
 
         return prod_
 
-    def running_part_count(self) -> pd.Series:
+    def running_part_count(self: ProductInspectData) -> pd.Series:
         """
         Returns a Series with a running part count.
         """
         self.data['part_count'] = self.data['part_present'].cumsum()
         return self.data['part_count']
 
-    def prod_to_xls(self) -> None:
+    def prod_to_xls(self: ProductInspectData) -> None:
         """
         Dumps the productivity DataFrame to .xlsx file.
         """

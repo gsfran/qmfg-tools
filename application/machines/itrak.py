@@ -33,7 +33,7 @@ class iTrak:
     IDEAL_RUN_RATE_HZ = 140 / 60
     STANDARD_RATE_HZ = 5000 / 3600
 
-    def __init__(self, line_number: int) -> None:
+    def __init__(self: iTrak, line_number: int) -> None:
         self.name = f'Line {line_number}'
 
         self.machine_info = iTrak.ITRAK_DICT.get(self.name)

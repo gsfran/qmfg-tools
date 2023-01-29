@@ -15,10 +15,10 @@ class Camera(Protocol):
     Machine vision system camera object. Any model capable of datalogging to /Process_Data/.
     """
 
-    def datablock(self, start_datetime: dt, end_datetime: dt) -> DataBlock:
+    def datablock(self: Camera, start_datetime: dt, end_datetime: dt) -> DataBlock:
         ...
 
-    def get_process_data(self, date: dt) -> pd.DataFrame:
+    def get_process_data(self: Camera, date: dt) -> pd.DataFrame:
         ...
 
 @dataclass
@@ -31,5 +31,5 @@ class DataBlock(Protocol):
     start_datetime: dt
     end_datetime: dt
 
-    def data(self) -> pd.DataFrame:
+    def data(self: DataBlock) -> pd.DataFrame:
         ...

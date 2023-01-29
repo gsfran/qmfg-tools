@@ -15,6 +15,7 @@ class NewWorkOrderForm(FlaskForm):
     product = SelectField(
         'Product', validators=[DataRequired()],
         choices=[
+            # ('', '--'),
             ('flu', '1169100 - Flu A/B'),
             ('abc', '1451300 - ABC (Flu+SARS)'),
             ('strep_aplus', '1330700 - Strep A+'),
@@ -24,6 +25,16 @@ class NewWorkOrderForm(FlaskForm):
             ('other', 'Other')
             ]
         )
+    
+    other_name = StringField('Other Product Name', validators=[], default=None)
+
+    other_item_num = StringField(
+        'Other Item Number', validators=[Length(7, 7)], default='9999999'
+    )
+
+    other_rate = IntegerField(
+        'Other Hourly Rate', validators=[NumberRange(min=500, max=5000)], default=5000
+    )
 
     lot_id = StringField(
         'Lot ID', validators=[DataRequired(), Length(2, 5)]
