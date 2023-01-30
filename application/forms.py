@@ -3,11 +3,52 @@ from __future__ import annotations
 from datetime import datetime as dt
 
 from flask_wtf import FlaskForm
-from wtforms import (IntegerField, RadioField, SelectField, StringField,
-                     SubmitField)
+from wtforms import (FormField, IntegerField, RadioField, SelectField,
+                     StringField, SubmitField)
 from wtforms.fields.datetime import DateField, TimeField
 from wtforms.validators import (DataRequired, Length, NumberRange,
                                 ValidationError)
+from application.models import WorkOrders
+
+
+class ProductDetailsForm(FlaskForm):
+    
+    product = StringField(
+        'Product'
+    )
+    
+    product_name = StringField(
+        'Product Name',
+        validators=[DataRequired()]
+        )
+    
+    short_name = StringField(
+        'Short Name',
+        validators=[DataRequired()]
+        )
+
+    item_number = StringField(
+        'Pouch Item Number',
+        validators=[DataRequired(), Length(7, 7)]
+    )
+
+    standard_rate = IntegerField(
+        'Standard Rate [/hr]',
+        validators=[
+            DataRequired(),
+            NumberRange(min=500, max=5000)
+            ]
+    )
+
+    submit = SubmitField('Save')
+
+    def validate_item_number(
+        form: ProductDetailsForm, item_number: StringField
+        ) -> None:
+        try:
+            int(item_number.data)
+        except ValueError:
+            raise ValidationError('Please enter a valid number.')
 
 
 class NewWorkOrderForm(FlaskForm):
@@ -15,26 +56,16 @@ class NewWorkOrderForm(FlaskForm):
     product = SelectField(
         'Product', validators=[DataRequired()],
         choices=[
-            # ('', '--'),
+            ('', '--'),
             ('flu', '1169100 - Flu A/B'),
             ('abc', '1451300 - ABC (Flu+SARS)'),
             ('strep_aplus', '1330700 - Strep A+'),
             ('rsv', '1175000 - RSV'),
             ('sars', '1440700 - SARS Antigen'),
             ('strep_inline', '1094000 - Strep Inline'),
-            ('other', 'Other')
+            ('other', '< Other >')
             ]
         )
-    
-    other_name = StringField('Other Product Name', validators=[], default=None)
-
-    other_item_num = StringField(
-        'Other Item Number', validators=[Length(7, 7)], default='9999999'
-    )
-
-    other_rate = IntegerField(
-        'Other Hourly Rate', validators=[NumberRange(min=500, max=5000)], default=5000
-    )
 
     lot_id = StringField(
         'Lot ID', validators=[DataRequired(), Length(2, 5)]
@@ -103,3 +134,14 @@ class LoadWorkOrderForm(FlaskForm):
     )
 
     submit = SubmitField('Load to Poucher')
+    
+    
+class ConfirmDeleteForm(FlaskForm):
+    
+    delete = StringField("Type 'delete' to confirm: ", validators=[DataRequired()])
+
+    submit = SubmitField('Delete')
+    
+    def validate_delete(form: ConfirmDeleteForm, delete: StringField) -> None:
+        if delete.data != 'delete':
+            raise ValidationError("Type 'delete' in the field to confirm.")

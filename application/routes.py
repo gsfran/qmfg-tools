@@ -7,7 +7,7 @@ from math import ceil
 from flask import flash, redirect, render_template, url_for
 
 from application import app, db
-from application.forms import LoadWorkOrderForm, NewWorkOrderForm
+from application.forms import LoadWorkOrderForm, NewWorkOrderForm, ProductDetailsForm, ConfirmDeleteForm
 from application.models import WorkOrders, WorkWeeks
 from application.products import products
 from application.schedule import CurrentSchedule, Schedule
@@ -20,9 +20,6 @@ def index() -> str:
 @app.route('/schedule')
 def current_schedule() -> str:
     schedule = CurrentSchedule()
-    print(schedule.work_orders)
-    for work_order in schedule.work_orders:
-        print(f'{work_order}')
 
     return render_template(
         'schedule.html.jinja', title='Current Schedule',
@@ -51,29 +48,29 @@ def view_all_work_orders() -> str:
         work_orders=work_orders
         )
 
-@app.route('/view-work-order/<int:lot_number>')
+@app.route('/view-work-order/<int:lot_number>', methods=['GET', 'POST'])
 def view_work_order(lot_number: int) -> str:
-    work_order = WorkOrders.query.get_or_404(lot_number)
+    form = ConfirmDeleteForm()
+    work_order = db.get_or_404(WorkOrders, lot_number)
+
+    if form.validate_on_submit():
+        return redirect(url_for('delete', lot_number=lot_number))
+
     return render_template(
         'view-work-order.html.jinja', title=f'Lot {lot_number}',
-        work_order=work_order
+        form=form, work_order=work_order
         )
 
 @app.route('/add-work-order', methods=['GET', 'POST'])
 def add_work_order() -> str:
+
     form = NewWorkOrderForm()
     if form.validate_on_submit():
         product = form.product.data
-        if product == 'other':
-            product_name = form.other_name.data
-            short_name = product.capitalize()
-            item_number = form.other_item_num.data
-            standard_rate = form.other_rate.data
-        else:
-            product_name = products[product].get('name')
-            short_name = products[product].get('short_name')
-            item_number = products[product].get('item_number')
-            standard_rate = products[product].get('std_rate')
+        lot_number = form.lot_number.data
+        [product_name, short_name,
+         item_number, standard_rate
+         ] = products[product].values()
 
         strip_qty = int(form.strip_qty.data)
         standard_time = ceil(strip_qty / standard_rate)
@@ -85,7 +82,7 @@ def add_work_order() -> str:
             item_number=item_number,
 
             lot_id=form.lot_id.data,
-            lot_number=form.lot_number.data,
+            lot_number=lot_number,
             strip_lot_number=int(form.strip_lot_number.data),
 
             strip_qty=strip_qty,
@@ -100,30 +97,51 @@ def add_work_order() -> str:
 
         flash(
             f'{short_name} {form.lot_id.data} '
-            f'(Lot {form.lot_number.data}) added.',
+            f'(Lot {lot_number}) added.',
             'success'
             )
-        return redirect(url_for('index'))
+        if product == 'other':
+            return redirect(
+                url_for('edit_work_order', lot_number=lot_number)
+                )
+        return redirect(url_for('current_schedule'))
 
     return render_template(
         'add-work-order.html.jinja', title='Add Work Order',
         form=form
         )
 
+@app.route('/edit-work-order/<int:lot_number>', methods=['GET', 'POST'])
+def edit_work_order(lot_number: int) -> str:
+    work_order = db.get_or_404(WorkOrders, lot_number)
+    form = ProductDetailsForm(obj=work_order)
+
+    if form.validate_on_submit():
+        work_order.product_name = form.product_name.data
+        work_order.short_name = form.short_name.data
+        work_order.item_number = form.item_number.data
+        work_order.standard_rate = form.standard_rate.data
+        
+        db.session.commit()
+
+        return redirect(url_for('index'))
+
+    return render_template('edit-work-order.html.jinja', form=form)
+
 @app.route('/delete/<int:lot_number>')
 def delete(lot_number: int) -> app.response_class:
-    work_order = WorkOrders.query.get_or_404(lot_number)
+    work_order = db.get_or_404(WorkOrders, lot_number)
     db.session.delete(work_order)
     db.session.commit()
     flash(
-        f'{work_order.short_name} {work_order.lot_id}'
+        f'{work_order.short_name} {work_order.lot_id} '
         f'(Lot {lot_number}) deleted.', 'danger'
         )
     return redirect(url_for('current_schedule'))
 
 @app.route('/load-work-order/<int:lot_number>', methods=['GET', 'POST'])
 def load_work_order(lot_number: int) -> str:
-    work_order = WorkOrders.query.get_or_404(lot_number)
+    work_order = db.get_or_404(WorkOrders, lot_number)
 
     form = LoadWorkOrderForm()
     if form.validate_on_submit():
@@ -171,7 +189,7 @@ def unload_work_order(lot_number: int) -> str:
         work_order.line = None
         work_order.end_datetime = None
         work_order.load_datetime = None
-        work_order.log += f'Unoaded from {work_order.line}: {dt.now()}\n'
+        work_order.log += f'Unloaded from {work_order.line}: {dt.now()}\n'
         
         db.session.commit()
     

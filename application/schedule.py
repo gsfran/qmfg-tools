@@ -6,18 +6,15 @@ from datetime import datetime as dt
 from datetime import time, timedelta
 
 import pandas as pd
+from sqlalchemy import and_, or_
 
 from application import db
 from application.models import WorkOrders, WorkWeeks
 
-def update_work_order(work_order: WorkOrders, hours: pd.Series) -> None:
-    work_order.remaining_qty = work_order.strip_qty - work_order.pouched_qty
-    work_order.remaining_time = (
-        math.ceil(
-            work_order.remaining_qty / work_order.standard_rate
-            )
-        )
-    
+
+def current_hour() -> dt:
+    return dt.combine(dt.now().date(), time(dt.now().hour))
+
 
 class Schedule:
     """Schedule for a single production week.
@@ -30,33 +27,28 @@ class Schedule:
     def __init__(self: Schedule, year_week: str) -> None:
         self.year_week = year_week
         self._init_week()
-        self._init_dates()
-        self._init_frames()
-        
+
     def _init_week(self) -> None:
         """Initializes database info for the week.
         """
         self._week = self._get_work_week()
         self._week_config()
-        
+        self._init_dates()
+
     def _get_work_week(self: Schedule) -> WorkWeeks:
-        week_ = WorkWeeks.query.filter(
-            WorkWeeks.year_week == self.year_week
-            ).first()
+        week_ = db.get_or_404(WorkWeeks, self.year_week)
         if week_ is None:
-            week_ = WorkWeeks(
-                year_week=self.year_week,  
-            )
+            week_ = WorkWeeks(year_week=self.year_week)
             db.session.add(week_)
             db.session.commit()
         return week_
-    
+
     def _week_config(self: Schedule) -> None:
         self._production_days = self._get_days()
         self.workday_start = time(self._week.workday_start_time)
         self.workday_end = time(self._week.workday_end_time)
         self.lines = self._get_lines()
-        
+
     def _get_days(self: Schedule) -> list[int]:
         """Returns a list of integers representing the days scheduled
         for the given week. 
@@ -74,7 +66,7 @@ class Schedule:
             if scheduled:
                 _days.append(day) 
         return _days
-        
+
     def _get_lines(self: Schedule) -> list[int]:
         """Returns list of integers representing the lines (5-12)
         in production for the given week.
@@ -116,76 +108,82 @@ class Schedule:
         else:
             raise Exception('Error setting week type (Current/Past/Future).')
 
-    def _init_frames(self: Schedule) -> None:
-        """Builds a pandas DataFrame for the given schedule.
-        """
-        week_frame_index = pd.date_range(
-            start=self.start_datetime, end=self.end_datetime, freq='h'
-            )
-        self._week_frame = pd.DataFrame(
-            columns=self.lines, index=week_frame_index
-            )
-        self._week_frame['scheduled'] = False
-        self._update_frames()
-
-    def _update_frames(self: Schedule) -> None:
-        self._update_hours()
-        self._update_schedule_frame()
-        self._update_work_orders()
-        for work_order in self.work_orders:
-            self._map_work_order(work_order)
 
     def set_hours(self: Schedule, workday_start: int, workday_end: int) -> None:
         self._week.workday_start_time = time(workday_start)
         self._week.workday_end_time = time(workday_end)
         db.session.commit()
-        self._init_week()
-        self._update_frames()
-        
+        self.refresh()
+
     def set_days(self: Schedule, days: int) -> None:
         self._week.prod_days = days
         db.session.commit()
-        self._init_week()
-        self._update_frames()
+        self.refresh()
 
-    def _update_hours(self: Schedule) -> None:
-        self._week_frame.loc[
-            self.workday_start:self.workday_end.replace(
-                hour=self.workday_end.hour - 1
-                ), 'scheduled'
-            ] = True
+    @property
+    def _index(self: Schedule) -> pd.DatetimeIndex:
+        try:
+            return self.index_
+        except AttributeError:
+            self.index_ = pd.date_range(
+                start=self.start_datetime, end=self.end_datetime, freq='h'
+                )
+            return self.index_
 
-        day_mask = pd.Series(False, index=self._week_frame.index)
-        for _day in self._production_days:
-            day_mask[day_mask.index.to_series().dt.weekday == _day] = True
+    @property
+    def schedule_frame(self: Schedule) -> pd.DataFrame:
+        try:
+            return self._schedule_frame
+        except AttributeError:
+            self._schedule_frame = pd.DataFrame(
+                index=self.hours.index[self.hours == True],
+                columns=self.lines
+                )
+            return self._schedule_frame
 
-        self.hours = self._week_frame['scheduled'] & day_mask
-        
-    def _update_schedule_frame(self: Schedule) -> None:
-        self._schedule_frame = pd.DataFrame(
-            index=self.hours.index[self.hours == True],
-            columns=self.lines
-            )
+    @property
+    def hours(self: Schedule) -> pd.Series:
+        try:
+            return self._hours
+        except AttributeError:
+            self.hour_mask
+            self.day_mask
+            self._hours = self._day_mask & self._hour_mask
+            return self._hours
 
-    def _update_work_orders(self: Schedule) -> None:
-        self._fetch_work_orders()
-        for work_order in self.work_orders:
-            if work_order.status == 'Pouching':
-                update_work_order(work_order, self.hours)
-            if work_order.status == 'Queued':
-                pass # update queued work orders start/completion times
-        
-    def _fetch_work_orders(self: Schedule) -> None:
-        self.work_orders = WorkOrders.query.filter(
-                WorkOrders.end_datetime >= self.start_datetime
-            ).filter(
-                WorkOrders.start_datetime <= self.end_datetime
-            ).order_by(WorkOrders.start_datetime.desc()).all()
+    @property
+    def hour_mask(self: Schedule) -> pd.Series:
+        try:
+            return self._hour_mask
+        except AttributeError:
+            self._hour_mask = pd.Series(False, index=self._index)
+            last_hour = self.workday_end.replace(hour=self.workday_end.hour-1)
+            self._hour_mask.loc[self.workday_start:last_hour] = True
+            return self._hour_mask
+
+    @property
+    def day_mask(self: Schedule) -> pd.Series:
+        try:
+            return self._day_mask
+        except AttributeError:
+            self._day_mask = pd.Series(False, index=self._index)
+            for _day in self._production_days:
+                self._day_mask[self._index.to_series().dt.weekday == _day] = True
+            return self._day_mask
+
+    @property
+    def work_orders(self: Schedule) -> list[WorkOrders]:
+        try:
+            return self._work_orders
+        except AttributeError:
+            self._work_orders = db.session.execute(db.select(WorkOrders).where(
+                or_(WorkOrders.end_datetime >= self.start_datetime,
+                    WorkOrders.start_datetime < self.end_datetime)
+                ).order_by(WorkOrders.start_datetime.desc())).scalars()
+            return self._work_orders
 
     def _map_work_order(self: Schedule, work_order: WorkOrders) -> None:
         pass # map work orders to css grid values
-    
-    
 
     @property
     def prior_week(self: Schedule) -> str:
@@ -209,19 +207,43 @@ class Schedule:
                 )
             return self._next_year_week
 
+    def refresh(self: Schedule) -> None:
+        self.__init__(self.year_week)
+
     @staticmethod
     def parking_lot() -> list[WorkOrders]:
         """
         Returns database query for all 'Parking Lot' jobs.
         """
-        return (
-            WorkOrders.query.filter(
-                WorkOrders.status == 'Parking Lot'
-                ).order_by(WorkOrders.add_datetime.desc()).all()
-            )
+        return WorkOrders.parking_lot()
+        
+    @staticmethod
+    def pouching() -> list[WorkOrders]:
+        """
+        Returns database query for all 'Pouching' jobs.
+        """
+        return WorkOrders.pouching()
+    
+    @staticmethod
+    def queued() -> list[WorkOrders]:
+        """Returns db query for all Queued jobs.
+
+        Returns:
+            list[WorkOrders]: Scheduled work orders.
+        """
+        return WorkOrders.queued()
 
     @staticmethod
-    def grid_hour(datetime_: dt) -> int:
+    def scheduled_jobs() -> list[WorkOrders]:
+        """Returns db query for all Pouching and Queued jobs.
+
+        Returns:
+            list[WorkOrders]: Scheduled work orders.
+        """
+        return WorkOrders.scheduled_jobs()
+
+    @staticmethod
+    def week_hour(datetime_: dt) -> int:
         """
         Returns integer representing the grid column for the
         given datetime hour. Ranges from 0 - 167, with 0 representing
@@ -241,6 +263,74 @@ class CurrentSchedule(Schedule):
     def __init__(self: CurrentSchedule) -> None:
         year_week = dt.strftime(dt.now(), Schedule._year_week_format)
         super().__init__(year_week=year_week)
+        self._update_work_orders()
 
-    def current_hour(self: CurrentSchedule) -> int:
-        return self.grid_hour(dt.now())
+    @property
+    def current_week_hour(self: CurrentSchedule) -> int:
+        self._current_week_hour = self.week_hour(dt.now())
+        return self._current_week_hour
+
+    @property
+    def current_hour(self: CurrentSchedule) -> time:
+        return current_hour()
+    
+
+    def multi_week_frame(self: Schedule) -> pd.DataFrame:
+
+        def get_next_frame(_week: Schedule) -> pd.DataFrame:
+            return NextSchedule(_week.year_week).schedule_frame
+        
+        _multi = pd.DataFrame()
+        _next = get_next_frame(self)
+        _multi = pd.concat([self.schedule_frame, _next])
+
+        _next_next = get_next_frame(NextSchedule(self.next_week))
+        _multi = pd.concat([_multi, _next_next])
+        
+        return _multi
+    
+    def _update_work_orders(self: CurrentSchedule) -> None:
+        self.current_week_hour
+        self._update_pouching()
+            
+    def _update_pouching(self: CurrentSchedule) -> None:
+        for work_order in self.pouching():
+            self._update_work_order(work_order, self.multi_week_frame())
+
+
+    def _update_work_order(
+            self: CurrentSchedule,
+            work_order: WorkOrders, _schedule_frame: pd.DataFrame
+        ) -> None:
+        # self.update_pouched_qty()
+        line = work_order.line
+        _frame = self._crop_frame(_schedule_frame, line)
+        work_order, _frame = WorkOrders.update_work_order(
+            work_order=work_order, _frame=_frame
+            )
+
+        _schedule_frame[work_order.line] = _frame
+
+        if work_order.status == 'Queued':
+            pass # update queued work orders start/completion times
+    
+    def _crop_frame(
+            self: CurrentSchedule,
+            _schedule_frame: pd.DataFrame, line: int
+            ) -> pd.DataFrame:
+        _frame = _schedule_frame.loc[current_hour():, line]
+        
+        if _frame[0] > self.end_datetime:
+            # next schedule hour is not in the current week
+            # need to fix
+            pass
+        
+        return _frame
+            
+
+
+class NextSchedule(Schedule):
+    
+    def __init__(self: NextSchedule, year_week: str) -> None:
+        self.year_week = year_week
+        self._init_week()

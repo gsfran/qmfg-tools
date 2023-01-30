@@ -1,0 +1,92 @@
+{% extends 'layout.html.jinja' %}
+{% block content %}
+<div class="card card-style mb-2 col-sm-10 col-md-8 col-lg-6" style="max-width: 540px;">
+    <h3>Edit Work Order</h3>
+    <div class="card-body">
+        <form action="" method="POST" novalidate>
+            {{ form.hidden_tag() }}
+            <fieldset class="form-group">
+
+                {% if form.product.data == 'other' %}
+
+                    <!-- PRODUCT NAME -->
+                    <div class="form-group">
+                        {{ form.product_name.label(class="form-control-label") }}
+                        {% if form.product_name.errors %}
+                            {{ form.product_name(class="form-control form-control-sm is-invalid") }}
+                            {% for error in form.product_name.errors %}
+                                <div class="invalid-feedback">
+                                    <span>{{ error }}</span>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            {{ form.product_name(class="form-control form-control-sm") }}
+                        {% endif %}
+                    </div>
+
+                    <!-- SHORT NAME -->
+                    <div class="form-group">
+                        {{ form.short_name.label(class="form-control-label") }}
+                        {% if form.short_name.errors %}
+                            {{ form.short_name(class="form-control form-control-sm is-invalid") }}
+                            {% for error in form.short_name.errors %}
+                                <div class="invalid-feedback">
+                                    <span>{{ error }}</span>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            {{ form.short_name(class="form-control form-control-sm") }}
+                        {% endif %}
+                    </div>
+
+                    <!-- ITEM NUMBER -->
+                    <div class="form-group">
+                        {{ form.item_number.label(class="form-control-label") }}
+                        {% if form.item_number.errors %}
+                            {{ form.item_number(class="form-control form-control-sm is-invalid") }}
+                            {% for error in form.item_number.errors %}
+                                <div class="invalid-feedback">
+                                    <span>{{ error }}</span>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            {{ form.item_number(class="form-control form-control-sm") }}
+                        {% endif %}
+                    </div>
+
+                    <!-- STD RATE -->
+                    <div class="form-group">
+                        {{ form.standard_rate.label(class="form-control-label") }}
+                        {% if form.standard_rate.errors %}
+                            {{ form.standard_rate(class="form-control form-control-sm is-invalid") }}
+                            {% for error in form.standard_rate.errors %}
+                                <div class="invalid-feedback">
+                                    <span>{{ error }}</span>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            {{ form.standard_rate(class="form-control form-control-sm") }}
+                        {% endif %}
+                    </div>
+
+                    <!-- SUBMIT -->
+                    <div class="form-group border-bottom pb-3" style="margin-top: 50px;">
+                        {{ form.submit(class="btn btn-outline-info", style="width: 100%")}}
+                    </div>
+                {% else %}
+                <div style="text-align: center; font-weight: bold; margin-block: 130px;">
+                    Editing core products not allowed.
+                </div>
+
+                {% endif %}
+                
+                <div>
+                    <a href="{{ url_for('index') }}"
+                            class="btn btn-outline-secondary" style="width: 100%">Cancel</a>
+                </div>
+
+            </fieldset>
+        </form>
+    </div>
+</div>
+{% endblock %}

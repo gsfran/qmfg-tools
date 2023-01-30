@@ -5,13 +5,10 @@
         <div style="width: 50%;">
             <h3>Pouching - iTrak</h3>
         </div>
-        <div  style="width: 50%; margin-top: 25px; text-align: right;">
-            <div class="h3-sub-right">
-                <a href="/schedule/{{ schedule.prior_week }}" style="margin-inline: 20px;">
-                    < </a>
-                        {{ schedule }}
-                        <a href="/schedule/{{ schedule.next_week }}" style="margin-inline: 20px;"> > </a>
-            </div>
+        <div class="h3-sub-right" style="width: 50%;  min-width: fit-content; margin-top: 25px; text-align: right;">
+                <a href="/schedule/{{ schedule.prior_week }}"><div class="h3-sub-right arrows"><</div></a>
+                <div class="h3-sub-right arrows">{{ schedule }}</div>
+                <a href="/schedule/{{ schedule.next_week }}"><div class="h3-sub-right arrows">></div></a>
         </div>
     </div>
     <div class="card-body main-block" style="display: inline-flex;">
@@ -50,10 +47,10 @@
             {# to each hour based on conditionals. #}
             <div class="hour 
                         {% if schedule.schedule_type == 'current' %}
-                            {% if hour == schedule.current_hour() %}
+                            {% if hour == schedule.current_week_hour %}
                                 current_hour 
                             {% endif %}
-                            {% if hour < schedule.current_hour() %}
+                            {% if hour < schedule.current_week_hour %}
                                 elapsed 
                             {% endif %}
                         {% elif schedule.schedule_type == 'past' %}
@@ -82,7 +79,8 @@
 
             <!-- WORK ORDERS -->
             {% for work_order in schedule.work_orders %}
-            {% if work_order.start_datetime < schedule.start_datetime %} <!-- WORK ORDERS THAT STARTED THE PREVIOUS WEEK
+            {% if work_order.start_datetime < schedule.start_datetime %}
+            <!-- WORK ORDERS THAT STARTED THE PREVIOUS WEEK
                 -->
                 {% set start_col = col_offset %}
                 {% set end_col = (work_order.end_datetime.weekday() * 24 + work_order.end_datetime.hour + col_offset) %}

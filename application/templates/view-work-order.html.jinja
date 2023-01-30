@@ -3,108 +3,149 @@
 <div class="card card-style mb-2 col-md-12 col-lg-10 col-xl-8" style="max-width: 720px;">
     <h3>Work Order Details</h3>
     <div class="main-block card-body" style="display: inline-flex;">
-        <table class="table">
-        <style>
-            .left_col {
-                width: 40%;
-                font-weight: bolder;
-            }
-            .right_col {
-                text-align: center;
-            }
-        </style>
-            <tbody>
-                <tr>
-                    <td class="left_col">Product (Lot ID)</td>
-                    <td class="right_col">{{ work_order.short_name }}
-                        ({{ work_order.lot_id }})
-                    </td>
-                </tr>
-                <tr>
-                    <td class="left_col">Product Name</td>
-                    <td class="right_col">{{ work_order.product_name }}</td>
-                </tr>
-                <tr>
-                    <td class="left_col">Pouch Item Number</td>
-                    <td class="right_col">{{ work_order.item_number }}</td>
-                </tr>
-                <tr>
-                    <td class="left_col">Pouch Lot # / Strip Lot #</td>
-                    <td class="right_col">{{ work_order.lot_number }}
-                        / {{ work_order.strip_lot_number }}
-                    </td>
-                </tr>
-                <tr style="border-bottom: 2px solid #000">
-                    <td class="left_col">Created</td>
-                    <td class="right_col">
-                        {{ work_order.add_datetime.strftime('%H:%M %m/%d/%y') }}
-                    </td>
-                </tr>
-                <tr>
-                    <td class="left_col">Qty. Strips Yielded</td>
-                    <td class="right_col">{{ '{:,}'.format(work_order.strip_qty) }}</td>
-                </tr>
-                <tr>
-                    <td class="left_col">Standard Rate</td>
-                    <td class="right_col">{{ '{:,}'.format(work_order.standard_rate) }}/hr.</td>
-                </tr>
-                <tr>
-                    <td class="left_col">Standard Time</td>
-                    <td class="right_col">{{ '{:.1f}'.format(work_order.standard_time) }} hr.</td>
-                </tr>
-                <tr>
-                    <td class="left_col">Status</td>
-                    <td class="right_col">{{ work_order.status }}</td>
-                </tr>
-                {% if work_order.status == 'Pouching' %}
-                <tr style="border-top: 2px solid #000">
-                    <td class="left_col">Poucher</td>
-                    <td class="right_col">Line {{ work_order.line }}</td>
-                </tr>
-                <tr>
-                    <tr>
-                        <td class="left_col">Qty. Remaining</td>
-                        <td class="right_col">{{ '{:,}'.format(work_order.remaining_qty) }}</td>
-                    </tr>
-                    <tr>
-                        <td class="left_col">Time Remaining</td>
-                        <td class="right_col">{{ '{:.1f}'.format(work_order.remaining_time) }} hr.</td>
-                    </tr>
-                    <td class="left_col">Job Started</td>
-                    <td class="right_col">{{ work_order.start_datetime.strftime('%H:%M %m/%d/%y') }}</td>
-                </tr>
-                <tr>
-                    <td class="left_col">Est. Completion Time</td>
-                    <td class="right_col">{{ work_order.end_datetime.strftime('%H:%M %m/%d/%y') }}</td>
-                </tr>
-                {% endif %}
-                
-                
-                {% if work_order.status == 'Parking Lot' %}
-                    <tr>
-                        <td colspan="2">
-                        <a href="{{ url_for('load_work_order', lot_number = work_order.lot_number) }}"
-                                class="btn btn-outline-info" style="width: 100%">Load to Poucher</a></td>
-                    </tr>
-                {% elif work_order.status == 'Pouching' or work_order.status == 'Scheduled' %}
-                    <tr>
-                        <td colspan="2">
-                        <a href="{{ url_for('unload_work_order', lot_number = work_order.lot_number) }}"
-                            class="btn btn-outline-warning" style="width: 100%">Unload Work Order</a></td>
-                    </tr>
-                {% endif %}
-                <tr>
-                    <td colspan="2">
-                    <a href="{{ url_for('delete', lot_number = work_order.lot_number) }}"
-                        class="btn btn-outline-danger" style="width: 100%">Delete Work Order</a></td>
-                </tr>
-                <tr>
-                    <td colspan="2">
-                    <a href="{{ url_for('view_all_work_orders') }}"
-                            class="btn btn-outline-dark" style="width: 100%">View All Work Orders</a></td>
-                </tr>
-            </tbody>
-        </table>
+    <form action="" method="POST" style="width: 100%;" novalidate>
+            {{ form.hidden_tag() }}
+            <fieldset class="form-group">
+                <table class="table">
+                    <!-- CONFIRM DELETE MODAL -->
+                    <div id="confirm-delete" class="confirm-modal window">
+                    <div id="confirm-delete" class="modal-bg">
+                        <div style="margin-bottom: 60px;">
+                            <h2>Delete Work Order</h2>
+                        </div>
+                        <div>
+                            <div class="form-group">
+                            {{ form.delete.label(class="form-control-label") }}
+                            {% if form.delete.errors %}
+                                {{ form.delete(class="form-control form-control-sm is-invalid") }}
+                                {% for error in form.delete.errors %}
+                                    <div class="invalid-feedback">
+                                        <span>{{ error }}</span>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                {{ form.delete(class="form-control form-control-sm") }}
+                            {% endif %}
+                            <h6 style="margin-top: 45px;">This cannot be undone.</h6>
+                            </div>
+
+                            <!-- SUBMIT -->
+                            <div class="form-group border-bottom pb-3" style="margin-top: 50px;">
+                                {{ form.submit(class="btn btn-danger btn-lg", style="width: 100%") }}
+                            </div>
+                            <!-- CANCEL -->
+                            <a href="#">
+                                <div class="btn btn-outline-dark btn-lg">
+                                    Cancel
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    </div>
+                    <!-- END MODAL -->
+                    <style>
+                        .left_col {
+                            width: 40%;
+                            font-weight: bolder;
+                        }
+                        .right_col {
+                            text-align: center;
+                        }
+                    </style>
+                    <tbody>
+                        <tr>
+                            <td class="left_col">Product (Lot ID)</td>
+                            <td class="right_col">{{ work_order.short_name }}
+                                ({{ work_order.lot_id }})
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="left_col">Product Name</td>
+                            <td class="right_col">{{ work_order.product_name }}</td>
+                        </tr>
+                        <tr>
+                            <td class="left_col">Pouch Item Number</td>
+                            <td class="right_col">{{ work_order.item_number }}</td>
+                        </tr>
+                        <tr>
+                            <td class="left_col">Pouch Lot # / Strip Lot #</td>
+                            <td class="right_col">{{ work_order.lot_number }}
+                                / {{ work_order.strip_lot_number }}
+                            </td>
+                        </tr>
+                        <tr style="border-bottom: 2px solid #000">
+                            <td class="left_col">Created</td>
+                            <td class="right_col">
+                                {{ work_order.add_datetime.strftime('%H:%M %m/%d/%y') }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="left_col">Qty. Strips Yielded</td>
+                            <td class="right_col">{{ '{:,}'.format(work_order.strip_qty) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="left_col">Standard Rate</td>
+                            <td class="right_col">{{ '{:,}'.format(work_order.standard_rate) }}/hr.</td>
+                        </tr>
+                        <tr>
+                            <td class="left_col">Standard Time</td>
+                            <td class="right_col">{{ '{:.1f}'.format(work_order.standard_time) }} hr.</td>
+                        </tr>
+                        <tr>
+                            <td class="left_col">Status</td>
+                            <td class="right_col">{{ work_order.status }}</td>
+                        </tr>
+                        {% if work_order.status == 'Pouching' %}
+                        <tr style="border-top: 2px solid #000">
+                            <td class="left_col">Poucher</td>
+                            <td class="right_col">Line {{ work_order.line }}</td>
+                        </tr>
+                        <tr>
+                            <tr>
+                                <td class="left_col">Qty. Remaining</td>
+                                <td class="right_col">{{ '{:,}'.format(work_order.remaining_qty) }}</td>
+                            </tr>
+                            <tr>
+                                <td class="left_col">Time Remaining</td>
+                                <td class="right_col">{{ '{:.1f}'.format(work_order.remaining_time) }} hr.</td>
+                            </tr>
+                            <td class="left_col">Job Started</td>
+                            <td class="right_col">{{ work_order.start_datetime.strftime('%H:%M %m/%d/%y') }}</td>
+                        </tr>
+                        <tr>
+                            <td class="left_col">Est. Completion Time</td>
+                            <td class="right_col">{{ work_order.end_datetime.strftime('%H:%M %m/%d/%y') }}</td>
+                        </tr>
+                        {% endif %}
+                        
+                        
+                        {% if work_order.status == 'Parking Lot' %}
+                            <tr>
+                                <td colspan="2">
+                                <a href="{{ url_for('load_work_order', lot_number = work_order.lot_number) }}"
+                                        class="btn btn-outline-info" style="width: 100%">Load to Poucher</a></td>
+                            </tr>
+                        {% elif work_order.status == 'Pouching' or work_order.status == 'Scheduled' %}
+                            <tr>
+                                <td colspan="2">
+                                <a href="{{ url_for('unload_work_order', lot_number = work_order.lot_number) }}"
+                                    class="btn btn-outline-warning" style="width: 100%">Unload Work Order</a></td>
+                            </tr>
+                        {% endif %}
+                        <tr>
+                            <td colspan="2">
+                            <a href="#confirm-delete"
+                                class="btn btn-outline-danger" style="width: 100%">Delete Work Order</a></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                            <a href="{{ url_for('view_all_work_orders') }}"
+                                    class="btn btn-outline-dark" style="width: 100%">View All Work Orders</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </fieldset>
+        </form>
     </div>
 </div>
 {% endblock %}
