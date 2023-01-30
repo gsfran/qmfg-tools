@@ -14,8 +14,8 @@ from application.schedule import CurrentSchedule, Schedule
 
 
 @app.route('/')
-def index() -> str:
-    return current_schedule()
+def index() -> app.response_class:
+    return redirect(url_for('current_schedule'))
 
 @app.route('/schedule')
 def current_schedule() -> str:

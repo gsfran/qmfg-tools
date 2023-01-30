@@ -263,7 +263,7 @@ class CurrentSchedule(Schedule):
     def __init__(self: CurrentSchedule) -> None:
         year_week = dt.strftime(dt.now(), Schedule._year_week_format)
         super().__init__(year_week=year_week)
-        self._update_work_orders()
+        # self._update_work_orders()
 
     @property
     def current_week_hour(self: CurrentSchedule) -> int:
