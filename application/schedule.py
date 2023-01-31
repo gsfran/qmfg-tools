@@ -36,8 +36,9 @@ class Schedule:
         self._init_dates()
 
     def _get_work_week(self: Schedule) -> WorkWeeks:
-        week_ = db.get_or_404(WorkWeeks, self.year_week)
-        if week_ is None:
+        try:
+            week_ = db.get_or_404(WorkWeeks, self.year_week)
+        except:
             week_ = WorkWeeks(year_week=self.year_week)
             db.session.add(week_)
             db.session.commit()
@@ -173,13 +174,17 @@ class Schedule:
 
     @property
     def work_orders(self: Schedule) -> list[WorkOrders]:
+        def _get_work_orders() -> list[WorkOrders]:
+            return db.session.execute(db.select(WorkOrders).where(
+                    and_(
+                        WorkOrders.end_datetime >= self.start_datetime,
+                        WorkOrders.start_datetime < self.end_datetime
+                        )
+                    ).order_by(WorkOrders.start_datetime.desc())).scalars()
         try:
             return self._work_orders
         except AttributeError:
-            self._work_orders = db.session.execute(db.select(WorkOrders).where(
-                or_(WorkOrders.end_datetime >= self.start_datetime,
-                    WorkOrders.start_datetime < self.end_datetime)
-                ).order_by(WorkOrders.start_datetime.desc())).scalars()
+            self._work_orders = _get_work_orders()
             return self._work_orders
 
     def _map_work_order(self: Schedule, work_order: WorkOrders) -> None:
@@ -263,7 +268,7 @@ class CurrentSchedule(Schedule):
     def __init__(self: CurrentSchedule) -> None:
         year_week = dt.strftime(dt.now(), Schedule._year_week_format)
         super().__init__(year_week=year_week)
-        # self._update_work_orders()
+        self._update_work_orders()
 
     @property
     def current_week_hour(self: CurrentSchedule) -> int:
@@ -273,20 +278,15 @@ class CurrentSchedule(Schedule):
     @property
     def current_hour(self: CurrentSchedule) -> time:
         return current_hour()
-    
 
-    def multi_week_frame(self: Schedule) -> pd.DataFrame:
+    def _multi_week_frame(self: CurrentSchedule) -> pd.DataFrame:
+        _next_week_obj = Schedule(self.next_week)
+        _multi = pd.concat(
+            [self.schedule_frame, _next_week_obj.schedule_frame]
+            )
+        _frame_after_next = Schedule(_next_week_obj.next_week).schedule_frame
+        _multi = pd.concat([_multi, _frame_after_next])
 
-        def get_next_frame(_week: Schedule) -> pd.DataFrame:
-            return NextSchedule(_week.year_week).schedule_frame
-        
-        _multi = pd.DataFrame()
-        _next = get_next_frame(self)
-        _multi = pd.concat([self.schedule_frame, _next])
-
-        _next_next = get_next_frame(NextSchedule(self.next_week))
-        _multi = pd.concat([_multi, _next_next])
-        
         return _multi
     
     def _update_work_orders(self: CurrentSchedule) -> None:
@@ -295,19 +295,24 @@ class CurrentSchedule(Schedule):
             
     def _update_pouching(self: CurrentSchedule) -> None:
         for work_order in self.pouching():
-            self._update_work_order(work_order, self.multi_week_frame())
-
+            print(work_order.lot_number)
+            self._update_work_order(work_order, self._multi_week_frame())
+            
+    def _update_queued(self: CurrentSchedule) -> None:
+        pass
 
     def _update_work_order(
-            self: CurrentSchedule,
+            self: Schedule,
             work_order: WorkOrders, _schedule_frame: pd.DataFrame
         ) -> None:
         # self.update_pouched_qty()
         line = work_order.line
+        print(line)
         _frame = self._crop_frame(_schedule_frame, line)
         work_order, _frame = WorkOrders.update_work_order(
             work_order=work_order, _frame=_frame
             )
+        print(_frame)
 
         _schedule_frame[work_order.line] = _frame
 
@@ -318,19 +323,13 @@ class CurrentSchedule(Schedule):
             self: CurrentSchedule,
             _schedule_frame: pd.DataFrame, line: int
             ) -> pd.DataFrame:
-        _frame = _schedule_frame.loc[current_hour():, line]
         
-        if _frame[0] > self.end_datetime:
+        curr_hour = dt.now().replace(minute=0, microsecond=0)
+        
+        _frame = _schedule_frame.loc[curr_hour:, line]
+        if _frame.index[0] > self.end_datetime:
             # next schedule hour is not in the current week
             # need to fix
-            pass
-        
+            raise Exception('Needs to fix scheduling next week.')
+
         return _frame
-            
-
-
-class NextSchedule(Schedule):
-    
-    def __init__(self: NextSchedule, year_week: str) -> None:
-        self.year_week = year_week
-        self._init_week()

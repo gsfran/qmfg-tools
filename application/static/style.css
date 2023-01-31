@@ -10,14 +10,21 @@ body {
     color: #000;
 }
 
+.dev-banner {
+    display: block;
+    text-align: center;
+    width: 100%;
+    color: red;
+}
+
 a {
     color: unset;
-    text-decoration: none;
+    text-decoration: unset;
 }
 
 a:hover {
-    color: #222;
-    text-decoration: none;
+    color: unset;
+    text-decoration: unset;
 }
 
 h3 {
@@ -277,7 +284,7 @@ h3.sub {
 .hour {
     background-color: #fff;
     border-bottom: 1px solid #000;
-    z-index: 0;
+    /* z-index: 0; */
     height: 80px;
 }
 
@@ -324,8 +331,8 @@ h3.sub {
 
     padding-inline: 8px;
 
-    z-index: 2;
-    opacity: 1;
+    /* z-index: 30; */
+    opacity: .85;
     /* color: #fff; */
 	/* -webkit-text-stroke: .75px #000000d5; */
 	/* -webkit-text-fill-color: #ddddddd5; */
@@ -339,6 +346,7 @@ h3.sub {
 .schedule .work_order {
     font-size: 18px;
     margin-block: 10px;
+    border-radius: 18px;
 }
 
 .work_order.week_start {

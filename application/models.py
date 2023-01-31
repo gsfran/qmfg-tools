@@ -43,6 +43,21 @@ class WorkOrders(db.Model):
         return f'<WorkOrders object {self.lot_number}'
     
     @staticmethod
+    def week_of(year_week: str) -> list[WorkOrders]:
+        """Returns work orders on the schedule for the given week. 
+
+        Args:
+            year_week (str): The week in year-week format.
+
+        Returns:
+            list[WorkOrders]: The list of work orders.
+        """
+        pass
+        # return db.session.execute(db.select(WorkOrders).where(
+        #     WorkOrders.start_datetime
+        # )) needs work
+    
+    @staticmethod
     def pouching() -> list[WorkOrders]:
         """
         Returns database query for all 'Pouching' work orders.
@@ -98,8 +113,9 @@ class WorkOrders(db.Model):
         _frame_start = _frame[_frame.isna().sort_index()].index[0]
         _frame_end = _frame[_frame_start:].head(work_order.remaining_time).index[-1]
         
-        work_order.start_datetime = dt.combine(_frame_start.date(), time(_frame_start.hour))
+        # work_order.start_datetime = dt.combine(_frame_start.date(), time(_frame_start.hour))
         work_order.end_datetime = dt.combine(_frame_end.date(), time(_frame_end.hour))
+        db.session.commit()
         
         _frame[_frame_start:_frame_end] = work_order.lot_number
         
@@ -110,14 +126,20 @@ class WorkWeeks(db.Model):
     # id = db.Column(db.Integer)
     year_week = db.Column(db.String(7), primary_key=True)
     
+    # [MON, TUE, WED, THU, FRI, SAT, SUN]
     prod_days = db.Column(db.Integer, nullable=False, default=0b1111100)
+    
+    # [0 - 23] [hr]
     workday_start_time = db.Column(db.Integer, nullable=False, default=6)
     workday_end_time = db.Column(db.Integer, nullable=False, default=23)
     
+    # [5, 6, 7, 8, 9, 10, 11, 12]
     lines = db.Column(db.Integer, nullable=False, default=0b11111000)
     
     def __repr__(self: WorkWeeks) -> str:
         return f'<WorkWeeks object {self.year_week}'
+
+        
     
 class Line5DataBase(db.Model):
     id = db.Column(db.Integer, primary_key=True)

@@ -28,7 +28,7 @@ def current_schedule() -> str:
 
 @app.route('/schedule/<string:year_week>')
 def view_schedule(year_week: str) -> str:
-    
+
     if year_week == dt.strftime(dt.now(), '%G-%V'):
         return redirect(url_for('current_schedule'))
 
@@ -124,7 +124,7 @@ def edit_work_order(lot_number: int) -> str:
         
         db.session.commit()
 
-        return redirect(url_for('index'))
+        return redirect(url_for('current_schedule'))
 
     return render_template('edit-work-order.html.jinja', form=form)
 
@@ -156,7 +156,6 @@ def load_work_order(lot_number: int) -> str:
 
         work_order.load_datetime = dt.now()
         work_order.status = 'Pouching'
-        work_order.pouched_qty = 0
         work_order.log += f'Loaded to {work_order.line}: {dt.now()}\n'
         db.session.commit()
 
@@ -186,11 +185,12 @@ def unload_work_order(lot_number: int) -> str:
             'warning'
             )
         work_order.status = 'Parking Lot'
-        work_order.line = None
+        work_order.start_datetime = None
         work_order.end_datetime = None
         work_order.load_datetime = None
-        work_order.log += f'Unloaded from {work_order.line}: {dt.now()}\n'
         
+        work_order.log += f'Unloaded from {work_order.line}: {dt.now()}\n'
+        work_order.line = None
         db.session.commit()
     
     return redirect(url_for('current_schedule'))
