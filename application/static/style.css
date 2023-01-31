@@ -1,8 +1,15 @@
 :root {
-    --bg_purple: #774def;
-    --faint_purple: #f0f0ff;
-    --light_grey: #bbbbbb;
-    --dark_grey: #888888;
+    --q-purple: #774def;
+
+    --flu: #55d000;
+    --abc: #ff00ff;
+    --sars: #ff0000;
+    --rsv: #ffa500;
+    --strep_aplus: #9400d3;
+    --strep_inline: #00bfff;
+    --other: #aaaaaa;
+
+
 }
 
 body {
@@ -27,10 +34,14 @@ a:hover {
     text-decoration: unset;
 }
 
-h3 {
+.card-title {
     margin-top: 20px;
     margin-left: 20px;
     margin-bottom: 0px;
+}
+
+h2 {
+    font-weight: bolder;
 }
 
 h3.sub {
@@ -192,6 +203,7 @@ h3.sub {
     margin-inline: 15px; 
     line-height: 2.2rem;
     cursor: grab;
+    margin-block: 6px;
 }
 
 .parking_lot_header {
@@ -214,12 +226,12 @@ h3.sub {
     font-weight: bolder;
     
     border-radius: 12px;
-    border: 2px solid #00ced1;
-    color: #00CED1;
+    border: 2px solid var(--q-purple);
+    color: var(--q-purple);
 }
 
 .parking_lot .add:hover {
-    background-color: #00ced1d0;
+    background-color: var(--q-purple);
     border: 2px solid #00ced110;
     color: #fff;
 }
@@ -297,7 +309,7 @@ h3.sub {
 }
 
 .hour.not-scheduled {
-    background-color: #00000066;
+    background-color: #00000033;
     /* z-index: 3; */
 }
 
@@ -326,6 +338,7 @@ h3.sub {
     border-radius: 12px;
 
     text-align: center;
+    vertical-align: middle;
     font-weight: bold;
     overflow: hidden;
 
@@ -341,12 +354,34 @@ h3.sub {
 
 .work_order:hover {
     color: #fff;
+    opacity: .65;
+    border: 2px solid #fff;
+}
+
+.wo-tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.wo-tooltip .wo-tooltiptext {
+    visibility: hidden;
+    width: 250px;
+    background-color: #eee;
+    color: #000;
+    text-align: center;
+    padding: 5px 0;
+    border-radius: 6px;
+}
+
+.wo-tooltip:hover .wo-tooltip-text {
+    visibility: visible;
 }
 
 .schedule .work_order {
     font-size: 18px;
     margin-block: 10px;
-    border-radius: 18px;
+    border-radius: 20px;
+    margin-inline: 1px;
 }
 
 .work_order.week_start {
@@ -361,82 +396,48 @@ h3.sub {
     border-bottom-right-radius: 0px;
 }
 
-.work_order.modal-bg {
+.work_order.bg {
     background-color: #fff;
-    z-index: 1;
+    z-index: 5;
     opacity: 1;
+    padding: 0px;
 }
 
 /* PRODUCT TYPES */
 
 .work_order.flu {
-    background-color: #55d000ff;
-    border: 2px solid #55d000ff;
-}
-
-.flu:hover {
-    background-color: #55d00088;
-    border: 2px solid #55d00001;
+    background-color: var(--flu);
+    border: 2px solid var(--flu);
 }
 
 .work_order.abc {
-    background-color: #ff00ffff;
-    border: 2px solid #ff00ffff;
-}
-
-.abc:hover {
-    background-color: #ff00ff80;
-    border: 2px solid #ff00ff01;
+    background-color: var(--abc);
+    border: 2px solid var(--abc);
 }
 
 .work_order.sars {
-    background-color: #FF0000ff;
-    border: 2px solid red;
-}
-
-.sars:hover {
-    background-color: #FF000080;
-    border: 2px solid #FF000001;
+    background-color: var(--sars);
+    border: 2px solid var(--sars);
 }
 
 .work_order.rsv {
-    background-color: #ffa500ff;
-    border: 2px solid orange;
-}
-
-.rsv:hover {
-    background-color: #ffa50080;
-    border: 2px solid #ffa50001;
+    background-color: var(--rsv);
+    border: 2px solid var(--rsv);
 }
 
 .work_order.strep_aplus {
-    background-color: #9400d3ff;
-    border: 2px solid darkviolet;
-}
-
-.strep_aplus:hover {
-    background-color: #9400d380;
-    border: 2px solid #9400d301;
+    background-color: var(--strep_aplus);
+    border: 2px solid var(--strep_aplus);
 }
 
 .work_order.strep_inline {
-    background-color: #00bfffff;
-    border: 2px solid deepskyblue;
-}
-
-.strep_inline:hover {
-    background-color: #00bfff80;
-    border: 2px solid #00bfff01;
+    background-color: var(--strep_inline);
+    border: 2px solid var(--strep_inline);
 }
 
 .work_order.other {
-    background-color: #aaaaaaff;
-    border: 2px solid #aaaaaaff;
-}
-
-.other:hover {
-    background-color: #aaaaaa80;
-    border: 2px solid #aaaaaa01;
+    background-color: var(--other);
+    border: 2px solid var(--other);
 }
 
 /* WEEKDAY SELECTORS */

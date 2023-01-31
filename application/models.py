@@ -102,25 +102,6 @@ class WorkOrders(db.Model):
                 )
             ).scalars()
     
-    @staticmethod
-    def update_work_order(work_order: WorkOrders, _frame: pd.Series) -> WorkOrders:
-        work_order.remaining_qty = work_order.strip_qty - work_order.pouched_qty
-        work_order.remaining_time = (
-            math.ceil(
-                work_order.remaining_qty / work_order.standard_rate
-                )
-            )
-        _frame_start = _frame[_frame.isna().sort_index()].index[0]
-        _frame_end = _frame[_frame_start:].head(work_order.remaining_time).index[-1]
-        
-        # work_order.start_datetime = dt.combine(_frame_start.date(), time(_frame_start.hour))
-        work_order.end_datetime = dt.combine(_frame_end.date(), time(_frame_end.hour))
-        db.session.commit()
-        
-        _frame[_frame_start:_frame_end] = work_order.lot_number
-        
-        return work_order, _frame
-    
 
 class WorkWeeks(db.Model):
     # id = db.Column(db.Integer)
@@ -139,7 +120,6 @@ class WorkWeeks(db.Model):
     def __repr__(self: WorkWeeks) -> str:
         return f'<WorkWeeks object {self.year_week}'
 
-        
     
 class Line5DataBase(db.Model):
     id = db.Column(db.Integer, primary_key=True)

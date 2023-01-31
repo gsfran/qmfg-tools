@@ -7,7 +7,7 @@ products = {
         },
 
         'abc': {
-            'product_name': 'ABC (Flu+SARS) FIA',
+            'product_name': 'Flu+SARS FIA',
             'short_name': 'ABC',
             'item_number': 1451300,
             'standard_rate': 5000

@@ -13,7 +13,44 @@ from application.models import WorkOrders, WorkWeeks
 
 
 def current_hour() -> dt:
-    return dt.combine(dt.now().date(), time(dt.now().hour))
+    return dt.now().replace(minute=0, second=0, microsecond=0)
+
+def crop_frame(_schedule_frame: pd.DataFrame, line: int) -> pd.DataFrame:
+    _frame = _schedule_frame.loc[current_hour():, line]
+    return _frame
+
+def multi_week_frame() -> pd.DataFrame:
+    _next_week_obj = Schedule(CurrentSchedule().next_week)
+    _multi = pd.concat(
+        [CurrentSchedule().schedule_frame, _next_week_obj.schedule_frame]
+        )
+    _frame_after_next = Schedule(_next_week_obj.next_week).schedule_frame
+    _multi = pd.concat([_multi, _frame_after_next])
+    return _multi
+
+def map_work_order(work_order: WorkOrders, _frame: pd.Series) -> WorkOrders:
+    work_order.remaining_qty = work_order.strip_qty - work_order.pouched_qty
+    work_order.remaining_time = (
+        math.ceil(
+            work_order.remaining_qty / work_order.standard_rate
+            )
+        )
+    work_order_start = _frame[_frame.isna().sort_index()].index[0]
+    work_order_end = (
+        _frame[work_order_start:].head(work_order.remaining_time).index[-1]
+    )
+
+    if work_order.status == 'Queued':
+        work_order.start_datetime = dt.combine(
+            work_order_start.date(), time(work_order_start.hour)
+            )
+    work_order.end_datetime = dt.combine(
+        work_order_end.date(), time(work_order_end.hour)
+        )
+    db.session.commit()
+    
+    _frame[work_order_start:work_order_end] = work_order.lot_number
+    return work_order, _frame
 
 
 class Schedule:
@@ -214,6 +251,17 @@ class Schedule:
 
     def refresh(self: Schedule) -> None:
         self.__init__(self.year_week)
+    
+    @staticmethod
+    def refresh_work_orders() -> None:
+        _frame = multi_week_frame()
+        for work_order in WorkOrders.scheduled_jobs():
+            line = work_order.line
+            cropped_frame = crop_frame(_frame, line)
+            work_order, cropped_frame = map_work_order(
+                work_order=work_order, _frame=cropped_frame
+                )
+            _frame[line] = cropped_frame
 
     @staticmethod
     def parking_lot() -> list[WorkOrders]:
@@ -268,7 +316,6 @@ class CurrentSchedule(Schedule):
     def __init__(self: CurrentSchedule) -> None:
         year_week = dt.strftime(dt.now(), Schedule._year_week_format)
         super().__init__(year_week=year_week)
-        self._update_work_orders()
 
     @property
     def current_week_hour(self: CurrentSchedule) -> int:
@@ -278,58 +325,3 @@ class CurrentSchedule(Schedule):
     @property
     def current_hour(self: CurrentSchedule) -> time:
         return current_hour()
-
-    def _multi_week_frame(self: CurrentSchedule) -> pd.DataFrame:
-        _next_week_obj = Schedule(self.next_week)
-        _multi = pd.concat(
-            [self.schedule_frame, _next_week_obj.schedule_frame]
-            )
-        _frame_after_next = Schedule(_next_week_obj.next_week).schedule_frame
-        _multi = pd.concat([_multi, _frame_after_next])
-
-        return _multi
-    
-    def _update_work_orders(self: CurrentSchedule) -> None:
-        self.current_week_hour
-        self._update_pouching()
-            
-    def _update_pouching(self: CurrentSchedule) -> None:
-        for work_order in self.pouching():
-            print(work_order.lot_number)
-            self._update_work_order(work_order, self._multi_week_frame())
-            
-    def _update_queued(self: CurrentSchedule) -> None:
-        pass
-
-    def _update_work_order(
-            self: Schedule,
-            work_order: WorkOrders, _schedule_frame: pd.DataFrame
-        ) -> None:
-        # self.update_pouched_qty()
-        line = work_order.line
-        print(line)
-        _frame = self._crop_frame(_schedule_frame, line)
-        work_order, _frame = WorkOrders.update_work_order(
-            work_order=work_order, _frame=_frame
-            )
-        print(_frame)
-
-        _schedule_frame[work_order.line] = _frame
-
-        if work_order.status == 'Queued':
-            pass # update queued work orders start/completion times
-    
-    def _crop_frame(
-            self: CurrentSchedule,
-            _schedule_frame: pd.DataFrame, line: int
-            ) -> pd.DataFrame:
-        
-        curr_hour = dt.now().replace(minute=0, microsecond=0)
-        
-        _frame = _schedule_frame.loc[curr_hour:, line]
-        if _frame.index[0] > self.end_datetime:
-            # next schedule hour is not in the current week
-            # need to fix
-            raise Exception('Needs to fix scheduling next week.')
-
-        return _frame

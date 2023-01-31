@@ -57,7 +57,7 @@ def view_work_order(lot_number: int) -> str:
         return redirect(url_for('delete', lot_number=lot_number))
 
     return render_template(
-        'view-work-order.html.jinja', title=f'Lot {lot_number}',
+        'view-work-order.html.jinja', title='Work Order Details',
         form=form, work_order=work_order
         )
 
@@ -175,7 +175,7 @@ def load_work_order(lot_number: int) -> str:
     
 @app.route('/unload-work-order/<int:lot_number>')
 def unload_work_order(lot_number: int) -> str:
-    work_order = WorkOrders.query.get_or_404(lot_number)
+    work_order = db.get_or_404(WorkOrders, lot_number)
     
     if work_order.status == 'Pouching':
         flash(
