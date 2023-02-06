@@ -248,7 +248,7 @@ h3.sub {
     margin-inline: 5px;
 }
 
-.weekly-byline {
+.schedule.weekly-byline {
     grid-template-columns:
         [machine_index] 1fr repeat(168, 1fr) [last_col] 1fr [end-col];
     grid-template-rows:
@@ -358,29 +358,10 @@ h3.sub {
     border: 2px solid #fff;
 }
 
-.wo-tooltip {
-    position: relative;
-    display: inline-block;
-}
-
-.wo-tooltip .wo-tooltiptext {
-    visibility: hidden;
-    width: 250px;
-    background-color: #eee;
-    color: #000;
-    text-align: center;
-    padding: 5px 0;
-    border-radius: 6px;
-}
-
-.wo-tooltip:hover .wo-tooltip-text {
-    visibility: visible;
-}
-
 .schedule .work_order {
     font-size: 18px;
     margin-block: 10px;
-    border-radius: 20px;
+    border-radius: 16px;
     margin-inline: 1px;
 }
 

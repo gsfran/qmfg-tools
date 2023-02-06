@@ -6,7 +6,7 @@ import pandas as pd
 from datetime import time
 from datetime import datetime as dt
 
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
 
 from application import db
 
@@ -73,7 +73,8 @@ class WorkOrders(db.Model):
         """
         return db.session.execute(db.select(WorkOrders).where(
             WorkOrders.status == 'Parking Lot'
-            ).order_by(WorkOrders.add_datetime.desc())).scalars()
+            ).order_by(WorkOrders.add_datetime.desc())
+                                  ).scalars()
         
     @staticmethod
     def queued() -> list[WorkOrders]:
@@ -85,7 +86,7 @@ class WorkOrders(db.Model):
         return db.session.execute(db.select(WorkOrders).where(
                 WorkOrders.status == 'Queued'
             )
-            ).scalars()
+                                  ).scalars()
         
     @staticmethod
     def scheduled_jobs() -> list[WorkOrders]:
@@ -95,12 +96,22 @@ class WorkOrders(db.Model):
             list[WorkOrders]: Scheduled work orders.
         """
         return db.session.execute(db.select(WorkOrders).where(
-                or_(
-                    WorkOrders.status == 'Pouching',
-                    WorkOrders.status == 'Queued'
-                    )
+            or_(
+                WorkOrders.status == 'Pouching',
+                WorkOrders.status == 'Queued'
                 )
-            ).scalars()
+            )
+                                  ).scalars()
+        
+    @staticmethod
+    def on_line(line: int) -> list[WorkOrders]:
+        return db.session.execute(db.select(WorkOrders).where(
+            and_(
+                WorkOrders.line == line,
+                WorkOrders.status == 'Pouching'
+                )
+        )
+                                  ).scalar_one()
     
 
 class WorkWeeks(db.Model):

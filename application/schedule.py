@@ -151,12 +151,12 @@ class Schedule:
         self._week.workday_start_time = time(workday_start)
         self._week.workday_end_time = time(workday_end)
         db.session.commit()
-        self.refresh()
+        self.reload()
 
     def set_days(self: Schedule, days: int) -> None:
         self._week.prod_days = days
         db.session.commit()
-        self.refresh()
+        self.reload()
 
     @property
     def _index(self: Schedule) -> pd.DatetimeIndex:
@@ -249,11 +249,11 @@ class Schedule:
                 )
             return self._next_year_week
 
-    def refresh(self: Schedule) -> None:
+    def reload(self: Schedule) -> None:
         self.__init__(self.year_week)
-    
+
     @staticmethod
-    def refresh_work_orders() -> None:
+    def refresh() -> None:
         _frame = multi_week_frame()
         for work_order in WorkOrders.scheduled_jobs():
             line = work_order.line

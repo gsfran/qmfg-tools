@@ -1,6 +1,5 @@
 import datetime
 import json
-import sqlite3
 from datetime import datetime as dt
 from math import ceil
 
@@ -20,6 +19,7 @@ def index() -> app.response_class:
 @app.route('/schedule')
 def current_schedule() -> str:
     schedule = CurrentSchedule()
+    schedule.refresh()
 
     return render_template(
         'schedule.html.jinja', title='Current Schedule',

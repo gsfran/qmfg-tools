@@ -80,22 +80,21 @@
             <!-- WORK ORDERS -->
             {% for work_order in schedule.work_orders %}
             {% if work_order.start_datetime < schedule.start_datetime %}
-            <!-- WORK ORDERS THAT STARTED THE PREVIOUS WEEK
-                -->
+                <!-- WORK ORDERS THAT STARTED THE PREVIOUS WEEK -->
                 {% set start_col = col_offset %}
                 {% set end_col = (work_order.end_datetime.weekday() * 24 + work_order.end_datetime.hour + col_offset) %}
-                <div id="sched_{{ work_order.lot_number }}" style="grid-column-start: {{ start_col }};
-                            grid-column-end: {{ end_col }}; grid-row: line_{{ work_order.line }};" class="wo-tooltip">
+                        <div id="sched_{{ work_order.lot_number }}" style="grid-column-start: {{ start_col }};
+                            grid-column-end: {{ end_col }}; grid-row: line_{{ work_order.line }};">
                     <a href="/view-work-order/{{ work_order.lot_number }}">
-                        <li class="work_order {{ work_order.product }} week_start">
+                        <li class="work_order {{ work_order.product }} week_start" style="grid-column-start: {{ start_col }}; grid-column-end: {{ end_col }};
+                                    grid-row: line_{{ work_order.line }};">
                             {{ work_order.short_name }} {{ work_order.lot_id }}
                         </li>
                     </a>
                 </div>
                 {% elif work_order.end_datetime > schedule.end_datetime %}
                 <!-- WORK ORDERS THAT WILL END THE FOLLOWING WEEK -->
-                {% set start_col = (work_order.start_datetime.weekday() * 24 + work_order.start_datetime.hour +
-                col_offset) %}
+                {% set start_col = (work_order.start_datetime.weekday() * 24 + work_order.start_datetime.hour + col_offset) %}
                 {% set end_col = 168 + col_offset %}
                 <div id="sched_{{ work_order.lot_number }}" style="grid-column-start: {{ start_col }};
                             grid-column-end: {{ end_col }}; grid-row: line_{{ work_order.line }};">
