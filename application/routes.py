@@ -195,6 +195,13 @@ def unload_work_order(lot_number: int) -> str:
     
     return redirect(url_for('current_schedule'))
 
+@app.route('/line-status/<int: line>')
+def view_line_status(line: int) -> str:
+    pouching = WorkOrders.on_line(line=line)
+    
+    return render_template('line-status.html.jinja', title=f'Line {line}',
+                           line=line)
+
 @app.route('/performance')
 def performance() -> str:
     type_comparison = (
