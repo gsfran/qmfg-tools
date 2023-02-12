@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import math
-from datetime import date
 from datetime import datetime as dt
 from datetime import time, timedelta
+from typing import Any
 
 import pandas as pd
 from sqlalchemy import and_, or_
@@ -15,42 +15,51 @@ from application.models import WorkOrders, WorkWeeks
 def current_hour() -> dt:
     return dt.now().replace(minute=0, second=0, microsecond=0)
 
-def crop_frame(_schedule_frame: pd.DataFrame, line: int) -> pd.DataFrame:
+
+def crop_frame(_schedule_frame: pd.DataFrame, line: int) -> pd.Series:
     _frame = _schedule_frame.loc[current_hour():, line]
     return _frame
+
 
 def multi_week_frame() -> pd.DataFrame:
     _next_week_obj = Schedule(CurrentSchedule().next_week)
     _multi = pd.concat(
         [CurrentSchedule().schedule_frame, _next_week_obj.schedule_frame]
-        )
+    )
     _frame_after_next = Schedule(_next_week_obj.next_week).schedule_frame
     _multi = pd.concat([_multi, _frame_after_next])
     return _multi
 
-def map_work_order(work_order: WorkOrders, _frame: pd.Series) -> WorkOrders:
+
+def map_work_order(
+        work_order: WorkOrders, _frame: pd.Series[str]
+) -> tuple[WorkOrders, pd.Series[str]]:
     work_order.remaining_qty = work_order.strip_qty - work_order.pouched_qty
-    work_order.remaining_time = (
-        math.ceil(
-            work_order.remaining_qty / work_order.standard_rate
-            )
-        )
-    work_order_start = _frame[_frame.isna().sort_index()].index[0]
-    work_order_end = (
-        _frame[work_order_start:].head(work_order.remaining_time).index[-1]
+    work_order.remaining_time = math.ceil(
+        work_order.remaining_qty / work_order.standard_rate
     )
 
-    if work_order.status == 'Queued':
-        work_order.start_datetime = dt.combine(
-            work_order_start.date(), time(work_order_start.hour)
-            )
-    work_order.end_datetime = dt.combine(
-        work_order_end.date(), time(work_order_end.hour)
-        )
+    start_datetime = get_first_hour(_frame)
+
+    end_datetime = get_last_hour(_frame, work_order)
+
+    if work_order.status != 'Pouching':
+        work_order.start_datetime = start_datetime
+    work_order.end_datetime = end_datetime
     db.session.commit()
-    
-    _frame[work_order_start:work_order_end] = work_order.lot_number
+
+    _frame[start_datetime:end_datetime] = work_order.lot_number
     return work_order, _frame
+
+
+def get_first_hour(_frame: pd.Series[str]) -> dt:
+    return _frame.isna().first_valid_index().to_pydatetime()
+
+
+def get_last_hour(_frame: pd.Series[str], work_order: WorkOrders) -> dt:
+    return _frame[work_order.start_datetime:].head(
+        work_order.remaining_time
+    ).isna().last_valid_index().to_pydatetime()
 
 
 class Schedule:
@@ -73,9 +82,8 @@ class Schedule:
         self._init_dates()
 
     def _get_work_week(self: Schedule) -> WorkWeeks:
-        try:
-            week_ = db.get_or_404(WorkWeeks, self.year_week)
-        except:
+        week_ = db.session.get(WorkWeeks, self.year_week)
+        if week_ is None:
             week_ = WorkWeeks(year_week=self.year_week)
             db.session.add(week_)
             db.session.commit()
@@ -89,7 +97,7 @@ class Schedule:
 
     def _get_days(self: Schedule) -> list[int]:
         """Returns a list of integers representing the days scheduled
-        for the given week. 
+        for the given week.
 
         Returns:
             list[int]: List of days scheduled. 0 = Monday, 6 = Sunday.
@@ -97,12 +105,12 @@ class Schedule:
         bin_list_str = list(bin(self._week.prod_days))[2:]
         bin_list_int = list(map(int, bin_list_str))
 
-        days = range(7) # 0 - 6
+        days = range(7)  # 0 - 6
         _days = []
 
         for day, scheduled in zip(days, bin_list_int):
             if scheduled:
-                _days.append(day) 
+                _days.append(day)
         return _days
 
     def _get_lines(self: Schedule) -> list[int]:
@@ -114,8 +122,8 @@ class Schedule:
         """
         bin_list_str = list(bin(self._week.lines))[2:]
         bin_list_int = list(map(int, bin_list_str))
-        
-        lines = range(5, 13) # 5 - 12
+
+        lines = range(5, 13)  # 5 - 12
         _lines = []
 
         for line, scheduled in zip(lines, bin_list_int):
@@ -127,13 +135,13 @@ class Schedule:
         self.start_datetime = dt.strptime(
             f'{self.year_week}-Mon',
             f'{Schedule._year_week_format}-%a'
-            )
+        )
         self.end_date = self.start_datetime + timedelta(days=6)
         self.end_datetime = dt.combine(self.end_date, time().max)
         self.dates = pd.date_range(
             self.start_datetime, self.end_datetime,
             freq='d'
-            )
+        )
         self._set_schedule_type()
 
     def _set_schedule_type(self: Schedule) -> None:
@@ -146,10 +154,9 @@ class Schedule:
         else:
             raise Exception('Error setting week type (Current/Past/Future).')
 
-
-    def set_hours(self: Schedule, workday_start: int, workday_end: int) -> None:
-        self._week.workday_start_time = time(workday_start)
-        self._week.workday_end_time = time(workday_end)
+    def set_hours(self: Schedule, start: int, end: int) -> None:
+        self._week.workday_start_time = time(start)
+        self._week.workday_end_time = time(end)
         db.session.commit()
         self.reload()
 
@@ -165,7 +172,7 @@ class Schedule:
         except AttributeError:
             self.index_ = pd.date_range(
                 start=self.start_datetime, end=self.end_datetime, freq='h'
-                )
+            )
             return self.index_
 
     @property
@@ -174,9 +181,9 @@ class Schedule:
             return self._schedule_frame
         except AttributeError:
             self._schedule_frame = pd.DataFrame(
-                index=self.hours.index[self.hours == True],
+                index=self.hours.index[self.hours],
                 columns=self.lines
-                )
+            )
             return self._schedule_frame
 
     @property
@@ -196,7 +203,7 @@ class Schedule:
         except AttributeError:
             self._hour_mask = pd.Series(False, index=self._index)
             last_hour = self.workday_end.replace(hour=self.workday_end.hour-1)
-            self._hour_mask.loc[self.workday_start:last_hour] = True
+            self._hour_mask[self.workday_start:last_hour] = True
             return self._hour_mask
 
     @property
@@ -206,18 +213,20 @@ class Schedule:
         except AttributeError:
             self._day_mask = pd.Series(False, index=self._index)
             for _day in self._production_days:
-                self._day_mask[self._index.to_series().dt.weekday == _day] = True
+                self._day_mask[
+                    self._index.to_series().dt.weekday == _day
+                ] = True
             return self._day_mask
 
     @property
     def work_orders(self: Schedule) -> list[WorkOrders]:
         def _get_work_orders() -> list[WorkOrders]:
             return db.session.execute(db.select(WorkOrders).where(
-                    and_(
-                        WorkOrders.end_datetime >= self.start_datetime,
-                        WorkOrders.start_datetime < self.end_datetime
-                        )
-                    ).order_by(WorkOrders.start_datetime.desc())).scalars()
+                and_(
+                    WorkOrders.end_datetime >= self.start_datetime,
+                    WorkOrders.start_datetime < self.end_datetime
+                )
+            ).order_by(WorkOrders.start_datetime.desc())).scalars()
         try:
             return self._work_orders
         except AttributeError:
@@ -225,7 +234,7 @@ class Schedule:
             return self._work_orders
 
     def _map_work_order(self: Schedule, work_order: WorkOrders) -> None:
-        pass # map work orders to css grid values
+        pass  # map work orders to css grid values
 
     @property
     def prior_week(self: Schedule) -> str:
@@ -235,7 +244,7 @@ class Schedule:
             prior_week_start = self.start_datetime - timedelta(days=7)
             self._prior_year_week = dt.strftime(
                 prior_week_start, Schedule._year_week_format
-                )
+            )
             return self._prior_year_week
 
     @property
@@ -246,7 +255,7 @@ class Schedule:
             next_week_start = self.start_datetime + timedelta(days=7)
             self._next_year_week = dt.strftime(
                 next_week_start, Schedule._year_week_format
-                )
+            )
             return self._next_year_week
 
     def reload(self: Schedule) -> None:
@@ -255,12 +264,12 @@ class Schedule:
     @staticmethod
     def refresh() -> None:
         _frame = multi_week_frame()
-        for work_order in WorkOrders.scheduled_jobs():
+        for work_order in Schedule.scheduled_jobs():
             line = work_order.line
             cropped_frame = crop_frame(_frame, line)
             work_order, cropped_frame = map_work_order(
                 work_order=work_order, _frame=cropped_frame
-                )
+            )
             _frame[line] = cropped_frame
 
     @staticmethod
@@ -268,15 +277,27 @@ class Schedule:
         """
         Returns database query for all 'Parking Lot' jobs.
         """
-        return WorkOrders.parking_lot()
-        
+        return db.session.execute(
+            db.select(WorkOrders).where(
+                WorkOrders.status == 'Parking Lot'
+            ).order_by(
+                WorkOrders.add_datetime.desc()
+            )
+        ).scalars()
+
     @staticmethod
     def pouching() -> list[WorkOrders]:
         """
         Returns database query for all 'Pouching' jobs.
         """
-        return WorkOrders.pouching()
-    
+        return db.session.execute(
+            db.select(WorkOrders).where(
+                WorkOrders.status == 'Pouching'
+            ).order_by(
+                WorkOrders.line
+            )
+        ).scalars()
+
     @staticmethod
     def queued() -> list[WorkOrders]:
         """Returns db query for all Queued jobs.
@@ -284,7 +305,13 @@ class Schedule:
         Returns:
             list[WorkOrders]: Scheduled work orders.
         """
-        return WorkOrders.queued()
+        return db.session.execute(
+            db.select(WorkOrders).where(
+                WorkOrders.status == 'Queued'
+            ).order_by(
+                WorkOrders.line
+            )
+        ).scalars()
 
     @staticmethod
     def scheduled_jobs() -> list[WorkOrders]:
@@ -293,7 +320,25 @@ class Schedule:
         Returns:
             list[WorkOrders]: Scheduled work orders.
         """
-        return WorkOrders.scheduled_jobs()
+        return db.session.execute(
+            db.select(WorkOrders).where(
+                or_(
+                    WorkOrders.status == 'Pouching',
+                    WorkOrders.status == 'Queued'
+                )
+            )
+        ).scalars()
+
+    @staticmethod
+    def on_line(line: int) -> WorkOrders:
+        return db.session.execute(
+            db.select(WorkOrders).where(
+                and_(
+                    WorkOrders.line == line,
+                    WorkOrders.status == 'Pouching'
+                )
+            )
+        ).scalar_one()
 
     @staticmethod
     def week_hour(datetime_: dt) -> int:
@@ -308,7 +353,7 @@ class Schedule:
         return (
             f'{self.start_datetime:%b %d, %Y} - '
             f'{self.end_datetime:%b %d, %Y}'
-            )
+        )
 
 
 class CurrentSchedule(Schedule):
@@ -323,5 +368,5 @@ class CurrentSchedule(Schedule):
         return self._current_week_hour
 
     @property
-    def current_hour(self: CurrentSchedule) -> time:
+    def current_hour(self: CurrentSchedule) -> dt:
         return current_hour()
