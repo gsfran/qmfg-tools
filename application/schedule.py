@@ -16,12 +16,12 @@ def current_hour() -> dt:
     return dt.now().replace(minute=0, second=0, microsecond=0)
 
 
-def crop_frame(_schedule_frame: pd.DataFrame, line: int) -> pd.Series:
+def _crop_frame(_schedule_frame: pd.DataFrame, line: int) -> pd.Series:
     _frame = _schedule_frame.loc[current_hour():, line]
     return _frame
 
 
-def multi_week_frame() -> pd.DataFrame:
+def _multi_week_frame() -> pd.DataFrame:
     _next_week_obj = Schedule(CurrentSchedule().next_week)
     _multi = pd.concat(
         [CurrentSchedule().schedule_frame, _next_week_obj.schedule_frame]
@@ -32,24 +32,24 @@ def multi_week_frame() -> pd.DataFrame:
 
 
 def map_work_order(
-        work_order: WorkOrders, _frame: pd.Series[str]
-) -> tuple[WorkOrders, pd.Series[str]]:
+    work_order: WorkOrders, _frame: pd.Series[str]
+) -> pd.Series[str]:
     work_order.remaining_qty = work_order.strip_qty - work_order.pouched_qty
     work_order.remaining_time = math.ceil(
         work_order.remaining_qty / work_order.standard_rate
     )
+    wo_start = get_first_hour(_frame)
+    wo_end = get_last_hour(_frame, work_order)
 
-    start_datetime = get_first_hour(_frame)
+    if work_order.status == 'Queued':
+        work_order.start_datetime = wo_start
 
-    end_datetime = get_last_hour(_frame, work_order)
+    work_order.end_datetime = wo_end
 
-    if work_order.status != 'Pouching':
-        work_order.start_datetime = start_datetime
-    work_order.end_datetime = end_datetime
     db.session.commit()
 
-    _frame[start_datetime:end_datetime] = work_order.lot_number
-    return work_order, _frame
+    _frame[wo_start:wo_end] = work_order.lot_number
+    return _frame
 
 
 def get_first_hour(_frame: pd.Series[str]) -> dt:
@@ -57,9 +57,14 @@ def get_first_hour(_frame: pd.Series[str]) -> dt:
 
 
 def get_last_hour(_frame: pd.Series[str], work_order: WorkOrders) -> dt:
-    return _frame[work_order.start_datetime:].head(
-        work_order.remaining_time
-    ).isna().last_valid_index().to_pydatetime()
+    if work_order.status == 'Pouching':
+        return _frame[dt.now():].head(
+            work_order.remaining_time
+        ).isna().last_valid_index().to_pydatetime()
+    elif work_order.status == 'Queued':
+        return _frame[work_order.start_datetime:].head(
+            work_order.remaining_time
+        ).isna().last_valid_index().to_pydatetime()
 
 
 class Schedule:
@@ -90,12 +95,12 @@ class Schedule:
         return week_
 
     def _week_config(self: Schedule) -> None:
-        self._production_days = self._get_days()
+        self._production_days = self._parse_days()
         self.workday_start = time(self._week.workday_start_time)
         self.workday_end = time(self._week.workday_end_time)
-        self.lines = self._get_lines()
+        self.lines = self._parse_lines()
 
-    def _get_days(self: Schedule) -> list[int]:
+    def _parse_days(self: Schedule) -> list[int]:
         """Returns a list of integers representing the days scheduled
         for the given week.
 
@@ -113,7 +118,7 @@ class Schedule:
                 _days.append(day)
         return _days
 
-    def _get_lines(self: Schedule) -> list[int]:
+    def _parse_lines(self: Schedule) -> list[int]:
         """Returns list of integers representing the lines (5-12)
         in production for the given week.
 
@@ -263,11 +268,11 @@ class Schedule:
 
     @staticmethod
     def refresh() -> None:
-        _frame = multi_week_frame()
+        _frame = _multi_week_frame()
         for work_order in Schedule.scheduled_jobs():
             line = work_order.line
-            cropped_frame = crop_frame(_frame, line)
-            work_order, cropped_frame = map_work_order(
+            cropped_frame = _crop_frame(_frame, line)
+            cropped_frame = map_work_order(
                 work_order=work_order, _frame=cropped_frame
             )
             _frame[line] = cropped_frame
@@ -330,7 +335,7 @@ class Schedule:
         ).scalars()
 
     @staticmethod
-    def on_line(line: int) -> WorkOrders:
+    def on_line(line: str) -> WorkOrders:
         return db.session.execute(
             db.select(WorkOrders).where(
                 and_(

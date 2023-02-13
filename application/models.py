@@ -20,7 +20,7 @@ class WorkOrders(db.Model):
     standard_time = db.Column(db.Integer, nullable=False)
 
     status = db.Column(db.String(30), nullable=False, default='Parking Lot')
-    add_datetime = db.Column(db.DateTime, nullable=False, default=dt.utcnow)
+    add_datetime = db.Column(db.DateTime, nullable=False)
     load_datetime = db.Column(db.DateTime)
 
     line = db.Column(db.Integer)

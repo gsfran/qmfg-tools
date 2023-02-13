@@ -1,4 +1,3 @@
-import datetime
 import json
 from datetime import datetime as dt
 from datetime import timedelta
@@ -98,7 +97,8 @@ def add_work_order() -> str | Response:
             remaining_qty=strip_qty,
             standard_rate=standard_rate,
             standard_time=standard_time,
-            remaining_time=standard_time
+            remaining_time=standard_time,
+            add_datetime=dt.now()
         )
 
         db.session.add(work_order)
@@ -154,20 +154,24 @@ def delete(lot_number: int) -> Response:
 @app.route('/load-work-order/<int:lot_number>', methods=['GET', 'POST'])
 def load_work_order(lot_number: int) -> str | Response:
     work_order = db.session.get(WorkOrders, lot_number)
-
     form = LoadWorkOrderForm()
+    
     if form.validate_on_submit():
-        work_order.line = form.line.data
-        work_order.start_datetime = dt.combine(
-            form.start_date.data, form.start_time.data
-        )
-        work_order.end_datetime = work_order.start_datetime + timedelta(
-            hours=work_order.remaining_time
-        )
+        work_order.line = line = form.line.data
+        # work_order.start_datetime = dt.combine(
+        #     form.start_date.data, form.start_time.data
+        # )
+        # work_order.end_datetime = work_order.start_datetime + timedelta(
+        #     hours=work_order.remaining_time
+        # )
+        if Schedule.on_line(line):
+            work_order.status = 'Queued'
+        else:
+            work_order.status = 'Pouching'
+            work_order.start_datetime = dt.now()
 
-        work_order.load_datetime = dt.now()
-        work_order.status = 'Pouching'
         work_order.log += f'Loaded to {work_order.line}: {dt.now()}\n'
+        work_order.load_datetime = dt.now()
         db.session.commit()
 
         flash(
@@ -189,7 +193,7 @@ def load_work_order(lot_number: int) -> str | Response:
 def unload_work_order(lot_number: int) -> Response:
     work_order = db.session.get(WorkOrders, lot_number)
 
-    if work_order.status == 'Pouching':
+    if work_order.status == 'Pouching' or work_order.status == 'Queued':
         flash(
             f'{work_order.short_name} {work_order.lot_id} '
             f'(Lot {lot_number}) unloaded from '
