@@ -3,29 +3,28 @@ from __future__ import annotations
 from datetime import datetime as dt
 
 from flask_wtf import FlaskForm
-from wtforms import (FormField, IntegerField, RadioField, SelectField,
+from wtforms import (IntegerField, RadioField, SelectField,
                      StringField, SubmitField)
 from wtforms.fields.datetime import DateField, TimeField
 from wtforms.validators import (DataRequired, Length, NumberRange,
                                 ValidationError)
-from application.models import WorkOrders
 
 
 class ProductDetailsForm(FlaskForm):
-    
+
     product = StringField(
         'Product'
     )
-    
+
     product_name = StringField(
         'Product Name',
         validators=[DataRequired()]
-        )
-    
+    )
+
     short_name = StringField(
         'Short Name',
         validators=[DataRequired()]
-        )
+    )
 
     item_number = StringField(
         'Pouch Item Number',
@@ -37,14 +36,15 @@ class ProductDetailsForm(FlaskForm):
         validators=[
             DataRequired(),
             NumberRange(min=500, max=5000)
-            ]
+        ]
     )
 
     submit = SubmitField('Save')
 
+    @staticmethod
     def validate_item_number(
         form: ProductDetailsForm, item_number: StringField
-        ) -> None:
+    ) -> None:
         try:
             int(item_number.data)
         except ValueError:
@@ -64,40 +64,42 @@ class NewWorkOrderForm(FlaskForm):
             ('sars', '1440700 - SARS Antigen'),
             ('strep_inline', '1094000 - Strep Inline'),
             ('other', '< Other >')
-            ]
-        )
+        ]
+    )
 
     lot_id = StringField(
         'Lot ID', validators=[DataRequired(), Length(2, 5)]
-        )
+    )
 
     lot_number = StringField(
         'Pouch Lot #', validators=[DataRequired(), Length(6, 6)]
-        )
+    )
 
     strip_lot_number = StringField(
         'Strip Lot #', validators=[DataRequired(), Length(6, 6)]
-        )
+    )
 
     strip_qty = IntegerField(
         'Strip Qty.', validators=[
             DataRequired(), NumberRange(min=1, max=999999)
-            ]
-        )
+        ]
+    )
 
     submit = SubmitField('Add Work Order')
 
+    @staticmethod
     def validate_lot_number(
         form: NewWorkOrderForm, lot_number: StringField
-        ) -> None:
+    ) -> None:
         try:
             int(lot_number.data)
         except ValueError:
             raise ValidationError('Please enter a valid number.')
 
+    @staticmethod
     def validate_strip_lot_number(
         form: NewWorkOrderForm, strip_lot_number: StringField
-        ) -> None:
+    ) -> None:
         try:
             int(strip_lot_number.data)
         except ValueError:
@@ -114,8 +116,8 @@ class LoadWorkOrderForm(FlaskForm):
             ('7', 'Line 7'),
             ('8', 'Line 8'),
             ('9', 'Line 9')
-            ]
-        )
+        ]
+    )
     priority = RadioField(
         validators=[DataRequired()],
         choices=[
@@ -134,14 +136,16 @@ class LoadWorkOrderForm(FlaskForm):
     )
 
     submit = SubmitField('Load to Poucher')
-    
-    
+
+
 class ConfirmDeleteForm(FlaskForm):
-    
-    delete = StringField("Type 'delete' to confirm: ", validators=[DataRequired()])
+
+    delete = StringField("Type 'delete' to confirm: ",
+                         validators=[DataRequired()])
 
     submit = SubmitField('Delete')
-    
+
+    @staticmethod
     def validate_delete(form: ConfirmDeleteForm, delete: StringField) -> None:
         if delete.data != 'delete':
             raise ValidationError("Type 'delete' in the field to confirm.")

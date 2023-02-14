@@ -377,6 +377,11 @@ h3.sub {
     border-bottom-right-radius: 0px;
 }
 
+.work_order.week_span {
+    border-inline: none;
+    border-radius: 0px;
+}
+
 .work_order.bg {
     background-color: #fff;
     z-index: 5;
