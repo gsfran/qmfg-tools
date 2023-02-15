@@ -158,12 +158,6 @@ def load_work_order(lot_number: int) -> str | Response:
     
     if form.validate_on_submit():
         work_order.line = line = form.line.data
-        # work_order.start_datetime = dt.combine(
-        #     form.start_date.data, form.start_time.data
-        # )
-        # work_order.end_datetime = work_order.start_datetime + timedelta(
-        #     hours=work_order.remaining_time
-        # )
         if Schedule.on_line(line):
             work_order.status = 'Queued'
         else:

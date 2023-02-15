@@ -56,15 +56,19 @@ def get_first_hour(_frame: pd.Series[str]) -> dt:
     return _frame.isna().first_valid_index().to_pydatetime()
 
 
-def get_last_hour(_frame: pd.Series[str], work_order: WorkOrders) -> dt:
+def get_last_hour(_frame: pd.Series[str], work_order: WorkOrders) -> dt | None:
     if work_order.status == 'Pouching':
         return _frame[dt.now():].head(
             work_order.remaining_time
         ).isna().last_valid_index().to_pydatetime()
+
     elif work_order.status == 'Queued':
         return _frame[work_order.start_datetime:].head(
             work_order.remaining_time
         ).isna().last_valid_index().to_pydatetime()
+
+    else:
+        return None
 
 
 class Schedule:
@@ -80,8 +84,6 @@ class Schedule:
         self._init_week()
 
     def _init_week(self) -> None:
-        """Initializes database info for the week.
-        """
         self._week = self._get_work_week()
         self._week_config()
         self._init_dates()
@@ -335,7 +337,7 @@ class Schedule:
         ).scalars()
 
     @staticmethod
-    def on_line(line: str) -> WorkOrders:
+    def on_line(line: str) -> WorkOrders | None:
         return db.session.execute(
             db.select(WorkOrders).where(
                 and_(
