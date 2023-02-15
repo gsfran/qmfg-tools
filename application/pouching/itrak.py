@@ -50,7 +50,7 @@ class iTrak:
         self.product_inspect = ProductInspectCamera(self.machine_info)
 
     @staticmethod
-    def build_lines(line_numbers: list[str]) -> dict[str, str]:
+    def build_lines(line_numbers: list[int]) -> dict[str, str]:
         lines = {}
         for line_number in line_numbers:
             lines[line_number] = iTrak(line_number)
