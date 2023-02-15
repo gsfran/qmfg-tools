@@ -1,4 +1,5 @@
 from datetime import datetime as dt
+import os
 import pathlib
 from warnings import filterwarnings
 
@@ -11,13 +12,13 @@ class ProcessData:
     Object to fetch process data.
     """
 
-    # ROOT_PATH = '//kansas.us/qfs/Engineering/Process_Data'
-    ROOT_PATH = './application/testdata'
+    # ROOT_PATH = './application/testdata'
+    ROOT_PATH = os.environ['PD_PATH']
 
     @staticmethod
     def load(
         target_file: str, _data_headers: list
-    ) -> pd.DataFrame:
+    ) -> pd.DataFrame | None:
         """
         Returns a Dataframe containing cleaned process data for the given file.
         """
@@ -30,6 +31,8 @@ class ProcessData:
         )
 
         print(f'Done in {dt.now() - _t}')
+        if _raw_data is None:
+            return None
         return ProcessData._clean_data(_raw_data)
 
     @staticmethod
@@ -41,7 +44,7 @@ class ProcessData:
         _t = dt.now()
         print(f'{_t}: Cleaning raw data...\t\t\t', end='')
         # clean up cognex timestamp and index by DatetimeIndex
-        ## Could add a parsing function to better handle changes ##
+        # Could add a parsing function to better handle changes ##
         data_['datetime'] = pd.to_datetime(data_['cognex_timestamp'])
 
         # sets the DatetimeIndex and removes the cognex timestamp
@@ -62,7 +65,9 @@ class ProcessData:
         return data_
 
     @staticmethod
-    def _load_raw_data(_filepath: str, _data_headers: list) -> pd.DataFrame:
+    def _load_raw_data(
+        _filepath: str, _data_headers: list
+    ) -> pd.DataFrame | None:
         """
         Returns a Dataframe containing all process data for the given file.
         """
@@ -79,10 +84,13 @@ class OnlineUtilizationLog:
     Tools for working with Online Utilization Log data.
     """
 
-    ROOT_PATH = '//kansas.us/qfs/Engineering/Shared/Online Utilization Logs'
+    # ROOT_PATH = '//kansas.us/qfs/Engineering/Shared/Online Utilization Logs'
+    # ROOT_PATH = './application/testdata'
+    ROOT_PATH = os.environ['OUL_PATH']
 
+    @staticmethod
     def load(
-        machine_name: str, month: dt.month, sheets: list = None
+        machine_name: str, month: dt, sheets: list[str] = []
     ) -> pd.DataFrame:
         """
         Returns data from the machine's Online Utilization Log
