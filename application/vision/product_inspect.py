@@ -363,7 +363,7 @@ class ProductInspectData:
         try:
             return self._first_cycle
         except AttributeError:
-            self._first_cycle = min(self.data.index.values)
+            self._first_cycle = pd.Timestamp(min(self.data.index.values))
             return self._first_cycle
 
     @property
@@ -374,7 +374,7 @@ class ProductInspectData:
         try:
             return self._last_cycle
         except AttributeError:
-            self._last_cycle = max(self.data.index.values)
+            self._last_cycle = pd.Timestamp(max(self.data.index.values))
             return self._last_cycle
 
     @property
@@ -387,8 +387,10 @@ class ProductInspectData:
             return self._all_cycle_time
         except AttributeError:
             self._all_cycle_time = (
-                self.last_cycle - self.first_cycle
+                self.last_cycle
+                - self.first_cycle
             ).total_seconds()
+            pass
             return self._all_cycle_time
 
     @property
@@ -413,7 +415,7 @@ class ProductInspectData:
         try:
             return self._parts
         except AttributeError:
-            self._parts = self.data[self.data['part_present'] == 1]
+            self._parts = self.data.query('part_present == 1')
             return self._parts
 
     @property
@@ -424,8 +426,8 @@ class ProductInspectData:
         try:
             return self._first_part
         except AttributeError:
-            self._first_part = min(
-                self.data[self.data['part_present'] == 1].index.values
+            self._first_part = pd.Timestamp(
+                min(self.parts.index.values)
             )
             return self._first_part
 
@@ -437,8 +439,8 @@ class ProductInspectData:
         try:
             return self._last_part
         except AttributeError:
-            self._last_part = max(
-                self.data[self.data['part_present'] == 1].index.values
+            self._last_part = pd.Timestamp(
+                max(self.parts.index.values)
             )
             return self._last_part
 
@@ -475,7 +477,7 @@ class ProductInspectData:
         try:
             return self._empty_cycles
         except AttributeError:
-            self._empty_cycles = self.data[self.data['part_present'] == 0]
+            self._empty_cycles = self.data.query('part_present == 0')
             return self._empty_cycles
 
     @property
@@ -547,7 +549,7 @@ class ProductInspectData:
             return self._stops
         except AttributeError:
             self._stops = self.data.query(
-                'cycle_time' > self.process_vars['MAX_CYCLE_TIME_SECONDS']
+                'cycle_time > @self.process_vars["MAX_CYCLE_TIME_SECONDS"]'
             )
             return self._stops
 
@@ -560,7 +562,7 @@ class ProductInspectData:
             return self._run_cycles
         except AttributeError:
             self._run_cycles = self.data.query(
-                'cycle_time' < self.process_vars['MAX_CYCLE_TIME_SECONDS']
+                'cycle_time < @self.process_vars["MAX_CYCLE_TIME_SECONDS"]'
             )
             return self._run_cycles
 
@@ -620,12 +622,12 @@ class ProductInspectData:
         except AttributeError:
             drop_these = pd.concat([
                 self.data.query(
-                    'cycle_time'
-                    > self.process_vars['SHORT_STOP_LIMIT_SECONDS']
+                    'cycle_time '
+                    '> @self.process_vars["SHORT_STOP_LIMIT_SECONDS"]'
                 ),
                 self.data.query(
-                    'cycle_time'
-                    < self.process_vars['MAX_CYCLE_TIME_SECONDS']
+                    'cycle_time '
+                    '< @self.process_vars["MAX_CYCLE_TIME_SECONDS"]'
                 )
             ]).index
             self._short_stops = self.data.drop(drop_these).dropna()
@@ -661,10 +663,10 @@ class ProductInspectData:
         try:
             return self._long_stops
         except AttributeError:
-            drop_rows = self.data[
-                self.data['cycle_time']
-                < self.process_vars['SHORT_STOP_LIMIT_SECONDS']
-            ].index
+            drop_rows = self.data.query(
+                'cycle_time '
+                '< @self.process_vars["SHORT_STOP_LIMIT_SECONDS"]'
+            ).index
             self._long_stops = self.data.drop(drop_rows).dropna()
             return self._long_stops
 
@@ -775,13 +777,14 @@ class ProductInspectData:
         Dumps the stats DataFrame to .xlsx file.
         """
         file_ = f'{self.__str__()}_Stats.xlsx'
-        folder_ = f'.test_out/xls/{self._data_source.__str__()}/'
+        folder_ = f'.test/xls/{self._data_source.__str__()}/'
         path_ = folder_ + file_
 
         if not os.path.exists(folder_):
             os.mkdir(folder_)
 
-        _keys, _values = self.all_stats
+        _keys = self.all_stats.keys()
+        _values = self.all_stats.values()
 
         pd.DataFrame(
             data=_values, columns=[self.__str__()], index=_keys
@@ -792,7 +795,7 @@ class ProductInspectData:
         Dumps the stops DataFrame to .xlsx file.
         """
         file_ = f'{self.__str__()}_Stops.xlsx'
-        folder_ = f'.test_out/xls/{self._data_source.__str__()}/'
+        folder_ = f'.test/xls/{self._data_source.__str__()}/'
         path_ = folder_ + file_
 
         if not os.path.exists(folder_):
@@ -845,8 +848,8 @@ class ProductInspectData:
 
         try:
             period_length = (
-                prod_.index.values[-1].to_datetime64()
-                - prod_.index.values[0].to_datetime64()
+                pd.Timestamp(prod_.index.values[-1])
+                - pd.Timestamp(prod_.index.values[0])
             ) / len(prod_)
         except IndexError:
             raise Exception("Index out of bounds for the given data.")
@@ -881,7 +884,7 @@ class ProductInspectData:
         Dumps the productivity DataFrame to .xlsx file.
         """
         file_ = f'{self.__str__()}_Productivity.xlsx'
-        folder_ = f'.test_out/xls/{self._data_source.__str__()}/'
+        folder_ = f'.test/xls/{self._data_source.__str__()}/'
         path_ = folder_ + file_
 
         if not os.path.exists(folder_):
