@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 from matplotlib.axis import Axis
 
-from machines import iTrak
+from pouching import iTrak
 
 
 def main():
@@ -35,14 +35,11 @@ def main():
     # print(line.product_inspect.cached_data[start])
 
     db.all_stats
-    prod_ = db.productivity
+    _ = db.productivity
 
     db.stats_to_xls()
     db.stops_to_xls()
     db.prod_to_xls()
-
-
-
 
     """
     OLD_VS_NEW
@@ -67,7 +64,6 @@ def main():
     print(f'\n\nSlow method finished in {tf - t0}')
     """
 
-
     # plt.plot(prod_.index, prod_['rate_Hz'].rolling(30).mean() * 60)
     # plt.draw()
     # # plt.show()
@@ -75,7 +71,6 @@ def main():
     # # print(new_db)
     # new_db.all_stats
     # new_prod_ = new_db.productivity
-
 
     # winsize = 60
 
@@ -98,7 +93,6 @@ def main():
     # # [plt.axvline(_, 0, 1, color='tab:blue', alpha=y_norm[i], lw=0.20) for i, _ in enumerate(x)]
 
     # plt.fill_between(prod_.index, y_0, y, color='tab:blue', lw=.25)
-
 
     # plt.axes.draw
     # plt.show()

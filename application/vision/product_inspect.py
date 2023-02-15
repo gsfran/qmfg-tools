@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-import datetime
 import os
 from copy import deepcopy
 from dataclasses import dataclass, field
+from datetime import date
 from datetime import datetime as dt
-from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -18,10 +17,10 @@ class ProductInspectCamera:
     """
     iTrak Poucher Product Inspect Camera object.
     """
-    _machine_info: dict = field(default_factory=dict)
+    _machine_info: dict = field(default_factory=dict[str, str])
 
     def __post_init__(self: ProductInspectCamera) -> None:
-        self._data_folder = self.machine_info.get('data_folder')
+        self._data_folder = self.machine_info.get('data_folder', None)
         self._process_vars = self.PROCESS_VARS
         self._process_code = self.process_vars['PROCESS_CODE']
 
@@ -30,7 +29,7 @@ class ProductInspectCamera:
     RAW_DATA_HEADERS = [
         "item_number", "lot_number", "serial_number",
         "part_present", "cognex_timestamp"
-        ]
+    ]
 
     PROCESS_VARS = {
 
@@ -48,7 +47,7 @@ class ProductInspectCamera:
         'SHORT_STOP_LIMIT_SECONDS': 120,
         'SHORT_STOP_BIN_WIDTH_SECONDS': 2,
         'LONG_STOP_BIN_WIDTH_SECONDS': 60
-        }
+    }
     # endregion
     ...
 
@@ -59,6 +58,8 @@ class ProductInspectCamera:
 
     @property
     def data_folder(self: ProductInspectCamera) -> str:
+        if self._data_folder is None:
+            raise KeyError('No data folder found for vision system.')
         return self._data_folder
 
     @property
@@ -77,8 +78,9 @@ class ProductInspectCamera:
 
     # region methods
     def _to_cache(
-        self: ProductInspectCamera, key_: datetime.date, data_: pd.DataFrame
-        ) -> None:
+        self: ProductInspectCamera,
+        key_: date, data_: pd.DataFrame | None
+    ) -> None:
         """
         Stores the given datetime key and process data in a
         cached DataFrame for further use.
@@ -87,7 +89,7 @@ class ProductInspectCamera:
 
     def new_block(
         self: ProductInspectCamera, start_datetime: dt, end_datetime: dt
-        ) -> ProductInspectData:
+    ) -> ProductInspectData:
         """
         Returns a DataBlock object of process data for the given timespan.
         """
@@ -96,7 +98,7 @@ class ProductInspectCamera:
         print(
             f'\n\nCreating DataBlock for {self.__str__()}: '
             f'{start_datetime} - {end_datetime}\n'
-            )
+        )
 
         data_ = self._concatenate_days(
             pd.date_range(start_datetime, end_datetime, freq='d')
@@ -105,28 +107,33 @@ class ProductInspectCamera:
         print(
             f'Retrieved data with length '
             f'{len(data_.index)} in {dt.now() - _t}'
-            )
+        )
 
         return ProductInspectData(self, data_, start_datetime, end_datetime)
 
     def _concatenate_days(
         self: ProductInspectCamera, days: pd.DatetimeIndex
-        ) -> pd.DataFrame:
+    ) -> pd.DataFrame:
         """
         Fetch the data for each item in dates.
         """
         data_ = pd.DataFrame()
         for day_ in days.to_pydatetime():
-            data_ = pd.concat([data_, self.load_data(day_)])
+            new_data = self.load_data(day_)
+            if new_data is None:
+                continue
+            data_ = pd.concat([data_, new_data])
 
         return data_
 
-    def load_data(self: ProductInspectCamera, date_: dt) -> pd.DataFrame:
+    def load_data(
+        self: ProductInspectCamera, date_: dt
+    ) -> pd.DataFrame | None:
         """
-        Returns cached data if it exists, otherwise loads 
+        Returns cached data if it exists, otherwise loads
         the data from process data files.
         """
-        key_ = datetime.date(date_.year, date_.month, date_.day)
+        key_ = date(date_.year, date_.month, date_.day)
 
         try:
             return self.cached_data[key_]
@@ -142,13 +149,13 @@ class ProductInspectCamera:
 
     def _load_data_from_file(
         self: ProductInspectCamera, date_: dt
-        ) -> pd.DataFrame:
+    ) -> pd.DataFrame | None:
         """
         Loads process data file for the given day.
         """
         target_file = (
             f'{self.data_folder}/{self.process_code}{date_:%Y%m%d}.txt'
-            )
+        )
 
         return ProcessData.load(target_file, self.RAW_DATA_HEADERS)
 
@@ -156,6 +163,7 @@ class ProductInspectCamera:
         return (f'{self.data_folder}-{self.process_code}')
     # endregion
     ...
+
 
 @dataclass
 class ProductInspectData:
@@ -279,7 +287,7 @@ class ProductInspectData:
         except AttributeError:
             self._run_parts_stats()
             return self._parts_stats
-    
+
     @property
     def stops_stats(self: ProductInspectData) -> dict:
         try:
@@ -311,7 +319,7 @@ class ProductInspectData:
             | self.parts_stats
             | self.stops_stats
             | self.oee_stats
-            )
+        )
         print(f'Done in {dt.now() - _t}')
 
     def _run_cycle_stats(self: ProductInspectData) -> None:
@@ -355,9 +363,8 @@ class ProductInspectData:
         try:
             return self._first_cycle
         except AttributeError:
-            self._first_cycle = min(self.data.index)
-        
-        return self.first_cycle
+            self._first_cycle = min(self.data.index.values)
+            return self._first_cycle
 
     @property
     def last_cycle(self: ProductInspectData) -> pd.Timestamp:
@@ -367,9 +374,8 @@ class ProductInspectData:
         try:
             return self._last_cycle
         except AttributeError:
-            self._last_cycle = max(self.data.index)
-
-        return self.last_cycle
+            self._last_cycle = max(self.data.index.values)
+            return self._last_cycle
 
     @property
     def all_cycle_time(self: ProductInspectData) -> float:
@@ -382,9 +388,8 @@ class ProductInspectData:
         except AttributeError:
             self._all_cycle_time = (
                 self.last_cycle - self.first_cycle
-                ).total_seconds()
-
-        return self.all_cycle_time
+            ).total_seconds()
+            return self._all_cycle_time
 
     @property
     def cycle_count(self: ProductInspectData) -> int:
@@ -395,8 +400,7 @@ class ProductInspectData:
             return self._cycle_count
         except AttributeError:
             self._cycle_count = len(self.data.index)
-
-        return self.cycle_count
+            return self._cycle_count
     # endregion
     ...
 
@@ -421,8 +425,8 @@ class ProductInspectData:
             return self._first_part
         except AttributeError:
             self._first_part = min(
-                self.data[self.data['part_present'] == 1].index
-                )
+                self.data[self.data['part_present'] == 1].index.values
+            )
             return self._first_part
 
     @property
@@ -434,8 +438,8 @@ class ProductInspectData:
             return self._last_part
         except AttributeError:
             self._last_part = max(
-                self.data[self.data['part_present'] == 1].index
-                )
+                self.data[self.data['part_present'] == 1].index.values
+            )
             return self._last_part
 
     @property
@@ -506,7 +510,7 @@ class ProductInspectData:
         except AttributeError:
             self._reworks = self.data[
                 self.data.duplicated('serial_number')
-                ]
+            ]
             return self._reworks
 
     @property
@@ -542,12 +546,10 @@ class ProductInspectData:
         try:
             return self._stops
         except AttributeError:
-            self._stops = (
-                self.data[self.data['cycle_time']
-                > self.process_vars['MAX_CYCLE_TIME_SECONDS']]
+            self._stops = self.data.query(
+                'cycle_time' > self.process_vars['MAX_CYCLE_TIME_SECONDS']
             )
             return self._stops
-
 
     @property
     def run_cycles(self: ProductInspectData) -> pd.DataFrame:
@@ -557,9 +559,8 @@ class ProductInspectData:
         try:
             return self._run_cycles
         except AttributeError:
-            self._run_cycles = (
-                self.data[self.data['cycle_time']
-                < self.process_vars['MAX_CYCLE_TIME_SECONDS']]
+            self._run_cycles = self.data.query(
+                'cycle_time' < self.process_vars['MAX_CYCLE_TIME_SECONDS']
             )
             return self._run_cycles
 
@@ -571,7 +572,7 @@ class ProductInspectData:
         try:
             return self._total_stop_count
         except AttributeError:
-            self._total_stop_count = len(self.stops.index)
+            self._total_stop_count = len(self.stops.index.values)
             return self._total_stop_count
 
     @property
@@ -606,7 +607,7 @@ class ProductInspectData:
         except AttributeError:
             self._uptime_percentage = (
                 self.total_run_time / self.all_cycle_time
-                )
+            )
             return self._uptime_percentage
 
     @property
@@ -617,13 +618,17 @@ class ProductInspectData:
         try:
             return self._short_stops
         except AttributeError:
-            drop_rows = pd.concat([
-                self.data[self.data['cycle_time']
-                > self.process_vars['SHORT_STOP_LIMIT_SECONDS']],
-                self.data[self.data['cycle_time']
-                < self.process_vars['MAX_CYCLE_TIME_SECONDS']]
+            drop_these = pd.concat([
+                self.data.query(
+                    'cycle_time'
+                    > self.process_vars['SHORT_STOP_LIMIT_SECONDS']
+                ),
+                self.data.query(
+                    'cycle_time'
+                    < self.process_vars['MAX_CYCLE_TIME_SECONDS']
+                )
             ]).index
-            self._short_stops = self.data.drop(drop_rows).dropna()
+            self._short_stops = self.data.drop(drop_these).dropna()
             return self._short_stops
 
     @property
@@ -659,10 +664,10 @@ class ProductInspectData:
             drop_rows = self.data[
                 self.data['cycle_time']
                 < self.process_vars['SHORT_STOP_LIMIT_SECONDS']
-                ].index
+            ].index
             self._long_stops = self.data.drop(drop_rows).dropna()
             return self._long_stops
-    
+
     @property
     def long_stop_count(self: ProductInspectData) -> int:
         """
@@ -735,8 +740,8 @@ class ProductInspectData:
         """
         Returns the OEE Quality Rate for the data
         as a decimal percentage.
-        
-        Note: This only accounts for reworks, not rejected pouches. 
+
+        Note: This only accounts for reworks, not rejected pouches.
         It's assumed losses due to melted or crushed product are minimal.
         """
         try:
@@ -757,7 +762,7 @@ class ProductInspectData:
                 self.availability_rate
                 * self.performance_rate
                 * self.quality_rate
-                )
+            )
             return self._oee_rate
     # endregion
     ...
@@ -776,10 +781,11 @@ class ProductInspectData:
         if not os.path.exists(folder_):
             os.mkdir(folder_)
 
+        _keys, _values = self.all_stats
+
         pd.DataFrame(
-                self.all_stats.values(), columns=[self.__str__()],
-                index=self.all_stats.keys()
-            ).T.to_excel(path_)
+            data=_values, columns=[self.__str__()], index=_keys
+        ).T.to_excel(path_)
 
     def stops_to_xls(self: ProductInspectData) -> None:
         """
@@ -798,7 +804,9 @@ class ProductInspectData:
 
     # region productivity
     @property
-    def productivity(self: ProductInspectData, freq: str='s') -> pd.DataFrame:
+    def productivity(
+        self: ProductInspectData, freq: str = 's'
+    ) -> pd.DataFrame:
         """
         Returns production yields vs. standard yields
         at the given frequency (default per second).
@@ -818,14 +826,16 @@ class ProductInspectData:
         finally:
             print(f'Done in {dt.now() - _t}')
 
-    def _get_productivity(self: ProductInspectData, freq: str) -> pd.DataFrame:
+    def _get_productivity(
+        self: ProductInspectData, freq: str
+    ) -> pd.DataFrame:
         """
         Returns the productivity at each interval
         of the given frequency.
         """
         datetime_range = pd.date_range(
-                self._start_datetime, self._end_datetime, freq=freq
-                )
+            self._start_datetime, self._end_datetime, freq=freq
+        )
         range_size = len(datetime_range)
         columns = ['actual_yield', 'standard_yield', 'rate_Hz']
         prod_ = pd.DataFrame(
@@ -834,7 +844,10 @@ class ProductInspectData:
         )
 
         try:
-            period_length = (prod_.index[-1].to_datetime64() - prod_.index[0].to_datetime64()) / len(prod_)
+            period_length = (
+                prod_.index.values[-1].to_datetime64()
+                - prod_.index.values[0].to_datetime64()
+            ) / len(prod_)
         except IndexError:
             raise Exception("Index out of bounds for the given data.")
 
@@ -849,7 +862,7 @@ class ProductInspectData:
         prod_['actual_yield'] = (
             self.running_part_count().sort_index().reindex_like(
                 datetime_range.to_series(), method='ffill'
-                ).fillna(0)
+            ).fillna(0)
         )
 
         prod_['rate_Hz'] = prod_['actual_yield'].diff() / freq_factor

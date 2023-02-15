@@ -29,19 +29,24 @@ class iTrak:
         },
         'Line 10': {
             'data_folder': 'Line10'
+        },
+        'Line 11': {
+            'data_folder': 'Line11'
+        },
+        'Line 12': {
+            'data_folder': 'Line12'
         }
     }
 
     IDEAL_RUN_RATE_HZ = 140 / 60
     STANDARD_RATE_HZ = 5000 / 3600
 
-    def __init__(self: iTrak, line_number: str) -> None:
+    def __init__(self: iTrak, line_number: int) -> None:
         self.number = line_number
         self.name = f'Line {self.number}'
 
-        self.machine_info = iTrak.ITRAK_DICT.get(self.name)
-        self.data_folder = self.machine_info.get('data_folder')
-
+        self.machine_info = iTrak.ITRAK_DICT[self.name]
+        self.data_folder = self.machine_info['data_folder']
         self.product_inspect = ProductInspectCamera(self.machine_info)
 
     @staticmethod
@@ -60,7 +65,7 @@ class iTrak:
                         WorkOrders.status == 'Pouching',
                         WorkOrders.status == 'Queued'
                     ),
-                    WorkOrders.line == self.number
+                    WorkOrders.line == str(self.number)
                 )
             ).order_by(
                 WorkOrders.add_datetime.desc()

@@ -209,7 +209,9 @@ class Schedule:
             return self._hour_mask
         except AttributeError:
             self._hour_mask = pd.Series(False, index=self._index)
-            last_hour = self.workday_end.replace(hour=self.workday_end.hour-1)
+            last_hour = self.workday_end.replace(
+                hour=self.workday_end.hour-1
+            )
             self._hour_mask[self.workday_start:last_hour] = True
             return self._hour_mask
 

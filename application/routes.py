@@ -1,6 +1,5 @@
 import json
 from datetime import datetime as dt
-from datetime import timedelta
 from math import ceil
 
 from flask import flash, redirect, render_template, url_for
@@ -155,9 +154,10 @@ def delete(lot_number: int) -> Response:
 def load_work_order(lot_number: int) -> str | Response:
     work_order = db.session.get(WorkOrders, lot_number)
     form = LoadWorkOrderForm()
-    
+
     if form.validate_on_submit():
-        work_order.line = line = form.line.data
+        line = form.line.data
+        work_order.line = line
         if Schedule.on_line(line):
             work_order.status = 'Queued'
         else:

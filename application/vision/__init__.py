@@ -12,14 +12,18 @@ import pandas as pd
 @dataclass
 class Camera(Protocol):
     """
-    Machine vision system camera object. Any model capable of datalogging to /Process_Data/.
+    Machine vision system camera object
+    Any model capable of logging data to csv
     """
 
-    def datablock(self: Camera, start_datetime: dt, end_datetime: dt) -> DataBlock:
+    def datablock(
+        self: Camera, start_datetime: dt, end_datetime: dt
+    ) -> DataBlock:
         ...
 
     def get_process_data(self: Camera, date: dt) -> pd.DataFrame:
         ...
+
 
 @dataclass
 class DataBlock(Protocol):

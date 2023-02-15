@@ -1,6 +1,5 @@
 from datetime import datetime as dt
 import os
-import pathlib
 from warnings import filterwarnings
 
 import numpy as np
@@ -11,8 +10,6 @@ class ProcessData:
     """
     Object to fetch process data.
     """
-
-    # ROOT_PATH = './application/testdata'
     ROOT_PATH = os.environ['PD_PATH']
 
     @staticmethod
@@ -83,15 +80,12 @@ class OnlineUtilizationLog:
     """
     Tools for working with Online Utilization Log data.
     """
-
-    # ROOT_PATH = '//kansas.us/qfs/Engineering/Shared/Online Utilization Logs'
-    # ROOT_PATH = './application/testdata'
     ROOT_PATH = os.environ['OUL_PATH']
 
     @staticmethod
     def load(
         machine_name: str, month: dt, sheets: list[str] = []
-    ) -> pd.DataFrame:
+    ) -> dict[int | str, pd.DataFrame] | None:
         """
         Returns data from the machine's Online Utilization Log
         """
@@ -121,10 +115,10 @@ class OnlineUtilizationLog:
             )
             try:
                 utilization_log_data = pd.read_excel(
-                    excel_reader, sheet_name=sheets, header=None,
+                    excel_reader, sheet_name=[*sheets], header=None,
                     na_filter=False
                 )
-            except Exception:
-                raise Exception(f'{file_path} could not be loaded.')
+            except FileNotFoundError:
+                raise
 
         return utilization_log_data
