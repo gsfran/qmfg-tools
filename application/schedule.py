@@ -339,7 +339,7 @@ class Schedule:
         ).scalars()
 
     @staticmethod
-    def on_line(line: str) -> WorkOrders | None:
+    def on_line(line: str | None) -> WorkOrders | None:
         return db.session.execute(
             db.select(WorkOrders).where(
                 and_(
