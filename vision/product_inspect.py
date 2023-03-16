@@ -6,10 +6,10 @@ from dataclasses import dataclass, field
 from datetime import date
 from datetime import datetime as dt
 
+from ._file_handling import ProcessData
+
 import numpy as np
 import pandas as pd
-
-from application.vision import ProcessData
 
 
 @dataclass
@@ -777,14 +777,14 @@ class ProductInspectData:
         Dumps the stats DataFrame to .xlsx file.
         """
         file_ = f'{self.__str__()}_Stats.xlsx'
-        folder_ = f'.test/xls/{self._data_source.__str__()}/'
+        folder_ = f'.test_files/xls/{self._data_source.__str__()}/'
         path_ = folder_ + file_
 
         if not os.path.exists(folder_):
             os.mkdir(folder_)
 
-        _keys = self.all_stats.keys()
-        _values = self.all_stats.values()
+        _keys = list(self.all_stats.keys())
+        _values = list(self.all_stats.values())
 
         pd.DataFrame(
             data=_values, columns=[self.__str__()], index=_keys
@@ -795,7 +795,7 @@ class ProductInspectData:
         Dumps the stops DataFrame to .xlsx file.
         """
         file_ = f'{self.__str__()}_Stops.xlsx'
-        folder_ = f'.test/xls/{self._data_source.__str__()}/'
+        folder_ = f'.test_files/xls/{self._data_source.__str__()}/'
         path_ = folder_ + file_
 
         if not os.path.exists(folder_):
@@ -884,7 +884,7 @@ class ProductInspectData:
         Dumps the productivity DataFrame to .xlsx file.
         """
         file_ = f'{self.__str__()}_Productivity.xlsx'
-        folder_ = f'.test/xls/{self._data_source.__str__()}/'
+        folder_ = f'.test_files/xls/{self._data_source.__str__()}/'
         path_ = folder_ + file_
 
         if not os.path.exists(folder_):

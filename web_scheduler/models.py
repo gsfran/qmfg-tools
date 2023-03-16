@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from application import db
+from web_scheduler import db
 
 
 class WorkOrders(db.Model):

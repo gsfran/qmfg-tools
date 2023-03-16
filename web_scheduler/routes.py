@@ -5,12 +5,12 @@ from math import ceil
 from flask import flash, redirect, render_template, url_for
 from werkzeug import Response
 
-from application import app, db
-from application.forms import (ConfirmDeleteForm, LoadWorkOrderForm,
-                               NewWorkOrderForm, ProductDetailsForm)
-from application.models import WorkOrders
-from application.products import products
-from application.schedule import CurrentSchedule, Schedule
+from web_scheduler import app, db
+from web_scheduler.forms import (ConfirmDeleteForm, LoadWorkOrderForm,
+                                 NewWorkOrderForm, ProductDetailsForm)
+from web_scheduler.models import WorkOrders
+from web_scheduler.products import products
+from web_scheduler.schedule import CurrentSchedule, Schedule
 
 
 @app.route('/')

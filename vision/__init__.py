@@ -4,8 +4,6 @@ from dataclasses import dataclass
 from datetime import datetime as dt
 from typing import Protocol
 
-from ._file_handling import ProcessData
-
 import pandas as pd
 
 

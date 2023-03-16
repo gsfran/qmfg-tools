@@ -14,5 +14,5 @@ def create_tables():
     db.create_all()
 
 
-from application import routes, models
+from . import routes, models
 # from application.machines import iTrak

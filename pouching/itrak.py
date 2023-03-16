@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-from sqlalchemy import and_, or_
+# from sqlalchemy import and_, or_
 
-from application.vision.product_inspect import ProductInspectCamera
-from application import db
-from application.models import WorkOrders
+from vision.product_inspect import ProductInspectCamera
 
 
 class iTrak:
@@ -56,18 +54,18 @@ class iTrak:
             lines[line_number] = iTrak(line_number)
         return lines
 
-    @property
-    def current_jobs(self: iTrak) -> list[WorkOrders]:
-        return db.session.execute(
-            db.select(WorkOrders).where(
-                and_(
-                    or_(
-                        WorkOrders.status == 'Pouching',
-                        WorkOrders.status == 'Queued'
-                    ),
-                    WorkOrders.line == str(self.number)
-                )
-            ).order_by(
-                WorkOrders.add_datetime.desc()
-            )
-        ).scalars()
+    # @property
+    # def current_jobs(self: iTrak) -> list[WorkOrders]:
+    #     return db.session.execute(
+    #         db.select(WorkOrders).where(
+    #             and_(
+    #                 or_(
+    #                     WorkOrders.status == 'Pouching',
+    #                     WorkOrders.status == 'Queued'
+    #                 ),
+    #                 WorkOrders.line == str(self.number)
+    #             )
+    #         ).order_by(
+    #             WorkOrders.add_datetime.desc()
+    #         )
+    #     ).scalars()

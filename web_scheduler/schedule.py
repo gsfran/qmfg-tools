@@ -3,13 +3,12 @@ from __future__ import annotations
 import math
 from datetime import datetime as dt
 from datetime import time, timedelta
-from typing import Any
 
 import pandas as pd
 from sqlalchemy import and_, or_
 
-from application import db
-from application.models import WorkOrders, WorkWeeks
+from web_scheduler import db
+from web_scheduler.models import WorkOrders, WorkWeeks
 
 
 def current_hour() -> dt:

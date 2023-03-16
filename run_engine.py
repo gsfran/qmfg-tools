@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.axis import Axis
-from application.pouching import iTrak
+from pouching import iTrak
 
 
 def main():
@@ -27,18 +27,18 @@ def main():
 
     pd.set_option('display.max_rows', 100)
 
-    db = line.product_inspect.new_block(start, end)
+    data_block_ = line.product_inspect.new_block(start, end)
 
     # print(line.product_inspect.cached_data.items())s
 
     # print(line.product_inspect.cached_data[start])
 
-    db.all_stats
-    _ = db.productivity
+    data_block_.all_stats
+    _ = data_block_.productivity
 
-    db.stats_to_xls()
-    db.stops_to_xls()
-    db.prod_to_xls()
+    data_block_.stats_to_xls()
+    data_block_.stops_to_xls()
+    data_block_.prod_to_xls()
 
     """
     OLD_VS_NEW
@@ -89,7 +89,9 @@ def main():
     # xformat = mdates.DateFormatter('%H:%M\n%b-%d')
     # plt.axes.xaxis.set_major_formatter(xformat)
 
-    # # [plt.axvline(_, 0, 1, color='tab:blue', alpha=y_norm[i], lw=0.20) for i, _ in enumerate(x)]
+    # [plt.axvline(
+    #     _, 0, 1, color='tab:blue', alpha=y_norm[i], lw=0.20
+    #     ) for i, _ in enumerate(x)]
 
     # plt.fill_between(prod_.index, y_0, y, color='tab:blue', lw=.25)
 

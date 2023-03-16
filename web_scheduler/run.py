@@ -1,5 +1,5 @@
 import os
-from application import app
+from ..web_scheduler import app
 
 
 if __name__ == '__main__':
