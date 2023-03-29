@@ -7,7 +7,7 @@ from application import db, login
 
 
 @login.user_loader
-def load_user(id):
+def load_user(id: str) -> User:
     return User.query.get(int(id))
 
 

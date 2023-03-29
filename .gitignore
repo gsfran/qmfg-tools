@@ -4,6 +4,7 @@
 ### Python ###
 
 .test
+.testdata
 
 
 # Byte-compiled / optimized / DLL files
