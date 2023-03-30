@@ -3,7 +3,7 @@ from datetime import datetime as dt
 from math import ceil
 
 from flask import abort, flash, redirect, render_template, request, url_for
-from flask_login import current_user, login_user
+from flask_login import current_user, login_required, login_user, logout_user
 from is_safe_url import is_safe_url
 from werkzeug import Response
 
@@ -22,10 +22,11 @@ def index() -> Response:
 
 @app.route('/user-login', methods=['GET', 'POST'])
 def login() -> str | Response:
+
     form = LoginForm()
     if form.validate_on_submit():
 
-        user = db.session.get(User, form.username.data)
+        user = User.get(form.username.data)
         if user is None:
             flash('Username not found.')
             return redirect(url_for('login'))
@@ -36,12 +37,21 @@ def login() -> str | Response:
         login_user(user, remember=form.remember_me.data)
         flash('Logged in successfully.')
 
-        next = request.args.get('next')
-        if not is_safe_url(next, None):
+        next_page = request.args.get('next')
+        if not is_safe_url(next_page, None):
             return abort(400)
 
-        return redirect(next or url_for('index'))
-    return render_template('user-login.html.jinja', title='User Login', form=form)
+        return redirect(next_page or url_for('index'))
+    return render_template(
+        'user-login.html.jinja', title='User Login',
+        form=form
+    )
+
+
+@app.route('/logout')
+def logout() -> Response:
+    logout_user()
+    return redirect(url_for('index'))
 
 
 @app.route('/schedule')
