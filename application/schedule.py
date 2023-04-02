@@ -347,7 +347,7 @@ class Schedule:
                     WorkOrders.status == 'Pouching'
                 )
             )
-        ).scalar_one()
+        ).scalar_one_or_none()
 
     @staticmethod
     def week_hour(datetime_: dt) -> int:
