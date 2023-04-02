@@ -3,11 +3,32 @@ from __future__ import annotations
 from datetime import datetime as dt
 
 from flask_wtf import FlaskForm
-from wtforms import (IntegerField, RadioField, SelectField,
-                     StringField, SubmitField)
+from wtforms import (BooleanField, IntegerField, PasswordField, RadioField,
+                     SelectField, StringField, SubmitField)
 from wtforms.fields.datetime import DateField, TimeField
 from wtforms.validators import (DataRequired, Length, NumberRange,
                                 ValidationError)
+
+
+class LoginForm(FlaskForm):
+
+    username = StringField(
+        'Username',
+        validators=[DataRequired()]
+    )
+
+    password = PasswordField(
+        'Password',
+        validators=[DataRequired()]
+    )
+
+    remember_me = BooleanField(
+        'Remember Me'
+    )
+
+    submit = SubmitField(
+        'Login'
+    )
 
 
 class ProductDetailsForm(FlaskForm):

@@ -7,8 +7,8 @@ from application import db, login
 
 
 @login.user_loader
-def load_user(id):
-    return User.query.get(int(id))
+def load_user(id: str):
+    return User.get(int(id))
 
 
 class User(UserMixin, db.Model):
@@ -71,7 +71,7 @@ class WorkWeeks(db.Model):
     workday_end_time = db.Column(db.Integer, nullable=False, default=23)
 
     # [5, 6, 7, 8, 9, 10, 11, 12]
-    lines = db.Column(db.Integer, nullable=False, default=0b11111000)
+    lines = db.Column(db.Integer, nullable=False, default=0b11111100)
 
     def __repr__(self: WorkWeeks) -> str:
         return f'<WorkWeeks object {self.year_week}>s'

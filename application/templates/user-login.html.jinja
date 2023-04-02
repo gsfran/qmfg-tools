@@ -1,0 +1,60 @@
+{% extends 'layout.html.jinja' %}
+{% block content %}
+<div class="card card-style mb-2 col-sm-10 col-md-8 col-lg-6" style="max-width: 540px;">
+    <h3 class="card-title">User Login</h3>
+    <div class="card-body">
+        <form action="" method="POST" novalidate>
+            {{ form.hidden_tag() }}
+            <fieldset class="form-group">
+
+                <!-- USERNAME FIELD -->
+                <div class="form-group">
+                    {{ form.username.label(class="form-control-label") }}
+                    {% if form.username.errors %}
+                        {{ form.username(class="form-control form-control-sm is-invalid") }}
+                        {% for error in form.username.errors %}
+                            <div class="invalid-feedback">
+                                <span>{{ error }}</span>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        {{ form.username(class="form-control form-control-sm") }}
+                    {% endif %}
+                </div>
+
+                <!-- PASSWORD FIELD -->
+                <div class="form-group">
+                    {{ form.password.label(class="form-control-label") }}
+                    {% if form.password.errors %}
+                        {{ form.password(class="form-control form-control-sm is-invalid") }}
+                        {% for error in form.password.errors %}
+                            <div class="invalid-feedback">
+                                <span>{{ error }}</span>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        {{ form.password(class="form-control form-control-sm") }}
+                    {% endif %}
+                </div>
+
+                <!-- REMEMBER ME FIELD -->
+                <div class="form-group" style="text-align: left;">
+                    {{ form.remember_me() }}
+                    {{ form.remember_me.label(class="form-control-label form-control-sm") }}
+                </div>
+
+                <!-- SUBMIT BUTTON -->
+                <div class="form-group border-bottom pb-3" style="margin-top: 50px;">
+                    {{ form.submit(class="btn btn-info", style="width: 100%") }}
+                </div>
+                
+                <div>
+                    <a href="{{ url_for('index') }}"
+                            class="btn btn-outline-secondary" style="width: 100%">Cancel</a>
+                </div>
+
+            </fieldset>
+        </form>
+    </div>
+</div>
+{% endblock %}
