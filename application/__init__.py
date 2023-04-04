@@ -11,6 +11,7 @@ migrate = Migrate(app, db)
 login = LoginManager(app)
 login.login_view = 'login'
 
+
 login.login_message_category = 'warning'
 
 
