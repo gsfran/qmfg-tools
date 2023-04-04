@@ -6,6 +6,7 @@ from flask import abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 from is_safe_url import is_safe_url
 from werkzeug import Response
+from werkzeug.urls import url_parse
 
 from application import app, db
 from application.forms import (ConfirmDeleteForm, LoadWorkOrderForm, LoginForm,
@@ -16,6 +17,7 @@ from application.schedule import CurrentSchedule, Schedule
 
 
 @app.route('/')
+@app.route('/index')
 def index() -> Response:
     return redirect(url_for('current_schedule'))
 
@@ -23,25 +25,38 @@ def index() -> Response:
 @app.route('/user-login', methods=['GET', 'POST'])
 def login() -> str | Response:
 
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+
     form = LoginForm()
     if form.validate_on_submit():
 
-        user = User.get(form.username.data)
+        user = db.session.execute(
+            db.select(User).where(
+                User.username == form.username.data
+            )
+        ).scalar_one_or_none()
+
         if user is None:
-            flash('Username not found.')
+            flash('Username not found.', 'danger')
             return redirect(url_for('login'))
         elif not user.check_password(form.password.data):
-            flash('Invalid username or password.')
+            flash('Invalid username or password.', 'danger')
             return redirect(url_for('login'))
 
         login_user(user, remember=form.remember_me.data)
-        flash('Logged in successfully.')
+        flash('Logged in successfully.', 'success')
 
         next_page = request.args.get('next')
+
+        if not next_page or url_parse(next_page).netloc != '':
+            next_page = url_for('index')
+
         if not is_safe_url(next_page, None):
             return abort(400)
 
-        return redirect(next_page or url_for('index'))
+        return redirect(next_page)
+
     return render_template(
         'user-login.html.jinja', title='User Login',
         form=form
@@ -49,6 +64,7 @@ def login() -> str | Response:
 
 
 @app.route('/logout')
+@login_required
 def logout() -> Response:
     logout_user()
     return redirect(url_for('index'))
@@ -105,6 +121,7 @@ def view_work_order(lot_number: int) -> str | Response:
 
 
 @app.route('/add-work-order', methods=['GET', 'POST'])
+@login_required
 def add_work_order() -> str | Response:
 
     form = NewWorkOrderForm()
@@ -157,6 +174,7 @@ def add_work_order() -> str | Response:
 
 
 @app.route('/edit-work-order/<int:lot_number>', methods=['GET', 'POST'])
+@login_required
 def edit_work_order(lot_number: int) -> str | Response:
     work_order = db.session.get(WorkOrders, lot_number)
     form = ProductDetailsForm(obj=work_order)
@@ -175,6 +193,7 @@ def edit_work_order(lot_number: int) -> str | Response:
 
 
 @app.route('/delete/<int:lot_number>')
+@login_required
 def delete(lot_number: int) -> Response:
     work_order = db.session.get(WorkOrders, lot_number)
     db.session.delete(work_order)
@@ -187,6 +206,7 @@ def delete(lot_number: int) -> Response:
 
 
 @app.route('/load-work-order/<int:lot_number>', methods=['GET', 'POST'])
+@login_required
 def load_work_order(lot_number: int) -> str | Response:
     work_order = db.session.get(WorkOrders, lot_number)
     form = LoadWorkOrderForm()
@@ -220,6 +240,7 @@ def load_work_order(lot_number: int) -> str | Response:
 
 
 @app.route('/unload-work-order/<int:lot_number>')
+@login_required
 def unload_work_order(lot_number: int) -> Response:
     work_order = db.session.get(WorkOrders, lot_number)
 
@@ -242,12 +263,12 @@ def unload_work_order(lot_number: int) -> Response:
     return redirect(url_for('current_schedule'))
 
 
-@app.route('/line-status/<int:line>')
-def view_line_status(line: int) -> str:
+@app.route('/machine/<string:machine>')
+def view_machine(machine: str) -> str:
     # pouching = WorkOrders.on_line(line=line)
     # scheduled = WorkOrders.scheduled_jobs
-    return render_template('line-status.html.jinja', title=f'Line {line}',
-                           line=line)
+    return render_template('machine-status.html.jinja', title=machine,
+                           machine=machine)
 
 
 @app.route('/performance')

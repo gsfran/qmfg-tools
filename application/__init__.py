@@ -8,8 +8,8 @@ app = Flask(__name__)
 app.config.from_object(Config)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
-login = LoginManager()
-login.init_app(app)
+login = LoginManager(app)
+login.login_view = 'login'
 
 
 @app.before_first_request
@@ -18,4 +18,3 @@ def create_tables():
 
 
 from application import routes, models
-# from application.machines import iTrak
