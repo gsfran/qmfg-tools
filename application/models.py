@@ -8,7 +8,11 @@ from application import db, login
 
 @login.user_loader
 def load_user(id: str):
-    return User.get(int(id))
+    return db.session.execute(
+        db.select(User).where(
+            User.id == id
+        )
+    ).scalar_one()
 
 
 class User(UserMixin, db.Model):
