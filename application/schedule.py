@@ -3,7 +3,6 @@ from __future__ import annotations
 import math
 from datetime import datetime as dt
 from datetime import time, timedelta
-from typing import Any
 
 import pandas as pd
 from sqlalchemy import and_, or_
@@ -53,19 +52,19 @@ def map_work_order(
 
 
 def get_first_hour(_frame: pd.Series[str]) -> dt:
-    return _frame.isna().first_valid_index().to_pydatetime()
+    return _frame.isna().first_valid_index().to_pydatetime()  # type: ignore
 
 
 def get_last_hour(_frame: pd.Series[str], work_order: WorkOrders) -> dt | None:
     if work_order.status == 'Pouching':
         return _frame[dt.now():].head(
             work_order.remaining_time
-        ).isna().last_valid_index().to_pydatetime()
+        ).isna().last_valid_index().to_pydatetime()  # type: ignore
 
     elif work_order.status == 'Queued':
         return _frame[work_order.start_datetime:].head(
             work_order.remaining_time
-        ).isna().last_valid_index().to_pydatetime()
+        ).isna().last_valid_index().to_pydatetime()  # type: ignore
 
     else:
         return None
