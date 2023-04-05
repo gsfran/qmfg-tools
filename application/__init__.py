@@ -1,4 +1,4 @@
-from flask import Flask, session
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
@@ -9,7 +9,7 @@ app.config.from_object(Config)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 login = LoginManager(app)
-login.login_view = 'login'
+login.login_view = 'login'  # type: ignore[call-arg]
 
 
 login.login_message_category = 'warning'
@@ -20,4 +20,4 @@ def create_tables():
     db.create_all()
 
 
-from application import routes, models
+from application import routes, models  # noqa

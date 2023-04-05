@@ -10,7 +10,8 @@ from werkzeug.urls import url_parse
 
 from application import app, db
 from application.forms import (ConfirmDeleteForm, LoadWorkOrderForm, LoginForm,
-                               NewWorkOrderForm, ProductDetailsForm, RegistrationForm)
+                               NewWorkOrderForm, ProductDetailsForm,
+                               RegistrationForm)
 from application.models import User, WorkOrders
 from application.products import products
 from application.schedule import CurrentSchedule, Schedule
@@ -25,7 +26,7 @@ def index() -> Response:
 @app.route('/user-login', methods=['GET', 'POST'])
 def login() -> str | Response:
 
-    if current_user.is_authenticated:
+    if current_user.is_authenticated:  # type: ignore[call-arg]
         return redirect(url_for('index'))
 
     form = LoginForm()
@@ -67,15 +68,24 @@ def logout() -> Response:
     return redirect(url_for('index'))
 
 
-@app.route('/register-user')
+@app.route('/register-user', methods=['GET', 'POST'])
 def register() -> str | Response:
-    form = RegistrationForm()
 
-    if form.validate_on_submit():
-        
-        flash('Registration successful.', 'success')
-        
+    if current_user.is_authenticated:  # type: ignore[call-arg]
         return redirect(url_for('index'))
+
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        user = User(
+            username=form.username.data,
+            email=form.email.data
+        )
+        user.set_password(form.password.data)
+        db.session.add(user)
+        db.session.commit()
+        flash('Registration successful.', 'success')
+        return redirect(url_for('index'))
+
     return render_template(
         'register-user.html.jinja', title='Register New User',
         form=form
@@ -120,12 +130,17 @@ def view_all_work_orders() -> str:
 
 @app.route('/view-work-order/<int:lot_number>', methods=['GET', 'POST'])
 def view_work_order(lot_number: int) -> str | Response:
+
     form = ConfirmDeleteForm()
     work_order = db.session.execute(
         db.select(WorkOrders).where(
             WorkOrders.lot_number == lot_number
         )
-    ).scalar_one()
+    ).scalar_one_or_none()
+
+    if work_order is None:
+        flash(f'Work Order #{lot_number} Not Found', 'warning')
+        return redirect(url_for('index'))
 
     if form.validate_on_submit():
         return redirect(url_for('delete', lot_number=lot_number))
@@ -196,7 +211,12 @@ def edit_work_order(lot_number: int) -> str | Response:
         db.select(WorkOrders).where(
             WorkOrders.lot_number == lot_number
         )
-    ).scalar_one()
+    ).scalar_one_or_none()
+
+    if work_order is None:
+        flash(f'Work Order #{lot_number} Not Found', 'warning')
+        return redirect(url_for('index'))
+
     form = ProductDetailsForm(obj=work_order)
 
     if form.validate_on_submit():
@@ -219,7 +239,12 @@ def delete(lot_number: int) -> Response:
         db.select(WorkOrders).where(
             WorkOrders.lot_number == lot_number
         )
-    ).scalar_one()
+    ).scalar_one_or_none()
+
+    if work_order is None:
+        flash(f'Work Order #{lot_number} Not Found', 'warning')
+        return redirect(url_for('index'))
+
     db.session.delete(work_order)
     db.session.commit()
     flash(
@@ -236,7 +261,7 @@ def load_work_order(lot_number: int) -> str | Response:
         db.select(WorkOrders).where(
             WorkOrders.lot_number == lot_number
         )
-    ).scalar_one()
+    ).scalar_one_or_none()
     form = LoadWorkOrderForm()
 
     if form.validate_on_submit():
@@ -274,7 +299,11 @@ def unload_work_order(lot_number: int) -> Response:
         db.select(WorkOrders).where(
             WorkOrders.lot_number == lot_number
         )
-    ).scalar_one()
+    ).scalar_one_or_none()
+
+    if work_order is None:
+        flash(f'Work Order #{lot_number} Not Found', 'warning')
+        return redirect(url_for('index'))
 
     if work_order.status == 'Pouching' or work_order.status == 'Queued':
         flash(

@@ -47,16 +47,17 @@
                 <div class="form-group border-bottom pb-3" style="margin-top: 50px;">
                     {{ form.submit(class="btn btn-info", style="width: 100%") }}
                 </div>
+
+                <div class="form-group border-bottom pb-3" >
+                    <a href="{{ url_for('register') }}"
+                            class="btn btn-outline-dark" style="width: 100%">Register</a>
+                </div>
                 
-                <div>
+                <div class="form-group" >
                     <a href="{{ url_for('index') }}"
                             class="btn btn-outline-secondary" style="width: 100%">Cancel</a>
                 </div>
-
             </fieldset>
-            <div style="font-size: small;">
-                <a href="{{ url_for('register') }}">Register</a>
-            </div>
         </form>
     </div>
 </div>

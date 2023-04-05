@@ -15,7 +15,7 @@ def load_user(id: str):
     ).scalar_one()
 
 
-class User(UserMixin, db.Model):
+class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(128), index=True, unique=True)
