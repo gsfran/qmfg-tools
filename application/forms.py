@@ -6,20 +6,27 @@ from flask_wtf import FlaskForm
 from wtforms import (BooleanField, IntegerField, PasswordField, RadioField,
                      SelectField, StringField, SubmitField)
 from wtforms.fields.datetime import DateField, TimeField
-from wtforms.validators import (DataRequired, Length, NumberRange,
-                                ValidationError)
+from wtforms.validators import (DataRequired, Email, EqualTo, Length,
+                                NumberRange, ValidationError)
+
+from application import db
+from application.models import User
 
 
 class LoginForm(FlaskForm):
 
     username = StringField(
         'Username',
-        validators=[DataRequired()]
+        validators=[
+            DataRequired()
+        ]
     )
 
     password = PasswordField(
         'Password',
-        validators=[DataRequired()]
+        validators=[
+            DataRequired()
+        ]
     )
 
     remember_me = BooleanField(
@@ -31,6 +38,55 @@ class LoginForm(FlaskForm):
     )
 
 
+class RegistrationForm(FlaskForm):
+
+    username = StringField(
+        'Username', validators=[
+            DataRequired()
+        ]
+    )
+
+    email = StringField(
+        'Email', validators=[
+            DataRequired(), Email()
+        ]
+    )
+
+    password = PasswordField(
+        'Password', validators=[
+            DataRequired()
+        ]
+    )
+
+    password_confirm = PasswordField(
+        'Repeat Password', validators=[
+            DataRequired(), EqualTo('password')
+        ]
+    )
+
+    submit = SubmitField(
+        'Register'
+    )
+
+    def validate_username(self, username: StringField) -> None:
+        user = db.session.execute(
+            db.select(User).where(
+                User.username == username.data
+            )
+        ).scalar_one_or_none()
+        if user is not None:
+            raise ValidationError('Username unavailable.')
+
+    def validate_email(self, email: StringField) -> None:
+        user = db.session.execute(
+            db.select(User).where(
+                User.email == email.data
+            )
+        ).select_one_or_none()
+        if user is not None:
+            raise ValidationError('Email address unavailable.')
+
+
 class ProductDetailsForm(FlaskForm):
 
     product = StringField(
@@ -38,23 +94,25 @@ class ProductDetailsForm(FlaskForm):
     )
 
     product_name = StringField(
-        'Product Name',
-        validators=[DataRequired()]
+        'Product Name', validators=[
+            DataRequired()
+        ]
     )
 
     short_name = StringField(
-        'Short Name',
-        validators=[DataRequired()]
+        'Short Name', validators=[
+            DataRequired()
+        ]
     )
 
     item_number = StringField(
-        'Pouch Item Number',
-        validators=[DataRequired(), Length(7, 7)]
+        'Pouch Item Number', validators=[
+            DataRequired(), Length(7, 7)
+        ]
     )
 
     standard_rate = IntegerField(
-        'Standard Rate [/hr]',
-        validators=[
+        'Standard Rate [/hr]', validators=[
             DataRequired(),
             NumberRange(min=500, max=5000)
         ]
@@ -75,7 +133,9 @@ class ProductDetailsForm(FlaskForm):
 class NewWorkOrderForm(FlaskForm):
 
     product = SelectField(
-        'Product', validators=[DataRequired()],
+        'Product', validators=[
+            DataRequired()
+        ],
         choices=[
             ('', '--'),
             ('flu', '1169100 - Flu A/B'),
@@ -89,15 +149,21 @@ class NewWorkOrderForm(FlaskForm):
     )
 
     lot_id = StringField(
-        'Lot ID', validators=[DataRequired(), Length(2, 5)]
+        'Lot ID', validators=[
+            DataRequired(), Length(2, 5)
+        ]
     )
 
     lot_number = StringField(
-        'Pouch Lot #', validators=[DataRequired(), Length(6, 6)]
+        'Pouch Lot #', validators=[
+            DataRequired(), Length(6, 6)
+        ]
     )
 
     strip_lot_number = StringField(
-        'Strip Lot #', validators=[DataRequired(), Length(6, 6)]
+        'Strip Lot #', validators=[
+            DataRequired(), Length(6, 6)
+        ]
     )
 
     strip_qty = IntegerField(
@@ -130,7 +196,9 @@ class NewWorkOrderForm(FlaskForm):
 class LoadWorkOrderForm(FlaskForm):
 
     line = SelectField(
-        'Poucher', validators=[DataRequired()],
+        'Poucher', validators=[
+            DataRequired()
+        ],
         choices=[
             ('5', 'Line 5'),
             ('6', 'Line 6'),
@@ -140,7 +208,9 @@ class LoadWorkOrderForm(FlaskForm):
         ]
     )
     priority = RadioField(
-        validators=[DataRequired()],
+        validators=[
+            DataRequired()
+        ],
         choices=[
             ('replace_job', 'Replace current work order'),
             ('schedule_next', 'Schedule after current work order'),
@@ -148,11 +218,15 @@ class LoadWorkOrderForm(FlaskForm):
         ], default='schedule_append'
     )
     start_date = DateField(
-        'Start Date', validators=[DataRequired()],
+        'Start Date', validators=[
+            DataRequired()
+        ],
         default=dt.now().date()
     )
     start_time = TimeField(
-        'Start Time', validators=[DataRequired()],
+        'Start Time', validators=[
+            DataRequired()
+        ],
         default=dt.now().time()
     )
 
@@ -161,8 +235,11 @@ class LoadWorkOrderForm(FlaskForm):
 
 class ConfirmDeleteForm(FlaskForm):
 
-    delete = StringField("Type 'delete' to confirm: ",
-                         validators=[DataRequired()])
+    delete = StringField(
+        "Type 'delete' to confirm: ", validators=[
+            DataRequired()
+        ]
+    )
 
     submit = SubmitField('Delete')
 

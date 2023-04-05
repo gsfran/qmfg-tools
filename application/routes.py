@@ -10,7 +10,7 @@ from werkzeug.urls import url_parse
 
 from application import app, db
 from application.forms import (ConfirmDeleteForm, LoadWorkOrderForm, LoginForm,
-                               NewWorkOrderForm, ProductDetailsForm)
+                               NewWorkOrderForm, ProductDetailsForm, RegistrationForm)
 from application.models import User, WorkOrders
 from application.products import products
 from application.schedule import CurrentSchedule, Schedule
@@ -37,10 +37,7 @@ def login() -> str | Response:
             )
         ).scalar_one_or_none()
 
-        if user is None:
-            flash('Username not found.', 'danger')
-            return redirect(url_for('login'))
-        elif not user.check_password(form.password.data):
+        if user is None or not user.check_password(form.password.data):
             flash('Invalid username or password.', 'danger')
             return redirect(url_for('login'))
 
@@ -68,6 +65,21 @@ def login() -> str | Response:
 def logout() -> Response:
     logout_user()
     return redirect(url_for('index'))
+
+
+@app.route('/register-user')
+def register() -> str | Response:
+    form = RegistrationForm()
+
+    if form.validate_on_submit():
+        
+        flash('Registration successful.', 'success')
+        
+        return redirect(url_for('index'))
+    return render_template(
+        'register-user.html.jinja', title='Register New User',
+        form=form
+    )
 
 
 @app.route('/schedule')
@@ -109,7 +121,11 @@ def view_all_work_orders() -> str:
 @app.route('/view-work-order/<int:lot_number>', methods=['GET', 'POST'])
 def view_work_order(lot_number: int) -> str | Response:
     form = ConfirmDeleteForm()
-    work_order = db.get_or_404(WorkOrders, lot_number)
+    work_order = db.session.execute(
+        db.select(WorkOrders).where(
+            WorkOrders.lot_number == lot_number
+        )
+    ).scalar_one()
 
     if form.validate_on_submit():
         return redirect(url_for('delete', lot_number=lot_number))
@@ -176,7 +192,11 @@ def add_work_order() -> str | Response:
 @app.route('/edit-work-order/<int:lot_number>', methods=['GET', 'POST'])
 @login_required
 def edit_work_order(lot_number: int) -> str | Response:
-    work_order = db.session.get(WorkOrders, lot_number)
+    work_order = db.session.execute(
+        db.select(WorkOrders).where(
+            WorkOrders.lot_number == lot_number
+        )
+    ).scalar_one()
     form = ProductDetailsForm(obj=work_order)
 
     if form.validate_on_submit():
@@ -195,7 +215,11 @@ def edit_work_order(lot_number: int) -> str | Response:
 @app.route('/delete/<int:lot_number>')
 @login_required
 def delete(lot_number: int) -> Response:
-    work_order = db.session.get(WorkOrders, lot_number)
+    work_order = db.session.execute(
+        db.select(WorkOrders).where(
+            WorkOrders.lot_number == lot_number
+        )
+    ).scalar_one()
     db.session.delete(work_order)
     db.session.commit()
     flash(
@@ -208,7 +232,11 @@ def delete(lot_number: int) -> Response:
 @app.route('/load-work-order/<int:lot_number>', methods=['GET', 'POST'])
 @login_required
 def load_work_order(lot_number: int) -> str | Response:
-    work_order = db.session.get(WorkOrders, lot_number)
+    work_order = db.session.execute(
+        db.select(WorkOrders).where(
+            WorkOrders.lot_number == lot_number
+        )
+    ).scalar_one()
     form = LoadWorkOrderForm()
 
     if form.validate_on_submit():
@@ -242,7 +270,11 @@ def load_work_order(lot_number: int) -> str | Response:
 @app.route('/unload-work-order/<int:lot_number>')
 @login_required
 def unload_work_order(lot_number: int) -> Response:
-    work_order = db.session.get(WorkOrders, lot_number)
+    work_order = db.session.execute(
+        db.select(WorkOrders).where(
+            WorkOrders.lot_number == lot_number
+        )
+    ).scalar_one()
 
     if work_order.status == 'Pouching' or work_order.status == 'Queued':
         flash(
