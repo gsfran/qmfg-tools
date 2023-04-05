@@ -2,5 +2,14 @@
     "python.analysis.typeCheckingMode": "basic",
     "python.linting.flake8Enabled": true,
     "python.linting.enabled": true,
-    "python.linting.pylintEnabled": false
+    "python.linting.pylintEnabled": false,
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "database": "${workspaceFolder:qmfg-tools}/instance/app.db",
+            "name": "qmfg"
+        }
+    ],
+    "sqltools.useNodeRuntime": true
 }

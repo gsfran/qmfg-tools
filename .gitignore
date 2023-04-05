@@ -5,6 +5,7 @@
 
 .test
 .testdata
+migrations
 
 
 # Byte-compiled / optimized / DLL files
