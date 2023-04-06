@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime as dt
+from datetime import timedelta
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -31,22 +33,23 @@ class User(db.Model, UserMixin):
         return f'<User {self.username}>'
 
 
-class WorkOrders(db.Model):
+class WorkOrder(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
     product = db.Column(db.String(30), nullable=False)
     product_name = db.Column(db.String(30), nullable=False)
     short_name = db.Column(db.String(10), nullable=False)
     item_number = db.Column(db.String(30), nullable=False)
 
     lot_id = db.Column(db.String(5), nullable=False)
-    lot_number = db.Column(db.Integer, primary_key=True)
-    strip_lot_number = db.Column(db.Integer, nullable=False, unique=True)
+    pouch_lot_num = db.Column(db.Integer, index=True, unique=True)
+    strip_lot_num = db.Column(db.Integer, index=True)
 
-    strip_qty = db.Column(db.Integer, nullable=False)
-    standard_rate = db.Column(db.Integer, nullable=False)
-    standard_time = db.Column(db.Integer, nullable=False)
+    strip_qty = db.Column(db.Integer)
+    standard_rate = db.Column(db.Integer)
+    standard_time = db.Column(db.Integer)
 
-    status = db.Column(db.String(30), nullable=False, default='Parking Lot')
-    add_datetime = db.Column(db.DateTime, nullable=False)
+    status = db.Column(db.String(30), default='Parking Lot')
+    add_datetime = db.Column(db.DateTime, default=dt.utcnow)
     load_datetime = db.Column(db.DateTime)
 
     line = db.Column(db.Integer)
@@ -59,28 +62,38 @@ class WorkOrders(db.Model):
 
     log = db.Column(db.Text, default=f'Created {add_datetime}')
 
-    def __repr__(self: WorkOrders) -> str:
-        return f'<WorkOrders object {self.lot_number}>'
+    def __repr__(self: WorkOrder) -> str:
+        return f'<WorkOrders object {self.pouch_lot_num}>'
 
 
-class WorkWeeks(db.Model):
-    # id = db.Column(db.Integer)
-    year_week = db.Column(db.String(7), primary_key=True)
-
-    # [MON, TUE, WED, THU, FRI, SAT, SUN]
-    prod_days = db.Column(db.Integer, nullable=False, default=0b1111100)
-
-    # [0 - 23] [hr]
-    workday_start_time = db.Column(db.Integer, nullable=False, default=6)
-    workday_end_time = db.Column(db.Integer, nullable=False, default=23)
-
-    # [5, 6, 7, 8, 9, 10, 11, 12]
-    lines = db.Column(db.Integer, nullable=False, default=0b01111100)
-
-    def __repr__(self: WorkWeeks) -> str:
-        return f'<WorkWeeks object {self.year_week}>s'
-
-
-class Line5DataBase(db.Model):
+class WorkWeek(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    pass
+    year_week = db.Column(db.String(7), index=True, nullable=False)
+
+    mon_start_time = db.Column(db.Time, default=None)
+    tue_start_time = db.Column(db.Time, default=None)
+    wed_start_time = db.Column(db.Time, default=None)
+    thu_start_time = db.Column(db.Time, default=None)
+    fri_start_time = db.Column(db.Time, default=None)
+    sat_start_time = db.Column(db.Time, default=None)
+    sun_start_time = db.Column(db.Time, default=None)
+
+    mon_end_time = db.Column(db.Time, default=None)
+    tue_end_time = db.Column(db.Time, default=None)
+    wed_end_time = db.Column(db.Time, default=None)
+    thu_end_time = db.Column(db.Time, default=None)
+    fri_end_time = db.Column(db.Time, default=None)
+    sat_end_time = db.Column(db.Time, default=None)
+    sun_end_time = db.Column(db.Time, default=None)
+
+    line_5_active = db.Column(db.Boolean, default=False)
+    line_6_active = db.Column(db.Boolean, default=False)
+    line_7_active = db.Column(db.Boolean, default=False)
+    line_8_active = db.Column(db.Boolean, default=False)
+    line_9_active = db.Column(db.Boolean, default=False)
+    line_10_active = db.Column(db.Boolean, default=False)
+    line_11_active = db.Column(db.Boolean, default=False)
+    line_12_active = db.Column(db.Boolean, default=False)
+
+    def __repr__(self: WorkWeek) -> str:
+        return f'<WorkWeeks object {self.year_week}>s'

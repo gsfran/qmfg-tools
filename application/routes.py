@@ -12,7 +12,7 @@ from application import app, db
 from application.forms import (ConfirmDeleteForm, LoadWorkOrderForm, LoginForm,
                                NewWorkOrderForm, ProductDetailsForm,
                                RegistrationForm)
-from application.models import User, WorkOrders
+from application.models import User, WorkOrder
 from application.products import products
 from application.schedule import CurrentSchedule, Schedule
 
@@ -92,9 +92,9 @@ def register() -> str | Response:
     )
 
 
-@app.route('/schedule')
-def current_schedule() -> str:
-    schedule = CurrentSchedule()
+@app.route('/schedule/<string:mach_type')
+def current_schedule(mach_type: str) -> str:
+    schedule = CurrentSchedule(mach_type=mach_type)
     schedule.refresh()
 
     return render_template(
@@ -109,7 +109,7 @@ def view_schedule(year_week: str) -> str | Response:
     if year_week == dt.strftime(dt.now(), '%G-%V'):
         return redirect(url_for('current_schedule'))
 
-    schedule = Schedule(year_week=year_week)
+    schedule = Schedule(year_week=year_week, mach_type='itrak')
     schedule.refresh()
     return render_template(
         'schedule.html.jinja', title='View Schedule',
@@ -120,7 +120,7 @@ def view_schedule(year_week: str) -> str | Response:
 @app.route('/view-all-work-orders')
 def view_all_work_orders() -> str:
     work_orders = (
-        WorkOrders.query.order_by(WorkOrders.lot_number.desc()).all()
+        WorkOrder.query.order_by(WorkOrder.pouch_lot_num.desc()).all()
     )
     return render_template(
         'view-all-work-orders.html.jinja', title='All Work Orders',
@@ -133,8 +133,8 @@ def view_work_order(lot_number: int) -> str | Response:
 
     form = ConfirmDeleteForm()
     work_order = db.session.execute(
-        db.select(WorkOrders).where(
-            WorkOrders.lot_number == lot_number
+        db.select(WorkOrder).where(
+            WorkOrder.pouch_lot_num == lot_number
         )
     ).scalar_one_or_none()
 
@@ -166,7 +166,7 @@ def add_work_order() -> str | Response:
         strip_qty = form.strip_qty.data
         standard_time = ceil(strip_qty / standard_rate)
 
-        work_order = WorkOrders(
+        work_order = WorkOrder(
             product=product,
             product_name=product_name,
             short_name=short_name,
@@ -208,8 +208,8 @@ def add_work_order() -> str | Response:
 @login_required
 def edit_work_order(lot_number: int) -> str | Response:
     work_order = db.session.execute(
-        db.select(WorkOrders).where(
-            WorkOrders.lot_number == lot_number
+        db.select(WorkOrder).where(
+            WorkOrder.pouch_lot_num == lot_number
         )
     ).scalar_one_or_none()
 
@@ -236,8 +236,8 @@ def edit_work_order(lot_number: int) -> str | Response:
 @login_required
 def delete(lot_number: int) -> Response:
     work_order = db.session.execute(
-        db.select(WorkOrders).where(
-            WorkOrders.lot_number == lot_number
+        db.select(WorkOrder).where(
+            WorkOrder.pouch_lot_num == lot_number
         )
     ).scalar_one_or_none()
 
@@ -258,8 +258,8 @@ def delete(lot_number: int) -> Response:
 @login_required
 def load_work_order(lot_number: int) -> str | Response:
     work_order = db.session.execute(
-        db.select(WorkOrders).where(
-            WorkOrders.lot_number == lot_number
+        db.select(WorkOrder).where(
+            WorkOrder.pouch_lot_num == lot_number
         )
     ).scalar_one_or_none()
     form = LoadWorkOrderForm()
@@ -296,8 +296,8 @@ def load_work_order(lot_number: int) -> str | Response:
 @login_required
 def unload_work_order(lot_number: int) -> Response:
     work_order = db.session.execute(
-        db.select(WorkOrders).where(
-            WorkOrders.lot_number == lot_number
+        db.select(WorkOrder).where(
+            WorkOrder.pouch_lot_num == lot_number
         )
     ).scalar_one_or_none()
 
@@ -336,32 +336,32 @@ def view_machine(machine: str) -> str:
 def performance() -> str:
     type_comparison = (
         db.session.query(
-            db.func.sum(WorkOrders.lot_number),
-            WorkOrders.product
+            db.func.sum(WorkOrder.pouch_lot_num),
+            WorkOrder.product
         ).group_by(
-            WorkOrders.product
+            WorkOrder.product
         ).order_by(
-            WorkOrders.product
+            WorkOrder.product
         ).all()
     )
     product_comparison = (
         db.session.query(
-            db.func.sum(WorkOrders.lot_number),
-            WorkOrders.status
+            db.func.sum(WorkOrder.pouch_lot_num),
+            WorkOrder.status
         ).group_by(
-            WorkOrders.status
+            WorkOrder.status
         ).order_by(
-            WorkOrders.status
+            WorkOrder.status
         ).all()
     )
     dates = (
         db.session.query(
-            db.func.sum(WorkOrders.lot_number),
-            WorkOrders.add_datetime
+            db.func.sum(WorkOrder.pouch_lot_num),
+            WorkOrder.add_datetime
         ).group_by(
-            WorkOrders.add_datetime
+            WorkOrder.add_datetime
         ).order_by(
-            WorkOrders.add_datetime
+            WorkOrder.add_datetime
         ).all()
     )
     income_category = []
