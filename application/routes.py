@@ -14,7 +14,7 @@ from application.forms import (ConfirmDeleteForm, LoadWorkOrderForm, LoginForm,
                                RegistrationForm)
 from application.models import User, WorkOrder
 from application.products import products
-from application.schedule import CurrentSchedule, Schedule
+from application.schedules import CurrentPouchingSchedule, PouchingSchedule
 
 
 @app.route('/')
@@ -92,9 +92,9 @@ def register() -> str | Response:
     )
 
 
-@app.route('/schedule/<string:mach_type')
-def current_schedule(mach_type: str) -> str:
-    schedule = CurrentSchedule(mach_type=mach_type)
+@app.route('/schedule')
+def current_schedule() -> str:
+    schedule = CurrentPouchingSchedule()
     schedule.refresh()
 
     return render_template(
@@ -109,7 +109,7 @@ def view_schedule(year_week: str) -> str | Response:
     if year_week == dt.strftime(dt.now(), '%G-%V'):
         return redirect(url_for('current_schedule'))
 
-    schedule = Schedule(year_week=year_week, mach_type='itrak')
+    schedule = PouchingSchedule(year_week=year_week)
     schedule.refresh()
     return render_template(
         'schedule.html.jinja', title='View Schedule',
@@ -164,7 +164,12 @@ def add_work_order() -> str | Response:
          ] = products[product].values()
 
         strip_qty = form.strip_qty.data
-        standard_time = ceil(strip_qty / standard_rate)
+        if strip_qty is not None and standard_rate is not None:
+            standard_time = ceil(
+                int(strip_qty) / int(standard_rate)
+            )
+        else:
+            raise Exception('Error calculating lot standard time.')
 
         work_order = WorkOrder(
             product=product,
@@ -267,7 +272,7 @@ def load_work_order(lot_number: int) -> str | Response:
     if form.validate_on_submit():
         line = form.line.data
         work_order.line = line
-        if Schedule.on_line(line):
+        if PouchingSchedule.on_line(line):
             work_order.status = 'Queued'
         else:
             work_order.status = 'Pouching'

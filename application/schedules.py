@@ -21,14 +21,22 @@ def _crop_frame(_schedule_frame: pd.DataFrame, line: int) -> pd.Series:
     return _frame
 
 
-def _multi_week_frame() -> pd.DataFrame:
-    _next_week_obj = Schedule(CurrentSchedule().next_week)
-    _multi = pd.concat(
-        [CurrentSchedule().schedule_frame, _next_week_obj.schedule_frame]
+def _three_week_frame() -> pd.DataFrame:
+    _next_week_obj = PouchingSchedule(
+        year_week=CurrentPouchingSchedule().next_week)
+    _three_week_frame = pd.concat(
+        [CurrentPouchingSchedule().schedule_frame,
+         _next_week_obj.schedule_frame]
     )
-    _frame_after_next = Schedule(_next_week_obj.next_week).schedule_frame
-    _multi = pd.concat([_multi, _frame_after_next])
-    return _multi
+
+    _week_after_next_obj = PouchingSchedule(
+        year_week=_next_week_obj.next_week)
+
+    _three_week_frame = pd.concat(
+        [_three_week_frame, _week_after_next_obj.schedule_frame]
+    )
+
+    return _three_week_frame
 
 
 def map_work_order(
@@ -71,25 +79,24 @@ def get_last_hour(_frame: pd.Series[str], work_order: WorkOrder) -> dt | None:
         return None
 
 
-class Schedule:
-    """Schedule for a single production week.
+class PouchingSchedule:
+    """Schedule for pouching that covers a single production week.
 
     Returns:
         Instance of Schedule class.
     """
     _year_week_format = '%G-%V'
 
-    def __init__(self: Schedule, year_week: str, mach_type: str) -> None:
+    def __init__(self: PouchingSchedule, year_week: str) -> None:
         self.year_week = year_week
-        self.mach_type = mach_type
         self._init_week()
 
     def _init_week(self) -> None:
         self.work_week = self._get_work_week()
         self._week_config()
-        self._init_dates()
+        self._get_dates()
 
-    def _get_work_week(self: Schedule) -> WorkWeek:
+    def _get_work_week(self: PouchingSchedule) -> WorkWeek:
         work_week = db.session.execute(
             db.select(WorkWeek).where(
                 WorkWeek.year_week == self.year_week
@@ -101,52 +108,58 @@ class Schedule:
             db.session.commit()
         return work_week
 
-    def _week_config(self: Schedule) -> None:
-        self._production_days = self._parse_days()
-        self.machines = self._init_machines()
+    def _week_config(self: PouchingSchedule) -> None:
+        self.production_days = self._init_weekdays()
+        self.active_machines = self._init_machines()
 
-    def _parse_days(self: Schedule) -> list[int]:
+    def _init_weekdays(self: PouchingSchedule) -> list[int]:
         """Returns a list of integers representing the days scheduled
         for the given week.
 
         Returns:
             list[int]: List of days scheduled. 0 = Monday, 6 = Sunday.
         """
-        
+
         #  need to figure out how to handle/store/load default schedule config
 
         days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
         weekday_nums = range(7)
         scheduled_days = []
-        
+
         columns_to_check = [f'{day}_start_time' for day in days]
 
         for column, weekday_num in zip(columns_to_check, weekday_nums):
             scheduled = self.work_week.__getattribute__(column)
-            if scheduled:
+            if scheduled is not None:
                 scheduled_days.append(weekday_num)
         return scheduled_days
 
-    def _init_machines(self: Schedule) -> list[int]:
+    def _init_machines(self: PouchingSchedule) -> list[int]:
         """Returns list of integers representing the machines
         in production for the given week.
 
         Returns:
             list[int]: Line numbers available for production.
         """
+        _machine_list = []
+        for mach_type in machines.keys():
+            if mach_type != 'itrak':
+                break
+            for machine_id in machines[mach_type]:
+                _machine_list.append(f'{mach_type}_{machine_id}')
 
-        lines =
-        _lines = []
+        _active_machines = []
 
-        for line, scheduled in zip(lines, bin_list_int):
+        for _machine in _machine_list:
+            scheduled = self.work_week.__getattribute__(_machine)
             if scheduled:
-                _lines.append(line)
-        return _lines
+                _active_machines.append(_machine)
+        return _active_machines
 
-    def _init_dates(self: Schedule) -> None:
+    def _get_dates(self: PouchingSchedule) -> None:
         self.start_datetime = dt.strptime(
             f'{self.year_week}-Mon',
-            f'{Schedule._year_week_format}-%a'
+            f'{PouchingSchedule._year_week_format}-%a'
         )
         self.end_date = self.start_datetime + timedelta(days=6)
         self.end_datetime = dt.combine(self.end_date, time().max)
@@ -156,7 +169,7 @@ class Schedule:
         )
         self._set_schedule_type()
 
-    def _set_schedule_type(self: Schedule) -> None:
+    def _set_schedule_type(self: PouchingSchedule) -> None:
         if self.start_datetime < dt.now() < self.end_datetime:
             self.schedule_type = 'current'
         elif self.end_datetime < dt.now():
@@ -166,19 +179,19 @@ class Schedule:
         else:
             raise Exception('Error setting week type (Current/Past/Future).')
 
-    def set_hours(self: Schedule, start: int, end: int) -> None:
+    def set_hours(self: PouchingSchedule, start: int, end: int) -> None:
         self.work_week.workday_start_time = time(start)
         self.work_week.workday_end_time = time(end)
         db.session.commit()
         self.reload()
 
-    def set_days(self: Schedule, days: int) -> None:
+    def set_days(self: PouchingSchedule, days: int) -> None:
         self.work_week.prod_days = days
         db.session.commit()
         self.reload()
 
     @property
-    def _index(self: Schedule) -> pd.DatetimeIndex:
+    def _index(self: PouchingSchedule) -> pd.DatetimeIndex:
         try:
             return self.index_
         except AttributeError:
@@ -188,18 +201,18 @@ class Schedule:
             return self.index_
 
     @property
-    def schedule_frame(self: Schedule) -> pd.DataFrame:
+    def schedule_frame(self: PouchingSchedule) -> pd.DataFrame:
         try:
             return self._schedule_frame
         except AttributeError:
             self._schedule_frame = pd.DataFrame(
                 index=self.hours.index[self.hours],
-                columns=self.machines
+                columns=self.active_machines
             )
             return self._schedule_frame
 
     @property
-    def hours(self: Schedule) -> pd.Series:
+    def hours(self: PouchingSchedule) -> pd.Series:
         try:
             return self._hours
         except AttributeError:
@@ -209,7 +222,7 @@ class Schedule:
             return self._hours
 
     @property
-    def hour_mask(self: Schedule) -> pd.Series:
+    def hour_mask(self: PouchingSchedule) -> pd.Series:
         try:
             return self._hour_mask
         except AttributeError:
@@ -221,64 +234,68 @@ class Schedule:
             return self._hour_mask
 
     @property
-    def day_mask(self: Schedule) -> pd.Series:
+    def day_mask(self: PouchingSchedule) -> pd.Series:
         try:
             return self._day_mask
         except AttributeError:
             self._day_mask = pd.Series(False, index=self._index)
-            for _day in self._production_days:
+            for _day in self.production_days:
                 self._day_mask[
                     self._index.to_series().dt.weekday == _day
                 ] = True
             return self._day_mask
 
     @property
-    def work_orders(self: Schedule) -> list[WorkOrder]:
+    def work_orders(self: PouchingSchedule) -> list[WorkOrder]:
         def _get_work_orders() -> list[WorkOrder]:
-            return db.session.execute(db.select(WorkOrder).where(
-                and_(
-                    WorkOrder.end_datetime >= self.start_datetime,
-                    WorkOrder.start_datetime < self.end_datetime
+            return db.session.execute(
+                db.select(WorkOrder).where(
+                    and_(
+                        WorkOrder.end_datetime >= self.start_datetime,
+                        WorkOrder.start_datetime < self.end_datetime
+                    )
+                ).order_by(
+                    WorkOrder.start_datetime.desc()
                 )
-            ).order_by(WorkOrder.start_datetime.desc())).scalars()
+            ).scalars()
         try:
             return self._work_orders
         except AttributeError:
             self._work_orders = _get_work_orders()
             return self._work_orders
 
-    def _map_work_order(self: Schedule, work_order: WorkOrder) -> None:
+    def _map_work_order(self: PouchingSchedule, work_order: WorkOrder) -> None:
         pass  # map work orders to css grid values
 
     @property
-    def prior_week(self: Schedule) -> str:
+    def prior_week(self: PouchingSchedule) -> str:
         try:
             return self._prior_year_week
         except AttributeError:
             prior_week_start = self.start_datetime - timedelta(days=7)
             self._prior_year_week = dt.strftime(
-                prior_week_start, Schedule._year_week_format
+                prior_week_start, PouchingSchedule._year_week_format
             )
             return self._prior_year_week
 
     @property
-    def next_week(self: Schedule) -> str:
+    def next_week(self: PouchingSchedule) -> str:
         try:
             return self._next_year_week
         except AttributeError:
             next_week_start = self.start_datetime + timedelta(days=7)
             self._next_year_week = dt.strftime(
-                next_week_start, Schedule._year_week_format
+                next_week_start, PouchingSchedule._year_week_format
             )
             return self._next_year_week
 
-    def reload(self: Schedule) -> None:
-        self.__init__(self.year_week)
+    def reload(self: PouchingSchedule) -> None:
+        self.__init__(year_week=self.year_week)
 
     @staticmethod
     def refresh() -> None:
-        _frame = _multi_week_frame()
-        for work_order in Schedule.scheduled_jobs():
+        _frame = _three_week_frame()
+        for work_order in PouchingSchedule.scheduled_jobs():
             line = work_order.line
             cropped_frame = _crop_frame(_frame, line)
             cropped_frame = map_work_order(
@@ -363,24 +380,24 @@ class Schedule:
         """
         return (datetime_.weekday() * 24) + datetime_.hour
 
-    def __str__(self: Schedule) -> str:
+    def __str__(self: PouchingSchedule) -> str:
         return (
             f'{self.start_datetime:%b %d, %Y} - '
             f'{self.end_datetime:%b %d, %Y}'
         )
 
 
-class CurrentSchedule(Schedule):
+class CurrentPouchingSchedule(PouchingSchedule):
 
-    def __init__(self: CurrentSchedule, mach_type: str) -> None:
-        year_week = dt.strftime(dt.now(), Schedule._year_week_format)
-        super().__init__(year_week=year_week, mach_type=mach_type)
+    def __init__(self: CurrentPouchingSchedule) -> None:
+        year_week = dt.strftime(dt.now(), PouchingSchedule._year_week_format)
+        super().__init__(year_week=year_week)
 
     @property
-    def current_week_hour(self: CurrentSchedule) -> int:
+    def current_week_hour(self: CurrentPouchingSchedule) -> int:
         self._current_week_hour = self.week_hour(dt.now())
         return self._current_week_hour
 
     @property
-    def current_hour(self: CurrentSchedule) -> dt:
+    def current_hour(self: CurrentPouchingSchedule) -> dt:
         return current_hour()

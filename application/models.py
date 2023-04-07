@@ -86,14 +86,20 @@ class WorkWeek(db.Model):
     sat_end_time = db.Column(db.Time, default=None)
     sun_end_time = db.Column(db.Time, default=None)
 
-    line_5_active = db.Column(db.Boolean, default=False)
-    line_6_active = db.Column(db.Boolean, default=False)
-    line_7_active = db.Column(db.Boolean, default=False)
-    line_8_active = db.Column(db.Boolean, default=False)
-    line_9_active = db.Column(db.Boolean, default=False)
-    line_10_active = db.Column(db.Boolean, default=False)
-    line_11_active = db.Column(db.Boolean, default=False)
-    line_12_active = db.Column(db.Boolean, default=False)
+    itrak_5 = db.Column(db.Boolean, default=False)
+    itrak_6 = db.Column(db.Boolean, default=False)
+    itrak_7 = db.Column(db.Boolean, default=False)
+    itrak_8 = db.Column(db.Boolean, default=False)
+    itrak_9 = db.Column(db.Boolean, default=False)
+    itrak_10 = db.Column(db.Boolean, default=False)
+    itrak_11 = db.Column(db.Boolean, default=False)
+    
+    # dipstick pouchers
+    # web laminators
+    # web spotters
+    # web dispensers
+    # nitro laminators
+    # swab poucher
 
     def __repr__(self: WorkWeek) -> str:
         return f'<WorkWeeks object {self.year_week}>s'
