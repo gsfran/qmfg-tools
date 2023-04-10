@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import datetime as dt
-from datetime import timedelta
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -52,7 +51,7 @@ class WorkOrder(db.Model):
     add_datetime = db.Column(db.DateTime, default=dt.utcnow)
     load_datetime = db.Column(db.DateTime)
 
-    line = db.Column(db.Integer)
+    machine = db.Column(db.Integer)
     start_datetime = db.Column(db.DateTime)
     end_datetime = db.Column(db.DateTime)
     pouched_qty = db.Column(db.Integer, nullable=False, default=0)
@@ -86,6 +85,7 @@ class WorkWeek(db.Model):
     sat_end_time = db.Column(db.Time, default=None)
     sun_end_time = db.Column(db.Time, default=None)
 
+    # iTrak Lines
     itrak_5 = db.Column(db.Boolean, default=False)
     itrak_6 = db.Column(db.Boolean, default=False)
     itrak_7 = db.Column(db.Boolean, default=False)
@@ -93,13 +93,25 @@ class WorkWeek(db.Model):
     itrak_9 = db.Column(db.Boolean, default=False)
     itrak_10 = db.Column(db.Boolean, default=False)
     itrak_11 = db.Column(db.Boolean, default=False)
-    
+
     # dipstick pouchers
+    dipstick_A = db.Column(db.Boolean, default=False)
+    dipstick_B = db.Column(db.Boolean, default=False)
+    dipstick_C = db.Column(db.Boolean, default=False)
+    dipstick_D = db.Column(db.Boolean, default=False)
+    dipstick_E = db.Column(db.Boolean, default=False)
+    dipstick_F = db.Column(db.Boolean, default=False)
+    dipstick_G = db.Column(db.Boolean, default=False)
+    dipstick_H = db.Column(db.Boolean, default=False)
+
+    # swab pouchers
+    swab_auto = db.Column(db.Boolean, default=False)
+    swab_carousel = db.Column(db.Boolean, default=False)
+
     # web laminators
     # web spotters
     # web dispensers
     # nitro laminators
-    # swab poucher
 
     def __repr__(self: WorkWeek) -> str:
         return f'<WorkWeeks object {self.year_week}>s'

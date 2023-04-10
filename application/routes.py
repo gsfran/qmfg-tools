@@ -272,7 +272,7 @@ def load_work_order(lot_number: int) -> str | Response:
     if form.validate_on_submit():
         line = form.line.data
         work_order.line = line
-        if PouchingSchedule.on_line(line):
+        if PouchingSchedule.on_machine(line):
             work_order.status = 'Queued'
         else:
             work_order.status = 'Pouching'

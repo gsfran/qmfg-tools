@@ -9,7 +9,6 @@
     --strep_inline: #00bfff;
     --other: #aaaaaa;
 
-
 }
 
 body {
@@ -96,7 +95,6 @@ h3.sub {
 
 .qmfg-nav-link {
     margin-inline: 10px;
-    /* min-width: 200px; */
 }
 
 .confirm-modal {
@@ -214,7 +212,6 @@ h3.sub {
 }
 
 .parking_lot .add {
-    /* display: block; */
     height: 40px;
     line-height: 2.2rem;
     width: auto;
@@ -248,18 +245,18 @@ h3.sub {
     margin-inline: 5px;
 }
 
-.schedule.weekly-byline {
+/* .schedule.weekly-byline {
     grid-template-columns:
-        [machine_index] 1fr repeat(168, 1fr) [last_col] 1fr [end-col];
+        [machine_index] 1fr repeat(336, 1fr) [last_col] 1fr [end-col];
     grid-template-rows:
-        [weekday_header] .20fr 
+        [weekday_header] .20fr
         [line_5] 1fr 
         [line_6] 1fr 
         [line_7] 1fr 
         [line_8] 1fr 
         [line_9] 1fr 
         [end-row];
-}
+} */
 
 /* GENERAL ITEM SETUP */
 /* SCHEDULE BLOCKS */
@@ -296,7 +293,6 @@ h3.sub {
 .hour {
     background-color: #fff;
     border-bottom: 1px solid #000;
-    /* z-index: 0; */
     height: 80px;
 }
 
@@ -310,7 +306,6 @@ h3.sub {
 
 .hour.not-scheduled {
     background-color: #00000033;
-    /* z-index: 3; */
 }
 
 .hour.current_hour {
@@ -344,11 +339,7 @@ h3.sub {
 
     padding-inline: 8px;
 
-    /* z-index: 30; */
     opacity: .85;
-    /* color: #fff; */
-	/* -webkit-text-stroke: .75px #000000d5; */
-	/* -webkit-text-fill-color: #ddddddd5; */
     transition: all 200ms;
 }
 
@@ -429,37 +420,37 @@ h3.sub {
 /* WEEKDAY SELECTORS */
 .mon {
     grid-row: weekday_header;
-    grid-column: 2 / span 24;
+    grid-column: 2 / span 48;
 }
 
 .tue {
     grid-row: weekday_header;
-    grid-column: 26 / span 24;
+    grid-column: 50 / span 48;
 }
 
 .wed {
     grid-row: weekday_header;
-    grid-column: 50 / span 24;
+    grid-column: 98 / span 48;
 }
 
 .thu {
     grid-row: weekday_header;
-    grid-column: 74 / span 24;
+    grid-column: 146 / span 48;
 }
 
 .fri {
     grid-row: weekday_header;
-    grid-column: 98 / span 24;
+    grid-column: 194 / span 48;
 }
 
 .sat {
     grid-row: weekday_header;
-    grid-column: 122 / span 24;
+    grid-column: 242 / span 48;
 }
 
 .sun {
     grid-row: weekday_header;
-    grid-column: 146 / span 24;
+    grid-column: 290 / span 48;
 }
 
 /* MACHINE SELECTORS */

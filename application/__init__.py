@@ -6,8 +6,8 @@ from config import Config
 
 app = Flask(__name__)
 app.config.from_object(Config)
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
+db: SQLAlchemy = SQLAlchemy(app)
+migrate: Migrate = Migrate(app, db)
 login = LoginManager(app)
 login.login_view = 'login'  # type: ignore[call-arg]
 

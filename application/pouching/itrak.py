@@ -65,7 +65,7 @@ class iTrak:
                         WorkOrder.status == 'Pouching',
                         WorkOrder.status == 'Queued'
                     ),
-                    WorkOrder.line == str(self.number)
+                    WorkOrder.machine == str(self.number)
                 )
             ).order_by(
                 WorkOrder.add_datetime.desc()
