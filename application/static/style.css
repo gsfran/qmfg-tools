@@ -289,35 +289,35 @@ h3.sub {
     font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
-/* HOUR TYPES */
-.hour {
+/* SCHEDULE ELEMENT TYPES */
+.schedule_column {
     background-color: #fff;
     border-bottom: 1px solid #000;
     height: 80px;
 }
 
-.hour.elapsed {
+.schedule_column.elapsed {
     background-color: #00000018;
 }
 
-.hour.last_hour {
+.schedule_column.last_column {
     border-right: 1px solid #000;
 }
 
-.hour.not-scheduled {
+.schedule_column.not-scheduled {
     background-color: #00000033;
 }
 
-.hour.current_hour {
+.schedule_column.current_hour {
     border-inline: 1px solid #774defc0;
     background-color: #774defc0;
 }
 
-.hour.start_of_day {
+.schedule_column.start_of_day {
     border-left: 1px solid #000;
 }
 
-.hour.midday {
+.schedule_column.midday {
     border-left: 1px dashed #000;
 }
 
@@ -454,7 +454,7 @@ h3.sub {
 }
 
 /* MACHINE SELECTORS */
-.line_5 {
+/* .line_5 {
     grid-area: line_5 / machine_index;
 }
 
@@ -472,4 +472,4 @@ h3.sub {
 
 .line_9 {
     grid-area: line_9 / machine_index;
-}
+} */

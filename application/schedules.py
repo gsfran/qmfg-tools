@@ -14,9 +14,9 @@ from application import db
 from application.machines import machines
 from application.models import WorkOrder, WorkWeek
 
-_YEAR_WEEK_FORMAT = '%G-%V'
+_YEAR_WEEK_FORMAT: str = '%G-%V'
 
-_WEEKDAY_TAGS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+_WEEKDAY_TAGS: list[str] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 
 _WEEKDAY_START_TIME_COLS = [
     f'{weekday_}_start_time' for weekday_ in _WEEKDAY_TAGS
@@ -106,6 +106,11 @@ class PouchingSchedule:
     Returns:
         Instance of PouchingSchedule class.
     """
+
+    CSS_COLUMN_SIZE: timedelta = timedelta(minutes=30)
+    COLS_PER_HOUR: int = int(timedelta(hours=1) / CSS_COLUMN_SIZE)
+    COLS_PER_DAY: int = int(timedelta(days=1) / CSS_COLUMN_SIZE)
+    COLS_PER_WEEK: int = COLS_PER_DAY * 7
 
     def __init__(self: PouchingSchedule, year_week: str) -> None:
         self.year_week = year_week
@@ -215,17 +220,9 @@ class PouchingSchedule:
             self._frame_index = pd.date_range(
                 start=self.start_datetime,
                 end=self.end_datetime,
-                freq='30min'
+                freq=PouchingSchedule.CSS_COLUMN_SIZE
             )
             return self._frame_index
-
-    @property
-    def index_freq(self: PouchingSchedule) -> str | None:
-        try:
-            return self._index_frequency
-        except AttributeError:
-            self._index_frequency = self.index_.freqstr
-            return self._index_frequency
 
     @property
     def frame_size(self: PouchingSchedule) -> int:
@@ -390,7 +387,7 @@ class PouchingSchedule:
         given datetime hour. Ranges from 0 - 167, with 0 representing
         12AM - 1AM Monday morning.
         """
-        return (datetime_.weekday() * 24) + datetime_.hour
+        return (datetime_.weekday() * PouchingSchedule.COLS_PER_DAY) + datetime_.hour
 
     def __str__(self: PouchingSchedule) -> str:
         return (
