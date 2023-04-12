@@ -88,21 +88,21 @@
             <div class="schedule_column 
                         {% if schedule.schedule_tense == 'current' %}
                             {% if schedule_column == schedule.current_grid_column %}
-                                current_hour 
+                                current_column 
                             {% endif %}
                             {% if schedule_column < schedule.current_grid_column %}
                                 elapsed 
                             {% endif %}
                         {% elif schedule.schedule_tense == 'past' %}
-                            elapsed
+                            elapsed 
                         {% endif %}
 
-                        {% if not schedule.index_[schedule_column] %}
-                            not_scheduled
+                        {% if not schedule.schedule_mask[schedule_column] %}
+                            not_scheduled 
                         {% endif %}
 
                         {% if schedule_column % schedule.COLS_PER_DAY == 0 %}
-                            start_of_day
+                            start_of_day 
                         {% endif %}
 
                         {% if schedule_column % schedule.COLS_PER_DAY == (schedule.COLS_PER_DAY / 2) %}
@@ -110,7 +110,7 @@
                         {% endif %}
 
                         {% if schedule_column == (schedule.COLS_PER_WEEK - 1) %}
-                            last_column
+                            last_column 
                         {% endif %}" style="grid-row: {{ machine }}; grid-column: {{ column_number }}">
             </div>
             {% endfor %}

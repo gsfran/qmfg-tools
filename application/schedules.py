@@ -21,8 +21,14 @@ with open(os.environ['SCHEDULE_JSON'], 'r') as schedule_json:
     schedule_times: dict[str, str] = json.load(schedule_json)
 
 
-def current_hour() -> dt:
-    return dt.now().replace(minute=0, second=0, microsecond=0)
+def current_column() -> dt:
+    minute_ = dt.now().minute // (60 // PouchingSchedule.COLS_PER_HOUR)
+    return dt.now().replace(minute=minute_, second=0, microsecond=0)
+
+
+def grid_column(datetime_: dt) -> dt:
+    minute_ = datetime_.minute // (60 // PouchingSchedule.COLS_PER_HOUR)
+    return datetime_.replace(minute=minute_, second=0, microsecond=0)
 
 
 def create_week(year_week: str) -> WorkWeek:
@@ -54,18 +60,19 @@ def _three_week_frame() -> pd.DataFrame:
 
 
 def map_work_order(
-    work_order: PouchingWorkOrder, _frame: pd.Series[str]
+    work_order: PouchingWorkOrder, _frame: pd.Series[str],
+    cols_per_hour: int
 ) -> pd.Series[str]:
     work_order.remaining_qty = work_order.strip_qty - work_order.pouched_qty
     work_order.remaining_time = math.ceil(
         work_order.remaining_qty / work_order.standard_rate
     )
-    wo_start = get_first_hour(_frame)
-    wo_end = get_last_hour(_frame, work_order)
+    wo_start = get_first_column(_frame)
 
     if work_order.status == 'Queued':
         work_order.start_datetime = wo_start
 
+    wo_end = get_last_column(_frame, work_order, cols_per_hour)
     work_order.end_datetime = wo_end
 
     db.session.commit()
@@ -74,23 +81,28 @@ def map_work_order(
     return _frame
 
 
-def get_first_hour(_frame: pd.Series[str]) -> dt:
-    return _frame.isna().first_valid_index().to_pydatetime()  # type: ignore
+def get_first_column(_frame: pd.Series[str]) -> dt:
+    return grid_column(
+        _frame.isna().first_valid_index().to_pydatetime()  # type: ignore
+    )
 
 
-def get_last_hour(_frame: pd.Series[str], work_order: PouchingWorkOrder) -> dt | None:
+def get_last_column(
+    _frame: pd.Series[str], work_order: PouchingWorkOrder,
+    cols_per_hour: int
+) -> dt:
     if work_order.status == 'Pouching':
-        return _frame[dt.now():].head(
-            work_order.remaining_time
+        return _frame.loc[current_column():].head(
+            work_order.remaining_time * cols_per_hour
         ).isna().last_valid_index().to_pydatetime()  # type: ignore
 
     elif work_order.status == 'Queued':
-        return _frame[work_order.start_datetime:].head(
-            work_order.remaining_time
+        return _frame.loc[work_order.start_datetime:].head(
+            work_order.remaining_time * cols_per_hour
         ).isna().last_valid_index().to_pydatetime()  # type: ignore
 
     else:
-        return None
+        raise Exception(f'Error while scheduling work order {work_order.lot_number}')
 
 
 class PouchingSchedule:
@@ -206,7 +218,6 @@ class PouchingSchedule:
                 end=self.end_datetime,
                 freq=PouchingSchedule.CSS_COLUMN_SIZE
             )
-            print(self._frame_index)
             return self._frame_index
 
     @property
@@ -236,7 +247,8 @@ class PouchingSchedule:
                     f'{date_.strftime("%a").lower()}_end_time'
                 )
                 day_start_dt = dt.combine(date_, day_start_time)
-                day_end_dt = dt.combine(date_, day_end_time)
+                day_end_dt = dt.combine(
+                    date_, day_end_time) - PouchingSchedule.CSS_COLUMN_SIZE
                 self._schedule_mask[day_start_dt:day_end_dt] = True
             return self._schedule_mask
 
@@ -289,12 +301,12 @@ class PouchingSchedule:
         _schedule_frame = _three_week_frame()
         for work_order in PouchingSchedule.scheduled_jobs():
             machine: str = work_order.machine
-            cropped_frame = _schedule_frame.loc[current_hour():, machine]
-            print(cropped_frame)
-            cropped_frame = map_work_order(
-                work_order=work_order, _frame=cropped_frame
+            cropped_frame = _schedule_frame.loc[current_column():, machine]
+            mapped_frame = map_work_order(
+                work_order=work_order, _frame=cropped_frame,
+                cols_per_hour=PouchingSchedule.COLS_PER_HOUR
             )
-            _schedule_frame[machine] = cropped_frame
+            _schedule_frame[machine] = mapped_frame
 
     @staticmethod
     def parking_lot() -> list[PouchingWorkOrder]:
@@ -393,5 +405,5 @@ class CurrentPouchingSchedule(PouchingSchedule):
         return self._current_grid_column
 
     @property
-    def current_hour(self: CurrentPouchingSchedule) -> dt:
-        return current_hour()
+    def current_column(self: CurrentPouchingSchedule) -> dt:
+        return current_column()
