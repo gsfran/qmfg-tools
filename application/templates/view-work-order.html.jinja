@@ -69,7 +69,7 @@
                         {% if work_order.status == 'Pouching' %}
                         <tr>
                             <td class="left_col">Poucher</td>
-                            <td class="right_col">Line {{ work_order.line }}</td>
+                            <td class="right_col">{{ work_order.machine }}</td>
                         </tr>
                         <tr>
                             <tr>

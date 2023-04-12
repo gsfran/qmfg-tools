@@ -245,19 +245,6 @@ h3.sub {
     margin-inline: 5px;
 }
 
-/* .schedule.weekly-byline {
-    grid-template-columns:
-        [machine_index] 1fr repeat(336, 1fr) [last_col] 1fr [end-col];
-    grid-template-rows:
-        [weekday_header] .20fr
-        [line_5] 1fr 
-        [line_6] 1fr 
-        [line_7] 1fr 
-        [line_8] 1fr 
-        [line_9] 1fr 
-        [end-row];
-} */
-
 /* GENERAL ITEM SETUP */
 /* SCHEDULE BLOCKS */
 .corner {
@@ -304,7 +291,7 @@ h3.sub {
     border-right: 1px solid #000;
 }
 
-.schedule_column.not-scheduled {
+.schedule_column.not_scheduled {
     background-color: #00000033;
 }
 
@@ -416,60 +403,3 @@ h3.sub {
     background-color: var(--other);
     border: 2px solid var(--other);
 }
-
-/* WEEKDAY SELECTORS */
-.mon {
-    grid-row: weekday_header;
-    grid-column: 2 / span 48;
-}
-
-.tue {
-    grid-row: weekday_header;
-    grid-column: 50 / span 48;
-}
-
-.wed {
-    grid-row: weekday_header;
-    grid-column: 98 / span 48;
-}
-
-.thu {
-    grid-row: weekday_header;
-    grid-column: 146 / span 48;
-}
-
-.fri {
-    grid-row: weekday_header;
-    grid-column: 194 / span 48;
-}
-
-.sat {
-    grid-row: weekday_header;
-    grid-column: 242 / span 48;
-}
-
-.sun {
-    grid-row: weekday_header;
-    grid-column: 290 / span 48;
-}
-
-/* MACHINE SELECTORS */
-/* .line_5 {
-    grid-area: line_5 / machine_index;
-}
-
-.line_6 {
-    grid-area: line_6 / machine_index;
-}
-
-.line_7 {
-    grid-area: line_7 / machine_index;
-}
-
-.line_8 {
-    grid-area: line_8 / machine_index;
-}
-
-.line_9 {
-    grid-area: line_9 / machine_index;
-} */

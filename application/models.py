@@ -32,7 +32,7 @@ class User(db.Model, UserMixin):
         return f'<User {self.username}>'
 
 
-class WorkOrder(db.Model):
+class PouchingWorkOrder(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     product = db.Column(db.String(30), nullable=False)
     product_name = db.Column(db.String(30), nullable=False)
@@ -40,8 +40,8 @@ class WorkOrder(db.Model):
     item_number = db.Column(db.String(30), nullable=False)
 
     lot_id = db.Column(db.String(5), nullable=False)
-    pouch_lot_num = db.Column(db.Integer, index=True, unique=True)
-    strip_lot_num = db.Column(db.Integer, index=True)
+    lot_number = db.Column(db.Integer, index=True, unique=True)
+    strip_lot_number = db.Column(db.Integer, index=True)
 
     strip_qty = db.Column(db.Integer)
     standard_rate = db.Column(db.Integer)
@@ -61,8 +61,8 @@ class WorkOrder(db.Model):
 
     log = db.Column(db.Text, default=f'Created {add_datetime}')
 
-    def __repr__(self: WorkOrder) -> str:
-        return f'<WorkOrders object {self.pouch_lot_num}>'
+    def __repr__(self: PouchingWorkOrder) -> str:
+        return f'<WorkOrders object {self.lot_number}>'
 
 
 class WorkWeek(db.Model):

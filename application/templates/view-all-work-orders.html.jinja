@@ -32,8 +32,8 @@
                         <td>{{ work_order.short_name }}</td>
                         <td>{{ work_order.lot_id }}</td>
                         <td>
-                            {{ work_order.status }}{% if work_order.line %}: Line
-                            {{ work_order.line }}
+                            {{ work_order.status }}{% if work_order.machine %}:
+                            {{ work_order.machine }}
                             {% endif %}
                         </td>
                         <td style="text-align: right;">

@@ -4,7 +4,7 @@ from sqlalchemy import and_, or_
 
 from application.vision.product_inspect import ProductInspectCamera
 from application import db
-from application.models import WorkOrder
+from application.models import PouchingWorkOrder
 
 
 class iTrak:
@@ -57,17 +57,17 @@ class iTrak:
         return lines
 
     @property
-    def current_jobs(self: iTrak) -> list[WorkOrder]:
+    def current_jobs(self: iTrak) -> list[PouchingWorkOrder]:
         return db.session.execute(
-            db.select(WorkOrder).where(
+            db.select(PouchingWorkOrder).where(
                 and_(
                     or_(
-                        WorkOrder.status == 'Pouching',
-                        WorkOrder.status == 'Queued'
+                        PouchingWorkOrder.status == 'Pouching',
+                        PouchingWorkOrder.status == 'Queued'
                     ),
-                    WorkOrder.machine == str(self.number)
+                    PouchingWorkOrder.machine == str(self.number)
                 )
             ).order_by(
-                WorkOrder.add_datetime.desc()
+                PouchingWorkOrder.add_datetime.desc()
             )
         ).scalars()

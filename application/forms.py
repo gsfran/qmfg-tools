@@ -181,7 +181,7 @@ class NewWorkOrderForm(FlaskForm):
         try:
             int(lot_number.data)
         except ValueError:
-            raise ValidationError('Please enter a valid number.')
+            raise ValidationError('Please enter a valid lot number.')
 
     @staticmethod
     def validate_strip_lot_number(
@@ -190,21 +190,21 @@ class NewWorkOrderForm(FlaskForm):
         try:
             int(strip_lot_number.data)
         except ValueError:
-            raise ValidationError('Please enter a valid number.')
+            raise ValidationError('Please enter a valid lot number.')
 
 
 class LoadWorkOrderForm(FlaskForm):
 
-    line = SelectField(
+    machine = SelectField(
         'Poucher', validators=[
             DataRequired()
         ],
         choices=[
-            ('5', 'Line 5'),
-            ('6', 'Line 6'),
-            ('7', 'Line 7'),
-            ('8', 'Line 8'),
-            ('9', 'Line 9')
+            ('itrak_5', 'Line 5'),
+            ('itrak_6', 'Line 6'),
+            ('itrak_7', 'Line 7'),
+            ('itrak_8', 'Line 8'),
+            ('itrak_9', 'Line 9')
         ]
     )
     priority = RadioField(
