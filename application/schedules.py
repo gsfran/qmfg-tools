@@ -14,6 +14,7 @@ from application import db
 from application.machines import machines
 from application.models import PouchingWorkOrder, WorkWeek
 
+
 _YEAR_WEEK_FORMAT: str = '%G-%V'
 
 
@@ -21,12 +22,11 @@ with open(os.environ['SCHEDULE_JSON'], 'r') as schedule_json:
     schedule_times: dict[str, str] = json.load(schedule_json)
 
 
-def current_column() -> dt:
-    minute_ = dt.now().minute // (60 // PouchingSchedule.COLS_PER_HOUR)
-    return dt.now().replace(minute=minute_, second=0, microsecond=0)
+def current_grid_column() -> dt:
+    return snap_to_grid(dt.now())
 
 
-def grid_column(datetime_: dt) -> dt:
+def snap_to_grid(datetime_: dt) -> dt:
     minute_ = datetime_.minute // (60 // PouchingSchedule.COLS_PER_HOUR)
     return datetime_.replace(minute=minute_, second=0, microsecond=0)
 
@@ -34,9 +34,9 @@ def grid_column(datetime_: dt) -> dt:
 def create_week(year_week: str) -> WorkWeek:
     print(f'Creating week {year_week}')
     work_week = WorkWeek(year_week=year_week)
-    for day_attr, time_ in schedule_times.items():
+    for day_, time_ in schedule_times.items():
         if time_ is not None:
-            work_week.__setattr__(day_attr, dt.strptime(time_, '%H:%M').time())
+            work_week.__setattr__(day_, dt.strptime(time_, '%H:%M').time())
     for machine_, active_ in machines.items():
         work_week.__setattr__(machine_, active_)
     db.session.add(work_week)
@@ -82,7 +82,7 @@ def map_work_order(
 
 
 def get_first_column(_frame: pd.Series[str]) -> dt:
-    return grid_column(
+    return snap_to_grid(
         _frame.isna().first_valid_index().to_pydatetime()  # type: ignore
     )
 
@@ -92,7 +92,7 @@ def get_last_column(
     cols_per_hour: int
 ) -> dt:
     if work_order.status == 'Pouching':
-        return _frame.loc[current_column():].head(
+        return _frame.loc[current_grid_column():].head(
             work_order.remaining_time * cols_per_hour
         ).isna().last_valid_index().to_pydatetime()  # type: ignore
 
@@ -102,7 +102,7 @@ def get_last_column(
         ).isna().last_valid_index().to_pydatetime()  # type: ignore
 
     else:
-        raise Exception(f'Error while scheduling work order {work_order.lot_number}')
+        raise Exception(f'Error while scheduling {work_order}.')
 
 
 class PouchingSchedule:
@@ -301,7 +301,7 @@ class PouchingSchedule:
         _schedule_frame = _three_week_frame()
         for work_order in PouchingSchedule.scheduled_jobs():
             machine: str = work_order.machine
-            cropped_frame = _schedule_frame.loc[current_column():, machine]
+            cropped_frame = _schedule_frame.loc[current_grid_column():, machine]
             mapped_frame = map_work_order(
                 work_order=work_order, _frame=cropped_frame,
                 cols_per_hour=PouchingSchedule.COLS_PER_HOUR
@@ -406,4 +406,4 @@ class CurrentPouchingSchedule(PouchingSchedule):
 
     @property
     def current_column(self: CurrentPouchingSchedule) -> dt:
-        return current_column()
+        return current_grid_column()
