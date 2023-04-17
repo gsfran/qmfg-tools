@@ -12,14 +12,14 @@
             [machine_index] 1fr repeat({{ schedule.COLS_PER_WEEK }}, 1fr) [last_col] 1fr [end-col];
         grid-template-rows:
             [weekday_header] .20fr
-            {% for machine in schedule.active_machines %}
+            {% for machine in schedule.machines %}
             [{{ machine }}] 1fr
             {% endfor %}
             [end-row];
     }
 
     {# MACHINE ROW HEADERS #}
-    {% for machine in schedule.active_machines %}
+    {% for machine in schedule.machines %}
     .{{ machine }} {
         grid-area: {{ machine }} / machine_index;
     }
@@ -40,12 +40,12 @@
             <h3 class="card-title">Pouching - {{ schedule.machine_type }}</h3>
         </div>
         <div class="h3-sub-right" style="width: 50%;  min-width: fit-content; margin-top: 25px; text-align: right;">
-            <a href="/schedule/{{ schedule.prior_week }}">
+            <a href="/schedule/{{ schedule.machine_type }}/{{ schedule.prior_week }}">
                 <div class="h3-sub-right arrows">
                     < </div>
             </a>
             <div class="h3-sub-right arrows">{{ schedule }}</div>
-            <a href="/schedule/{{ schedule.next_week }}">
+            <a href="/schedule/{{ schedule.machine_type }}/{{ schedule.next_week }}">
                 <div class="h3-sub-right arrows"> > </div>
             </a>
         </div>
@@ -57,7 +57,7 @@
 
 
             <!--  PREVIOUS WEEK ARROWS  -->
-            <a href="/schedule/{{ schedule.prior_week }}">
+            <a href="/schedule/{{ schedule.machine_type }}/{{ schedule.prior_week }}">
                 <div class="corner">
                     << </div>
             </a>
@@ -70,14 +70,14 @@
             {% endfor %}
 
             <!-- FOLLOWING WEEK ARROWS -->
-            <a href="/schedule/{{ schedule.next_week }}">
+            <a href="/schedule/{{ schedule.machine_type }}/{{ schedule.next_week }}">
                 <div class="corner">
                     >> </div>
             </a>
 
             <!--  PRODUCTION LINES  -->
-            {% for machine in schedule.active_machines %}
-            <div class="machine_index {{ machine }}">{{ machine }}</div>
+            {% for machine in schedule.machines %}
+            <div class="machine_index {{ machine }}">{{ machine.id }}</div>
 
             <!-- HOURS OF THE WEEK-->
             {% for schedule_column in range(schedule.COLS_PER_WEEK) %}

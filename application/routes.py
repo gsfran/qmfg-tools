@@ -14,7 +14,7 @@ from application.forms import (ConfirmDeleteForm, LoadWorkOrderForm, LoginForm,
                                RegistrationForm)
 from application.models import User, PouchingWorkOrder
 from application.products import products
-from application.schedules import CurrentPouchingSchedule, PouchingSchedule
+from application.schedules import CurrentSchedule, Schedule
 
 
 @app.route('/')
@@ -25,7 +25,7 @@ def index() -> Response:
 
 @app.route('/schedule/<string:machine_type>')
 def current_schedule(machine_type: str) -> str:
-    schedule = CurrentPouchingSchedule(machine_type=machine_type)
+    schedule = CurrentSchedule(machine_type=machine_type)
     schedule.refresh_work_orders()
 
     return render_template(
@@ -40,7 +40,7 @@ def view_schedule(machine_type: str, year_week: str) -> str | Response:
     if year_week == dt.strftime(dt.now(), '%G-%V'):
         return redirect(url_for('current_schedule'))
 
-    schedule = PouchingSchedule(year_week=year_week, machine_type=machine_type)
+    schedule = Schedule(year_week=year_week, machine_type=machine_type)
     schedule.refresh_work_orders()
     return render_template(
         'schedule.html.jinja', title='View Schedule',
@@ -66,7 +66,9 @@ def view_work_order(lot_number: int) -> str | Response:
 
     form = ConfirmDeleteForm()
     work_order = db.session.execute(
-        db.select(PouchingWorkOrder).where(
+        db.select(
+            PouchingWorkOrder
+        ).where(
             PouchingWorkOrder.lot_number == lot_number
         )
     ).scalar_one_or_none()
@@ -205,7 +207,7 @@ def load_work_order(lot_number: int) -> str | Response:
     if form.validate_on_submit():
         machine = form.machine.data
         work_order.machine = machine
-        if PouchingSchedule.on_machine(machine):
+        if Schedule.on_machine(machine):
             work_order.status = 'Queued'
         else:
             work_order.status = 'Pouching'

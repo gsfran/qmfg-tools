@@ -52,6 +52,7 @@ class PouchingWorkOrder(db.Model):
     load_datetime = db.Column(db.DateTime)
 
     machine = db.Column(db.Integer)
+    queue_position = db.Column(db.Integer)
     start_datetime = db.Column(db.DateTime)
     end_datetime = db.Column(db.DateTime)
     pouched_qty = db.Column(db.Integer, nullable=False, default=0)
