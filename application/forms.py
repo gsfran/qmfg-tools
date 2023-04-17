@@ -200,11 +200,13 @@ class LoadWorkOrderForm(FlaskForm):
             DataRequired()
         ],
         choices=[
-            ('itrak_5', 'Line 5'),
-            ('itrak_6', 'Line 6'),
-            ('itrak_7', 'Line 7'),
-            ('itrak_8', 'Line 8'),
-            ('itrak_9', 'Line 9')
+            ('line5', 'Line 5'),
+            ('line6', 'Line 6'),
+            ('line7', 'Line 7'),
+            ('line8', 'Line 8'),
+            ('line9', 'Line 9'),
+            ('line10', 'Line 10'),
+            ('line11', 'Line 11')
         ]
     )
     priority = RadioField(

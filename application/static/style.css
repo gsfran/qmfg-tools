@@ -341,6 +341,7 @@ h3.sub {
     margin-block: 10px;
     border-radius: 16px;
     margin-inline: 1px;
+    overflow: hidden;
 }
 
 .work_order.week_start {

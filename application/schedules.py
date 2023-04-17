@@ -23,11 +23,15 @@ with open(os.environ['SCHEDULE_JSON'], 'r') as schedule_json:
     schedule_times: dict[str, str] = json.load(schedule_json)
 
 
-def current_grid_index() -> dt:
-    return snap_to_grid(dt.now())
+def current_dt_snapped() -> dt:
+    return snap_dt_to_grid(dt.now())
 
 
-def snap_to_grid(datetime_: dt) -> dt:
+def current_year_week() -> str:
+    return dt.strftime(dt.now(), _YEAR_WEEK_FORMAT)
+
+
+def snap_dt_to_grid(datetime_: dt) -> dt:
     minute_ = datetime_.minute // (60 // Schedule.COLS_PER_HOUR)
     return datetime_.replace(minute=minute_, second=0, microsecond=0)
 
@@ -68,7 +72,7 @@ def map_work_order(
 
 
 def get_first_index(_frame: pd.Series[str]) -> dt:
-    return snap_to_grid(
+    return snap_dt_to_grid(
         _frame.isna().first_valid_index().to_pydatetime()  # type: ignore
     )
 
@@ -78,15 +82,17 @@ def get_last_index(
     cols_per_hour: int
 ) -> dt:
     if work_order.status == 'Pouching':
-        return _frame.loc[current_grid_index():].head(
-            work_order.remaining_time * cols_per_hour
-        ).isna().last_valid_index().to_pydatetime()  # type: ignore
-
+        return snap_dt_to_grid(
+            _frame.loc[current_dt_snapped():].head(
+                work_order.remaining_time * cols_per_hour
+            ).isna().last_valid_index().to_pydatetime()  # type: ignore
+        )
     elif work_order.status == 'Queued':
-        return _frame.loc[snap_to_grid(work_order.start_datetime):].head(
-            work_order.remaining_time * cols_per_hour
-        ).isna().last_valid_index().to_pydatetime()  # type: ignore
-
+        return snap_dt_to_grid(
+            _frame.loc[snap_dt_to_grid(work_order.start_datetime):].head(
+                work_order.remaining_time * cols_per_hour
+            ).isna().last_valid_index().to_pydatetime()  # type: ignore
+        )
     else:
         raise Exception(f'Error while scheduling {work_order}.')
 
@@ -249,8 +255,9 @@ class Schedule:
 
     @property
     def _next_3_weeks_frame(self: Schedule) -> pd.DataFrame:
+        current_week = CurrentSchedule(machine_type=self.machine_type)
         week_2_obj = Schedule(
-            year_week=self.next_week, machine_type=self.machine_type
+            year_week=current_week.next_week, machine_type=self.machine_type
         )
         _frame = pd.concat([
             CurrentSchedule(machine_type=self.machine_type).schedule_frame,
@@ -317,7 +324,7 @@ class Schedule:
         _schedule_frame = self._next_3_weeks_frame
 
         for machine in self.machines:
-            job_list = db.session.execute(
+            work_order_list = db.session.execute(
                 db.select(
                     PouchingWorkOrder
                 ).where(
@@ -327,27 +334,15 @@ class Schedule:
                 )
             ).scalars()
 
-            for work_order in job_list:
-                machine_schedule_frame = _schedule_frame.loc[
-                    current_grid_index():, machine.short_name
+            for work_order in work_order_list:
+                _machine_schedule = _schedule_frame.loc[
+                    current_dt_snapped():, machine.short_name
                 ]
                 mapped_frame = map_work_order(
-                    work_order=work_order, _frame=machine_schedule_frame,
+                    work_order=work_order, _frame=_machine_schedule,
                     cols_per_hour=Schedule.COLS_PER_HOUR
                 )
                 _schedule_frame[machine] = mapped_frame
-
-
-        # for work_order in Schedule.scheduled_jobs():
-        #     machine = work_order.machine
-        #     machine_schedule_frame = _schedule_frame.loc[
-        #         current_grid_index():, machine
-        #     ]
-        #     mapped_frame = map_work_order(
-        #         work_order=work_order, _frame=machine_schedule_frame,
-        #         cols_per_hour=Schedule.COLS_PER_HOUR
-        #     )
-        #     _schedule_frame[machine] = mapped_frame
 
     @staticmethod
     def parking_lot() -> list[PouchingWorkOrder]:
@@ -418,13 +413,19 @@ class Schedule:
         ).scalar_one_or_none()
 
     @staticmethod
-    def grid_column(datetime_: dt) -> int:
+    def dt_to_grid_column(datetime_: dt) -> int:
         """
         Returns integer representing the grid column for the
         given time.
         """
-        return (datetime_.hour * Schedule.COLS_PER_HOUR) + (
-            datetime_.weekday() * Schedule.COLS_PER_DAY
+        return (
+            (
+                datetime_.minute // (60 // Schedule.COLS_PER_HOUR)
+            ) + (
+                datetime_.hour * Schedule.COLS_PER_HOUR
+            ) + (
+                datetime_.weekday() * Schedule.COLS_PER_DAY
+            )
         )
 
     def __str__(self: Schedule) -> str:
@@ -437,14 +438,15 @@ class Schedule:
 class CurrentSchedule(Schedule):
 
     def __init__(self: CurrentSchedule, machine_type: str) -> None:
-        year_week = dt.strftime(dt.now(), _YEAR_WEEK_FORMAT)
-        super().__init__(year_week=year_week, machine_type=machine_type)
+        super().__init__(
+            year_week=current_year_week(), machine_type=machine_type
+            )
 
     @property
     def current_grid_column(self: CurrentSchedule) -> int:
-        self._current_grid_column = self.grid_column(dt.now())
+        self._current_grid_column = self.dt_to_grid_column(dt.now())
         return self._current_grid_column
 
     @property
     def current_column(self: CurrentSchedule) -> dt:
-        return current_grid_index()
+        return current_dt_snapped()
