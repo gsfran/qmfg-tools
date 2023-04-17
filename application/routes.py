@@ -23,79 +23,10 @@ def index() -> Response:
     return redirect(url_for('current_schedule'))
 
 
-@app.route('/user-login', methods=['GET', 'POST'])
-def login() -> str | Response:
-
-    if current_user.is_authenticated:  # type: ignore[call-arg]
-        return redirect(url_for('index'))
-
-    form = LoginForm()
-    if form.validate_on_submit():
-
-        user = db.session.execute(
-            db.select(User).where(
-                User.username == form.username.data
-            )
-        ).scalar_one_or_none()
-
-        if user is None or not user.check_password(form.password.data):
-            flash('Invalid username or password.', 'danger')
-            return redirect(url_for('login'))
-
-        login_user(user, remember=form.remember_me.data)
-        flash('Logged in successfully.', 'success')
-
-        next_page = request.args.get('next')
-
-        if not next_page or url_parse(next_page).netloc != '':
-            next_page = url_for('index')
-
-        if not is_safe_url(next_page, None):
-            return abort(400)
-
-        return redirect(next_page)
-
-    return render_template(
-        'user-login.html.jinja', title='User Login',
-        form=form
-    )
-
-
-@app.route('/logout')
-@login_required
-def logout() -> Response:
-    logout_user()
-    return redirect(url_for('index'))
-
-
-@app.route('/register-user', methods=['GET', 'POST'])
-def register() -> str | Response:
-
-    if current_user.is_authenticated:  # type: ignore[call-arg]
-        return redirect(url_for('index'))
-
-    form = RegistrationForm()
-    if form.validate_on_submit():
-        user = User(
-            username=form.username.data,
-            email=form.email.data
-        )
-        user.set_password(form.password.data)
-        db.session.add(user)
-        db.session.commit()
-        flash('Registration successful.', 'success')
-        return redirect(url_for('index'))
-
-    return render_template(
-        'register-user.html.jinja', title='Register New User',
-        form=form
-    )
-
-
-@app.route('/schedule')
-def current_schedule() -> str:
-    schedule = CurrentPouchingSchedule()
-    schedule.refresh()
+@app.route('/schedule/<string:machine_type>')
+def current_schedule(machine_type: str) -> str:
+    schedule = CurrentPouchingSchedule(machine_type=machine_type)
+    schedule.refresh_work_orders()
 
     return render_template(
         'schedule.html.jinja', title='Current Schedule',
@@ -103,14 +34,14 @@ def current_schedule() -> str:
     )
 
 
-@app.route('/schedule/<string:year_week>')
-def view_schedule(year_week: str) -> str | Response:
+@app.route('/schedule/<string:machine_type>/<string:year_week>')
+def view_schedule(machine_type: str, year_week: str) -> str | Response:
 
     if year_week == dt.strftime(dt.now(), '%G-%V'):
         return redirect(url_for('current_schedule'))
 
-    schedule = PouchingSchedule(year_week=year_week)
-    schedule.refresh()
+    schedule = PouchingSchedule(year_week=year_week, machine_type=machine_type)
+    schedule.refresh_work_orders()
     return render_template(
         'schedule.html.jinja', title='View Schedule',
         schedule=schedule
@@ -119,9 +50,11 @@ def view_schedule(year_week: str) -> str | Response:
 
 @app.route('/view-all-work-orders')
 def view_all_work_orders() -> str:
-    work_orders = (
-        PouchingWorkOrder.query.order_by(PouchingWorkOrder.lot_number.desc()).all()
-    )
+    work_orders = db.session.execute(
+        db.select(PouchingWorkOrder).order_by(
+            PouchingWorkOrder.lot_number.desc()
+        )
+    ).scalars()
     return render_template(
         'view-all-work-orders.html.jinja', title='All Work Orders',
         work_orders=work_orders
@@ -335,6 +268,75 @@ def view_machine(machine: str) -> str:
     # scheduled = WorkOrders.scheduled_jobs
     return render_template('machine-status.html.jinja', title=machine,
                            machine=machine)
+
+
+@app.route('/user-login', methods=['GET', 'POST'])
+def login() -> str | Response:
+
+    if current_user.is_authenticated:  # type: ignore[call-arg]
+        return redirect(url_for('index'))
+
+    form = LoginForm()
+    if form.validate_on_submit():
+
+        user = db.session.execute(
+            db.select(User).where(
+                User.username == form.username.data
+            )
+        ).scalar_one_or_none()
+
+        if user is None or not user.check_password(form.password.data):
+            flash('Invalid username or password.', 'danger')
+            return redirect(url_for('login'))
+
+        login_user(user, remember=form.remember_me.data)
+        flash('Logged in successfully.', 'success')
+
+        next_page = request.args.get('next')
+
+        if not next_page or url_parse(next_page).netloc != '':
+            next_page = url_for('index')
+
+        if not is_safe_url(next_page, None):
+            return abort(400)
+
+        return redirect(next_page)
+
+    return render_template(
+        'user-login.html.jinja', title='User Login',
+        form=form
+    )
+
+
+@app.route('/logout')
+@login_required
+def logout() -> Response:
+    logout_user()
+    return redirect(url_for('index'))
+
+
+@app.route('/register-user', methods=['GET', 'POST'])
+def register() -> str | Response:
+
+    if current_user.is_authenticated:  # type: ignore[call-arg]
+        return redirect(url_for('index'))
+
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        user = User(
+            username=form.username.data,
+            email=form.email.data
+        )
+        user.set_password(form.password.data)
+        db.session.add(user)
+        db.session.commit()
+        flash('Registration successful.', 'success')
+        return redirect(url_for('index'))
+
+    return render_template(
+        'register-user.html.jinja', title='Register New User',
+        form=form
+    )
 
 
 @app.route('/performance')
