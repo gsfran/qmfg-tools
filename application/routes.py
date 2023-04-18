@@ -207,11 +207,26 @@ def load_work_order(lot_number: int) -> str | Response:
     if form.validate_on_submit():
         machine = form.machine.data
         work_order.machine = machine
-        if Schedule.on_machine(machine):
-            work_order.status = 'Queued'
-        else:
+        if form.priority.data == 'replace':
+            # Replace current WO
+            work_order.queue_position = 0
             work_order.status = 'Pouching'
             work_order.start_datetime = dt.now()
+        elif form.priority.data == 'next':
+            # Schedule next
+            work_order.status = 'Queued'
+            work_order.queue_position = 1
+        elif form.priority.data == 'append':
+            # Schedule last
+            work_order.status = 'Queued'
+            pass
+        elif form.priority.data == 'custom':
+            # Custom time
+            work_order.status = 'Queued'
+            pass
+        
+            
+        ## DOES NOT WORK, NEED FUNCTIONS TO SCRAPE SCHEDULE AND FIND POSITION
 
         work_order.log += f'Loaded to {work_order.machine}: {dt.now()}\n'
         work_order.load_datetime = dt.now()
@@ -253,6 +268,7 @@ def unload_work_order(lot_number: int) -> Response:
             'warning'
         )
         work_order.status = 'Parking Lot'
+        work_order.queue_position = None
         work_order.start_datetime = None
         work_order.end_datetime = None
         work_order.load_datetime = None

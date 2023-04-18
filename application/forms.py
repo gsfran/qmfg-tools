@@ -11,6 +11,7 @@ from wtforms.validators import (DataRequired, Email, EqualTo, Length,
 
 from application import db
 from application.models import User
+from application.products import products
 
 
 class LoginForm(FlaskForm):
@@ -209,22 +210,26 @@ class LoadWorkOrderForm(FlaskForm):
             ('line11', 'Line 11')
         ]
     )
+
     priority = RadioField(
-        validators=[
+        'Priority', validators=[
             DataRequired()
         ],
         choices=[
-            ('replace_job', 'Replace current work order'),
-            ('schedule_next', 'Schedule after current work order'),
-            ('schedule_append', 'Schedule after all work orders')
-        ], default='schedule_append'
+            ('replace', 'Replace current work order'),
+            ('next', 'Queue as next work order'),
+            ('append', 'Queue as last work order'),
+            ('custom', 'Schedule a custom start time')
+        ], default='append'
     )
+
     start_date = DateField(
         'Start Date', validators=[
             DataRequired()
         ],
         default=dt.now().date()
     )
+
     start_time = TimeField(
         'Start Time', validators=[
             DataRequired()

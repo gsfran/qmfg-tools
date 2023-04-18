@@ -6,15 +6,13 @@ import os
 from datetime import date
 from datetime import datetime as dt
 from datetime import time, timedelta
-from typing import Type
 
 import pandas as pd
 from sqlalchemy import and_, or_
 
 from application import db
-from application.machines import machines, Machine, iTrak, Dipstick
+from application.machines import Machine, machines
 from application.models import PouchingWorkOrder, WorkWeek
-
 
 _YEAR_WEEK_FORMAT: str = '%G-%V'
 
@@ -49,47 +47,47 @@ def create_week(year_week: str) -> WorkWeek:
     return work_week
 
 
-def map_work_order(
-        work_order: PouchingWorkOrder, _frame: pd.Series[str],
+def _map_work_order(
+        work_order: PouchingWorkOrder, _frame_row: pd.Series[str],
         cols_per_hour: int
 ) -> pd.Series[str]:
     work_order.remaining_qty = work_order.strip_qty - work_order.pouched_qty
     work_order.remaining_time = math.ceil(
         work_order.remaining_qty / work_order.standard_rate
     )
-    start_index = get_first_index(_frame)
+    start_index = _get_first_open_index(_frame_row)
 
     if work_order.status == 'Queued':
         work_order.start_datetime = start_index
 
-    end_index = get_last_index(_frame, work_order, cols_per_hour)
+    end_index = _estimate_last_index(_frame_row, work_order, cols_per_hour)
     work_order.end_datetime = end_index
 
     db.session.commit()
 
-    _frame[start_index:end_index] = work_order.lot_number
-    return _frame
+    _frame_row[start_index:end_index] = work_order.lot_number
+    return _frame_row
 
 
-def get_first_index(_frame: pd.Series[str]) -> dt:
+def _get_first_open_index(_frame_row: pd.Series[str]) -> dt:
     return snap_dt_to_grid(
-        _frame.isna().first_valid_index().to_pydatetime()  # type: ignore
+        _frame_row.isna().first_valid_index().to_pydatetime()  # type: ignore
     )
 
 
-def get_last_index(
-    _frame: pd.Series[str], work_order: PouchingWorkOrder,
+def _estimate_last_index(
+    _frame_row: pd.Series[str], work_order: PouchingWorkOrder,
     cols_per_hour: int
 ) -> dt:
     if work_order.status == 'Pouching':
         return snap_dt_to_grid(
-            _frame.loc[current_dt_snapped():].head(
+            _frame_row.loc[current_dt_snapped():].head(
                 work_order.remaining_time * cols_per_hour
             ).isna().last_valid_index().to_pydatetime()  # type: ignore
         )
     elif work_order.status == 'Queued':
         return snap_dt_to_grid(
-            _frame.loc[snap_dt_to_grid(work_order.start_datetime):].head(
+            _frame_row.loc[snap_dt_to_grid(work_order.start_datetime):].head(
                 work_order.remaining_time * cols_per_hour
             ).isna().last_valid_index().to_pydatetime()  # type: ignore
         )
@@ -120,9 +118,9 @@ class Schedule:
         Schedule: An instance of this class.
     """
 
-    CSS_COLUMN_SIZE: timedelta = timedelta(minutes=30)
-    COLS_PER_HOUR: int = int(timedelta(hours=1) / CSS_COLUMN_SIZE)
-    COLS_PER_DAY: int = int(timedelta(days=1) / CSS_COLUMN_SIZE)
+    CSS_GRID_PERIOD: timedelta = timedelta(minutes=30)
+    COLS_PER_HOUR: int = int(timedelta(hours=1) / CSS_GRID_PERIOD)
+    COLS_PER_DAY: int = int(timedelta(days=1) / CSS_GRID_PERIOD)
     COLS_PER_WEEK: int = COLS_PER_DAY * 7
 
     def __init__(self: Schedule, year_week: str, machine_type: str) -> None:
@@ -238,7 +236,7 @@ class Schedule:
             self._frame_index_cache = pd.date_range(
                 start=self.start_datetime,
                 end=self.end_datetime,
-                freq=Schedule.CSS_COLUMN_SIZE
+                freq=Schedule.CSS_GRID_PERIOD
             )
             return self._frame_index_cache
 
@@ -289,14 +287,16 @@ class Schedule:
                 )
                 start_index = dt.combine(date_, day_start_time)
                 end_index = dt.combine(
-                    date_, day_end_time) - Schedule.CSS_COLUMN_SIZE
+                    date_, day_end_time) - Schedule.CSS_GRID_PERIOD
                 self._schedule_mask_cache[start_index:end_index] = True
             return self._schedule_mask_cache
 
     @property
     def work_orders(self: Schedule) -> list[PouchingWorkOrder]:
-        def _get_work_orders() -> list[PouchingWorkOrder]:
-            return db.session.execute(
+        try:
+            return self._work_order_cache
+        except AttributeError:
+            self._work_order_cache = db.session.execute(
                 db.select(
                     PouchingWorkOrder
                 ).where(
@@ -308,10 +308,6 @@ class Schedule:
                     PouchingWorkOrder.start_datetime  # .desc()
                 )
             ).scalars()
-        try:
-            return self._work_order_cache
-        except AttributeError:
-            self._work_order_cache = _get_work_orders()
             return self._work_order_cache
 
     def reload(self: Schedule) -> None:
@@ -321,8 +317,12 @@ class Schedule:
         self.refresh_work_orders()
 
     def refresh_work_orders(self: Schedule) -> None:
-        _schedule_frame = self._next_3_weeks_frame
+        """Recalculates all work orders iteratively.
 
+        Args:
+            None
+        """
+        self._schedule_temp_frame = self._next_3_weeks_frame
         for machine in self.machines:
             work_order_list = db.session.execute(
                 db.select(
@@ -335,14 +335,14 @@ class Schedule:
             ).scalars()
 
             for work_order in work_order_list:
-                _machine_schedule = _schedule_frame.loc[
+                _machine_schedule = self._schedule_temp_frame.loc[
                     current_dt_snapped():, machine.short_name
                 ]
-                mapped_frame = map_work_order(
-                    work_order=work_order, _frame=_machine_schedule,
+                mapped_frame = _map_work_order(
+                    work_order=work_order, _frame_row=_machine_schedule,
                     cols_per_hour=Schedule.COLS_PER_HOUR
                 )
-                _schedule_frame[machine] = mapped_frame
+                self._schedule_temp_frame[machine] = mapped_frame
 
     @staticmethod
     def parking_lot() -> list[PouchingWorkOrder]:
@@ -440,7 +440,7 @@ class CurrentSchedule(Schedule):
     def __init__(self: CurrentSchedule, machine_type: str) -> None:
         super().__init__(
             year_week=current_year_week(), machine_type=machine_type
-            )
+        )
 
     @property
     def current_grid_column(self: CurrentSchedule) -> int:

@@ -14,16 +14,24 @@
                     {{ form.machine(class="form-control form-control-md") }}
                 </div>
 
-                <!-- START DATE FIELD -->
-                <div class="form-group">
-                    {{ form.start_date.label(class="form-control-label") }}
-                    {{ form.start_date(class="form-control form-control-md") }}
-                </div>
+                <div>
+                    <!-- PRIORITY FIELD -->
+                    <div class="form-group">
+                        {{ form.priority.label(class="form-control-label", style="font-style: bold") }}
+                        {{ form.priority(class="form-control form-control-md", style="border-bottom: none; border-inline: none; list-style: none;") }}
+                    </div>
 
-                <!-- START TIME FIELD -->
-                <div class="form-group">
-                    {{ form.start_time.label(class="form-control-label") }}
-                    {{ form.start_time(class="form-control form-control-md") }}
+                    <!-- START DATE FIELD -->
+                    <div class="form-group">
+                        {{ form.start_date.label(class="form-control-label") }}
+                        {{ form.start_date(class="form-control form-control") }}
+                    </div>
+
+                    <!-- START TIME FIELD -->
+                    <div class="form-group">
+                        {{ form.start_time.label(class="form-control-label") }}
+                        {{ form.start_time(class="form-control form-control") }}
+                    </div>
                 </div>
 
                 <!-- SUBMIT BUTTON -->
