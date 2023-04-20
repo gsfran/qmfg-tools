@@ -32,7 +32,7 @@ class User(db.Model, UserMixin):
         return f'<User {self.username}>'
 
 
-class PouchingWorkOrder(db.Model):
+class PouchWorkOrder(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     product = db.Column(db.String(30), nullable=False)
     product_name = db.Column(db.String(30), nullable=False)
@@ -48,11 +48,11 @@ class PouchingWorkOrder(db.Model):
     standard_time = db.Column(db.Integer)
 
     status = db.Column(db.String(30), default='Parking Lot')
-    add_datetime = db.Column(db.DateTime, default=dt.utcnow)
-    load_datetime = db.Column(db.DateTime)
+    created_dt = db.Column(db.DateTime, default=dt.utcnow)
+    load_dt = db.Column(db.DateTime)
 
     machine = db.Column(db.Integer)
-    queue_position = db.Column(db.Integer)
+    priority = db.Column(db.Integer)
     start_datetime = db.Column(db.DateTime)
     end_datetime = db.Column(db.DateTime)
     pouched_qty = db.Column(db.Integer, nullable=False, default=0)
@@ -60,9 +60,9 @@ class PouchingWorkOrder(db.Model):
     remaining_qty = db.Column(db.Integer, nullable=False)
     remaining_time = db.Column(db.Integer, nullable=False)
 
-    log = db.Column(db.Text, default=f'Created {add_datetime}')
+    log = db.Column(db.Text, default=f'Created {created_dt}')
 
-    def __repr__(self: PouchingWorkOrder) -> str:
+    def __repr__(self: PouchWorkOrder) -> str:
         return f'<WorkOrders object {self.lot_number}>'
 
 

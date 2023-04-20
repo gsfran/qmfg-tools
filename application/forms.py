@@ -219,7 +219,7 @@ class LoadWorkOrderForm(FlaskForm):
             ('replace', 'Replace current work order'),
             ('next', 'Queue as next work order'),
             ('append', 'Queue as last work order'),
-            ('custom', 'Schedule a custom start time')
+            ('custom', 'Schedule a custom start time:')
         ], default='append'
     )
 

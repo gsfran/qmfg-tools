@@ -8,33 +8,33 @@ from datetime import datetime as dt
 from datetime import time, timedelta
 
 import pandas as pd
-from sqlalchemy import and_, or_
+from sqlalchemy import and_
 
 from application import db
 from application.machines import Machine, machines
-from application.models import PouchingWorkOrder, WorkWeek
+from application.models import PouchWorkOrder, WorkWeek
 
 _YEAR_WEEK_FORMAT: str = '%G-%V'
 
 
-with open(os.environ['SCHEDULE_JSON'], 'r') as schedule_json:
-    schedule_times: dict[str, str] = json.load(schedule_json)
+with open(os.environ['SCHEDULE_JSON'], 'r') as SCHEDULE_JSON:
+    schedule_times: dict[str, str] = json.load(SCHEDULE_JSON)
 
 
-def current_dt_snapped() -> dt:
-    return snap_dt_to_grid(dt.now())
+def _dt_now_to_grid() -> dt:
+    return _snap_dt_to_grid(dt.now())
 
 
-def current_year_week() -> str:
+def _current_year_week() -> str:
     return dt.strftime(dt.now(), _YEAR_WEEK_FORMAT)
 
 
-def snap_dt_to_grid(datetime_: dt) -> dt:
+def _snap_dt_to_grid(datetime_: dt) -> dt:
     minute_ = datetime_.minute // (60 // Schedule.COLS_PER_HOUR)
     return datetime_.replace(minute=minute_, second=0, microsecond=0)
 
 
-def create_week(year_week: str) -> WorkWeek:
+def _create_work_week(year_week: str) -> WorkWeek:
     print(f'Creating week {year_week}')
     work_week = WorkWeek(year_week=year_week)
     for day_, time_ in schedule_times.items():
@@ -48,8 +48,8 @@ def create_week(year_week: str) -> WorkWeek:
 
 
 def _map_work_order(
-        work_order: PouchingWorkOrder, _frame_row: pd.Series[str],
-        cols_per_hour: int
+        work_order: PouchWorkOrder, _frame_row: pd.Series[str],
+        COLS_PER_HOUR: int
 ) -> pd.Series[str]:
     work_order.remaining_qty = work_order.strip_qty - work_order.pouched_qty
     work_order.remaining_time = math.ceil(
@@ -60,7 +60,7 @@ def _map_work_order(
     if work_order.status == 'Queued':
         work_order.start_datetime = start_index
 
-    end_index = _estimate_last_index(_frame_row, work_order, cols_per_hour)
+    end_index = _estimate_last_index(_frame_row, work_order, COLS_PER_HOUR)
     work_order.end_datetime = end_index
 
     db.session.commit()
@@ -70,25 +70,25 @@ def _map_work_order(
 
 
 def _get_first_open_index(_frame_row: pd.Series[str]) -> dt:
-    return snap_dt_to_grid(
+    return _snap_dt_to_grid(
         _frame_row.isna().first_valid_index().to_pydatetime()  # type: ignore
     )
 
 
 def _estimate_last_index(
-    _frame_row: pd.Series[str], work_order: PouchingWorkOrder,
-    cols_per_hour: int
+    _frame_row: pd.Series[str], work_order: PouchWorkOrder,
+    COLS_PER_HOUR: int
 ) -> dt:
     if work_order.status == 'Pouching':
-        return snap_dt_to_grid(
-            _frame_row.loc[current_dt_snapped():].head(
-                work_order.remaining_time * cols_per_hour
+        return _snap_dt_to_grid(
+            _frame_row.loc[_dt_now_to_grid():].head(
+                work_order.remaining_time * COLS_PER_HOUR
             ).isna().last_valid_index().to_pydatetime()  # type: ignore
         )
     elif work_order.status == 'Queued':
-        return snap_dt_to_grid(
-            _frame_row.loc[snap_dt_to_grid(work_order.start_datetime):].head(
-                work_order.remaining_time * cols_per_hour
+        return _snap_dt_to_grid(
+            _frame_row.loc[_snap_dt_to_grid(work_order.start_datetime):].head(
+                work_order.remaining_time * COLS_PER_HOUR
             ).isna().last_valid_index().to_pydatetime()  # type: ignore
         )
     else:
@@ -96,7 +96,8 @@ def _estimate_last_index(
 
 
 def _get_machines(machine_type: str) -> list[Machine]:
-    """Returns list of Machine objects of the given type.
+    """
+    Returns list of Machine objects of the given type.
 
     Returns:
         list[Machine]: Machines available for production.
@@ -112,7 +113,8 @@ def _get_machines(machine_type: str) -> list[Machine]:
 
 
 class Schedule:
-    """Schedule for a single production week.
+    """
+    Schedule for a single production week.
 
     Returns:
         Schedule: An instance of this class.
@@ -207,15 +209,16 @@ class Schedule:
             )
         ).scalar_one_or_none()
         if work_week is None:
-            work_week = create_week(year_week=self.year_week)
+            work_week = _create_work_week(year_week=self.year_week)
         return work_week
 
     def _get_scheduled_days_from_db(self: Schedule) -> list[date]:
-        """Returns a list of datetime.date objects representing
+        """
+        Returns a list of datetime.date objects representing
         the days scheduled for the given week.
 
         Returns:
-            list[str]: List of days scheduled for the week.
+            list[date]: List of days scheduled for the week.
         """
         scheduled_days: list[date] = []
 
@@ -292,20 +295,20 @@ class Schedule:
             return self._schedule_mask_cache
 
     @property
-    def work_orders(self: Schedule) -> list[PouchingWorkOrder]:
+    def work_orders(self: Schedule) -> list[PouchWorkOrder]:
         try:
             return self._work_order_cache
         except AttributeError:
             self._work_order_cache = db.session.execute(
                 db.select(
-                    PouchingWorkOrder
+                    PouchWorkOrder
                 ).where(
                     and_(
-                        PouchingWorkOrder.end_datetime >= self.start_datetime,
-                        PouchingWorkOrder.start_datetime < self.end_datetime
+                        PouchWorkOrder.end_datetime >= self.start_datetime,
+                        PouchWorkOrder.start_datetime < self.end_datetime
                     )
                 ).order_by(
-                    PouchingWorkOrder.start_datetime  # .desc()
+                    PouchWorkOrder.start_datetime  # .desc()
                 )
             ).scalars()
             return self._work_order_cache
@@ -314,103 +317,133 @@ class Schedule:
         self.__init__(
             year_week=self.year_week, machine_type=self.machine_type
         )
-        self.refresh_work_orders()
+        self._refresh_work_orders()
 
-    def refresh_work_orders(self: Schedule) -> None:
-        """Recalculates all work orders iteratively.
+    def _refresh_work_orders(self: Schedule) -> None:
+        """
+        Recalculates all work orders iteratively.
 
         Args:
             None
         """
         self._schedule_temp_frame = self._next_3_weeks_frame
         for machine in self.machines:
-            work_order_list = db.session.execute(
-                db.select(
-                    PouchingWorkOrder
-                ).where(
-                    PouchingWorkOrder.machine == machine.short_name
-                ).order_by(
-                    PouchingWorkOrder.queue_position
-                )
-            ).scalars()
+            self._refresh_machine_work_orders(machine)
 
-            for work_order in work_order_list:
-                _machine_schedule = self._schedule_temp_frame.loc[
-                    current_dt_snapped():, machine.short_name
-                ]
-                mapped_frame = _map_work_order(
-                    work_order=work_order, _frame_row=_machine_schedule,
-                    cols_per_hour=Schedule.COLS_PER_HOUR
-                )
-                self._schedule_temp_frame[machine] = mapped_frame
+    def _refresh_machine_work_orders(self: Schedule, machine: Machine) -> None:
+        work_order_list = db.session.execute(
+            db.select(
+                PouchWorkOrder
+            ).where(
+                PouchWorkOrder.machine == machine.short_name
+            ).order_by(
+                PouchWorkOrder.priority
+            )
+        ).scalars()
+
+        for work_order in work_order_list:
+            _machine_schedule = self._schedule_temp_frame.loc[
+                _dt_now_to_grid():, machine.short_name
+            ]
+            mapped_frame = _map_work_order(
+                work_order=work_order, _frame_row=_machine_schedule,
+                COLS_PER_HOUR=Schedule.COLS_PER_HOUR
+            )
+            self._schedule_temp_frame[machine.short_name] = mapped_frame
 
     @staticmethod
-    def parking_lot() -> list[PouchingWorkOrder]:
+    def parking_lot() -> list[PouchWorkOrder]:
         """
         Returns database query for all 'Parking Lot' jobs.
         """
         return db.session.execute(
-            db.select(PouchingWorkOrder).where(
-                PouchingWorkOrder.status == 'Parking Lot'
+            db.select(PouchWorkOrder).where(
+                PouchWorkOrder.status == 'Parking Lot'
             ).order_by(
-                PouchingWorkOrder.add_datetime.desc()
+                PouchWorkOrder.created_dt.desc()
             )
         ).scalars()
 
     @staticmethod
-    def pouching() -> list[PouchingWorkOrder]:
+    def pouching(
+        machine: Machine | None = None
+    ) -> list[PouchWorkOrder] | PouchWorkOrder | None:
         """
         Returns database query for all 'Pouching' jobs.
         """
-        return db.session.execute(
-            db.select(PouchingWorkOrder).where(
-                PouchingWorkOrder.status == 'Pouching'
-            ).order_by(
-                PouchingWorkOrder.machine
-            )
-        ).scalars()
+        if machine is None:
+            return db.session.execute(
+                db.select(PouchWorkOrder).where(
+                    PouchWorkOrder.priority == 0
+                ).order_by(
+                    PouchWorkOrder.machine
+                )
+            ).scalars()
+        else:
+            return db.session.execute(
+                db.select(PouchWorkOrder).where(
+                    and_(
+                        PouchWorkOrder.priority == 0,
+                        PouchWorkOrder.machine == machine.short_name
+                    )
+                )
+            ).scalar_one_or_none()
 
     @staticmethod
-    def queued() -> list[PouchingWorkOrder]:
-        """Returns db query for all Queued jobs.
+    def queued(machine: Machine | None = None) -> list[PouchWorkOrder] | None:
+        """
+        Returns db query for all Queued jobs.
+        Optionally,
 
         Returns:
             list[WorkOrders]: Scheduled work orders.
         """
-        return db.session.execute(
-            db.select(PouchingWorkOrder).where(
-                PouchingWorkOrder.status == 'Queued'
-            ).order_by(
-                PouchingWorkOrder.machine
-            )
-        ).scalars()
+        if machine is None:
+            return db.session.execute(
+                db.select(PouchWorkOrder).where(
+                    PouchWorkOrder.priority > 0
+                ).order_by(
+                    PouchWorkOrder.machine
+                ).order_by(
+                    PouchWorkOrder.priority
+                )
+            ).scalars()
+        else:
+            return db.session.execute(
+                db.select(PouchWorkOrder).where(
+                    and_(
+                        PouchWorkOrder.priority > 0,
+                        PouchWorkOrder.machine == machine.short_name
+                    )
+                ).order_by(
+                    PouchWorkOrder.priority
+                )
+            ).scalars()
 
     @staticmethod
-    def scheduled_jobs() -> list[PouchingWorkOrder]:
+    def scheduled_jobs(
+        machine: Machine | None = None
+    ) -> list[PouchWorkOrder] | None:
         """Returns db query for all Pouching and Queued jobs.
 
         Returns:
             list[WorkOrders]: Scheduled work orders.
         """
-        return db.session.execute(
-            db.select(PouchingWorkOrder).where(
-                or_(
-                    PouchingWorkOrder.status == 'Pouching',
-                    PouchingWorkOrder.status == 'Queued'
+        if machine is None:
+            return db.session.execute(
+                db.select(PouchWorkOrder).where(
+                    PouchWorkOrder.priority >= 0
                 )
-            )
-        ).scalars()
-
-    @staticmethod
-    def on_machine(machine: str | None) -> PouchingWorkOrder | None:
-        return db.session.execute(
-            db.select(PouchingWorkOrder).where(
-                and_(
-                    PouchingWorkOrder.machine == machine,
-                    PouchingWorkOrder.status == 'Pouching'
+            ).scalars()
+        else:
+            return db.session.execute(
+                db.select(PouchWorkOrder).where(
+                    and_(
+                        PouchWorkOrder.priority >= 0,
+                        PouchWorkOrder.machine == machine.short_name
+                    )
                 )
-            )
-        ).scalar_one_or_none()
+            ).scalars()
 
     @staticmethod
     def dt_to_grid_column(datetime_: dt) -> int:
@@ -439,7 +472,7 @@ class CurrentSchedule(Schedule):
 
     def __init__(self: CurrentSchedule, machine_type: str) -> None:
         super().__init__(
-            year_week=current_year_week(), machine_type=machine_type
+            year_week=_current_year_week(), machine_type=machine_type
         )
 
     @property
@@ -449,4 +482,4 @@ class CurrentSchedule(Schedule):
 
     @property
     def current_column(self: CurrentSchedule) -> dt:
-        return current_dt_snapped()
+        return _dt_now_to_grid()

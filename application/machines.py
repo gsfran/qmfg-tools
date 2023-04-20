@@ -15,12 +15,12 @@ class Machine:
     id: str
 
     @classmethod
-    def create(cls: Type, machine_type: str, machine_id: str) -> Machine:
+    def create(cls: Type, machine_type: str, short_name: str) -> Machine:
         MACHINE_TYPE_MAP = {
             subclass.__name__.lower(): subclass
             for subclass in cls.__subclasses__()
         }
-        return MACHINE_TYPE_MAP[machine_type](machine_id)
+        return MACHINE_TYPE_MAP[machine_type](short_name)
 
     def __repr__(self: Machine) -> str:
         ...

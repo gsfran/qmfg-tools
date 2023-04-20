@@ -18,21 +18,16 @@
                     <!-- PRIORITY FIELD -->
                     <div class="form-group">
                         {{ form.priority.label(class="form-control-label", style="font-style: bold") }}
-                        {{ form.priority(class="form-control form-control-md", style="border-bottom: none; border-inline: none; list-style: none;") }}
+                        {{ form.priority(class="form-control form-control-sm", style="border-bottom: none; border-inline: none; list-style: none;") }}
+                        <div class="col", style="text-align: right; margin-bottom: 100px; border: none;">
+                            <p>
+                                {{ form.start_date }}
+                            </p>
+                            <p>
+                                {{ form.start_time }}
+                            </p>
+                        </div>
                     </div>
-
-                    <!-- START DATE FIELD -->
-                    <div class="form-group">
-                        {{ form.start_date.label(class="form-control-label") }}
-                        {{ form.start_date(class="form-control form-control") }}
-                    </div>
-
-                    <!-- START TIME FIELD -->
-                    <div class="form-group">
-                        {{ form.start_time.label(class="form-control-label") }}
-                        {{ form.start_time(class="form-control form-control") }}
-                    </div>
-                </div>
 
                 <!-- SUBMIT BUTTON -->
                 <div class="form-group border-bottom pb-3">
