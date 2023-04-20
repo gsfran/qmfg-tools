@@ -129,6 +129,7 @@ class Schedule:
         self.year_week = year_week
         self.machine_type = machine_type
         self._init_schedule()
+        self._refresh_work_orders()
 
     def _init_schedule(self) -> None:
         self.dates
@@ -313,11 +314,10 @@ class Schedule:
             ).scalars()
             return self._work_order_cache
 
-    def reload(self: Schedule) -> None:
+    def _reinitialize(self: Schedule) -> None:
         self.__init__(
             year_week=self.year_week, machine_type=self.machine_type
         )
-        self._refresh_work_orders()
 
     def _refresh_work_orders(self: Schedule) -> None:
         """
@@ -331,6 +331,7 @@ class Schedule:
             self._refresh_machine_work_orders(machine)
 
     def _refresh_machine_work_orders(self: Schedule, machine: Machine) -> None:
+        work_order_list = self.scheduled(machine=machine)
         work_order_list = db.session.execute(
             db.select(
                 PouchWorkOrder
@@ -403,10 +404,8 @@ class Schedule:
                 db.select(PouchWorkOrder).where(
                     PouchWorkOrder.priority > 0
                 ).order_by(
-                    PouchWorkOrder.machine
-                ).order_by(
                     PouchWorkOrder.priority
-                )
+                ).order_by(PouchWorkOrder.machine)
             ).scalars()
         else:
             return db.session.execute(
@@ -415,13 +414,11 @@ class Schedule:
                         PouchWorkOrder.priority > 0,
                         PouchWorkOrder.machine == machine.short_name
                     )
-                ).order_by(
-                    PouchWorkOrder.priority
-                )
+                ).order_by(PouchWorkOrder.priority)
             ).scalars()
 
     @staticmethod
-    def scheduled_jobs(
+    def scheduled(
         machine: Machine | None = None
     ) -> list[PouchWorkOrder] | None:
         """Returns db query for all Pouching and Queued jobs.
@@ -433,7 +430,7 @@ class Schedule:
             return db.session.execute(
                 db.select(PouchWorkOrder).where(
                     PouchWorkOrder.priority >= 0
-                )
+                ).order_by(PouchWorkOrder.priority)
             ).scalars()
         else:
             return db.session.execute(
@@ -442,7 +439,7 @@ class Schedule:
                         PouchWorkOrder.priority >= 0,
                         PouchWorkOrder.machine == machine.short_name
                     )
-                )
+                ).order_by(PouchWorkOrder.priority)
             ).scalars()
 
     @staticmethod
