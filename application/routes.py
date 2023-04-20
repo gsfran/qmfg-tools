@@ -12,7 +12,8 @@ from application import app, db
 from application.forms import (ConfirmDeleteForm, LoadWorkOrderForm, LoginForm,
                                NewWorkOrderForm, ProductDetailsForm,
                                RegistrationForm)
-from application.models import User, PouchingWorkOrder
+from application.machines import Machine
+from application.models import User, PouchWorkOrder
 from application.products import products
 from application.schedules import CurrentSchedule, Schedule
 
@@ -26,7 +27,7 @@ def index() -> Response:
 @app.route('/schedule/<string:machine_type>')
 def current_schedule(machine_type: str) -> str:
     schedule = CurrentSchedule(machine_type=machine_type)
-    schedule.refresh_work_orders()
+    schedule._refresh_work_orders()
 
     return render_template(
         'schedule.html.jinja', title='Current Schedule',
@@ -41,7 +42,7 @@ def view_schedule(machine_type: str, year_week: str) -> str | Response:
         return redirect(url_for('current_schedule'))
 
     schedule = Schedule(year_week=year_week, machine_type=machine_type)
-    schedule.refresh_work_orders()
+    schedule._refresh_work_orders()
     return render_template(
         'schedule.html.jinja', title='View Schedule',
         schedule=schedule
@@ -51,8 +52,8 @@ def view_schedule(machine_type: str, year_week: str) -> str | Response:
 @app.route('/view-all-work-orders')
 def view_all_work_orders() -> str:
     work_orders = db.session.execute(
-        db.select(PouchingWorkOrder).order_by(
-            PouchingWorkOrder.lot_number.desc()
+        db.select(PouchWorkOrder).order_by(
+            PouchWorkOrder.lot_number.desc()
         )
     ).scalars()
     return render_template(
@@ -67,9 +68,9 @@ def view_work_order(lot_number: int) -> str | Response:
     form = ConfirmDeleteForm()
     work_order = db.session.execute(
         db.select(
-            PouchingWorkOrder
+            PouchWorkOrder
         ).where(
-            PouchingWorkOrder.lot_number == lot_number
+            PouchWorkOrder.lot_number == lot_number
         )
     ).scalar_one_or_none()
 
@@ -106,7 +107,7 @@ def add_work_order() -> str | Response:
         else:
             raise Exception('Error calculating lot standard time.')
 
-        work_order = PouchingWorkOrder(
+        work_order = PouchWorkOrder(
             product=product,
             product_name=product_name,
             short_name=short_name,
@@ -120,8 +121,7 @@ def add_work_order() -> str | Response:
             remaining_qty=strip_qty,
             standard_rate=standard_rate,
             standard_time=standard_time,
-            remaining_time=standard_time,
-            add_datetime=dt.now()
+            remaining_time=standard_time
         )
 
         db.session.add(work_order)
@@ -148,8 +148,8 @@ def add_work_order() -> str | Response:
 @login_required
 def edit_work_order(lot_number: int) -> str | Response:
     work_order = db.session.execute(
-        db.select(PouchingWorkOrder).where(
-            PouchingWorkOrder.lot_number == lot_number
+        db.select(PouchWorkOrder).where(
+            PouchWorkOrder.lot_number == lot_number
         )
     ).scalar_one_or_none()
 
@@ -176,8 +176,8 @@ def edit_work_order(lot_number: int) -> str | Response:
 @login_required
 def delete(lot_number: int) -> Response:
     work_order = db.session.execute(
-        db.select(PouchingWorkOrder).where(
-            PouchingWorkOrder.lot_number == lot_number
+        db.select(PouchWorkOrder).where(
+            PouchWorkOrder.lot_number == lot_number
         )
     ).scalar_one_or_none()
 
@@ -198,17 +198,17 @@ def delete(lot_number: int) -> Response:
 @login_required
 def load_work_order(lot_number: int) -> str | Response:
     work_order = db.session.execute(
-        db.select(PouchingWorkOrder).where(
-            PouchingWorkOrder.lot_number == lot_number
+        db.select(PouchWorkOrder).where(
+            PouchWorkOrder.lot_number == lot_number
         )
     ).scalar_one_or_none()
     form = LoadWorkOrderForm()
 
     if form.validate_on_submit():
-        machine = form.machine.data
-        work_order.machine = machine
+        work_order.machine = form.machine.data
+        machine = Machine.create(work_order.machine)
         if form.priority.data == 'replace':
-            # Replace current WO
+            Schedule.pouching(work_order.machine)
             work_order.queue_position = 0
             work_order.status = 'Pouching'
             work_order.start_datetime = dt.now()
@@ -224,8 +224,8 @@ def load_work_order(lot_number: int) -> str | Response:
             # Custom time
             work_order.status = 'Queued'
             pass
-        
-            
+
+
         ## DOES NOT WORK, NEED FUNCTIONS TO SCRAPE SCHEDULE AND FIND POSITION
 
         work_order.log += f'Loaded to {work_order.machine}: {dt.now()}\n'
@@ -234,7 +234,7 @@ def load_work_order(lot_number: int) -> str | Response:
 
         flash(
             f'{work_order.short_name} {work_order.lot_id} '
-            f'(Lot {lot_number}) loaded to '
+            f'Lot {lot_number} loaded to '
             f'{work_order.machine}.',
             'info'
         )
@@ -251,8 +251,8 @@ def load_work_order(lot_number: int) -> str | Response:
 @login_required
 def unload_work_order(lot_number: int) -> Response:
     work_order = db.session.execute(
-        db.select(PouchingWorkOrder).where(
-            PouchingWorkOrder.lot_number == lot_number
+        db.select(PouchWorkOrder).where(
+            PouchWorkOrder.lot_number == lot_number
         )
     ).scalar_one_or_none()
 
@@ -361,32 +361,32 @@ def register() -> str | Response:
 def performance() -> str:
     type_comparison = (
         db.session.query(
-            db.func.sum(PouchingWorkOrder.lot_number),
-            PouchingWorkOrder.product
+            db.func.sum(PouchWorkOrder.lot_number),
+            PouchWorkOrder.product
         ).group_by(
-            PouchingWorkOrder.product
+            PouchWorkOrder.product
         ).order_by(
-            PouchingWorkOrder.product
+            PouchWorkOrder.product
         ).all()
     )
     product_comparison = (
         db.session.query(
-            db.func.sum(PouchingWorkOrder.lot_number),
-            PouchingWorkOrder.status
+            db.func.sum(PouchWorkOrder.lot_number),
+            PouchWorkOrder.status
         ).group_by(
-            PouchingWorkOrder.status
+            PouchWorkOrder.status
         ).order_by(
-            PouchingWorkOrder.status
+            PouchWorkOrder.status
         ).all()
     )
     dates = (
         db.session.query(
-            db.func.sum(PouchingWorkOrder.lot_number),
-            PouchingWorkOrder.add_datetime
+            db.func.sum(PouchWorkOrder.lot_number),
+            PouchWorkOrder.created_dt
         ).group_by(
-            PouchingWorkOrder.add_datetime
+            PouchWorkOrder.created_dt
         ).order_by(
-            PouchingWorkOrder.add_datetime
+            PouchWorkOrder.created_dt
         ).all()
     )
     income_category = []
