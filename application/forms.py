@@ -212,14 +212,14 @@ class LoadWorkOrderForm(FlaskForm):
     )
 
     priority = RadioField(
-        'Priority', validators=[
+        'Schedule Time', validators=[
             DataRequired()
         ],
         choices=[
-            ('replace', 'Replace current work order'),
-            ('next', 'Queue as next work order'),
-            ('append', 'Queue as last work order'),
-            ('custom', 'Schedule a custom start time:')
+            ('append', 'Next Available Time'),
+            ('next', 'After Current Work Order'),
+            ('replace', 'Replace Current Work Order'),
+            ('custom', 'Custom Start Time:')
         ], default='append'
     )
 

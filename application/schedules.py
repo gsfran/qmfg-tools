@@ -87,7 +87,9 @@ def _estimate_last_index(
         )
     elif work_order.status == 'Queued':
         return _snap_dt_to_grid(
-            _frame_row.loc[_snap_dt_to_grid(work_order.pouching_start_dt):].head(
+            _frame_row.loc[
+                _snap_dt_to_grid(work_order.pouching_start_dt):
+            ].head(
                 work_order.remaining_time * COLS_PER_HOUR
             ).isna().last_valid_index().to_pydatetime()  # type: ignore
         )
@@ -95,7 +97,7 @@ def _estimate_last_index(
         raise Exception(f'Error while scheduling {work_order}.')
 
 
-def _get_machines(machine_type: str) -> list[Machine]:
+def _get_machines(machine_family: str) -> list[Machine]:
     """
     Returns list of Machine objects of the given type.
 
@@ -103,12 +105,12 @@ def _get_machines(machine_type: str) -> list[Machine]:
         list[Machine]: Machines available for production.
     """
     machine_list: list[Machine] = []
-    for mach_id in machines[machine_type].keys():
-        mach = Machine.create(machine_type, mach_id)
+    for mach_id in machines[machine_family].keys():
+        mach = Machine.create(mach_id)
         machine_list.append(mach)
 
     if machine_list is None:
-        raise Exception(f"No machines found for '{machine_type}' type.")
+        raise Exception(f"No machines found for '{machine_family}' type.")
     return machine_list
 
 
@@ -159,7 +161,7 @@ class Schedule:
             return self._machines
         except AttributeError:
             self._machines = _get_machines(
-                machine_type=self.machine_type
+                machine_family=self.machine_type
             )
             return self._machines
 

@@ -16,19 +16,23 @@ class Machine:
 
     @classmethod
     def create(cls: Type, short_name: str) -> Machine:
-        machine_family = Machine._get_machine_family(short_name=short_name)
-        MACHINE_FAMILY_MAP = {
+        CREATE_MACHINE_MAP = {
             subclass.__name__.lower(): subclass
             for subclass in cls.__subclasses__()
         }
-        return MACHINE_FAMILY_MAP[machine_family](short_name)
+        machine_family = Machine._get_machine_family(short_name=short_name)
+        return CREATE_MACHINE_MAP[machine_family](short_name)
 
     @classmethod
     def _get_machine_family(cls: Type, short_name: str) -> str | None:
-        INVERSE_LOOKUP = {
-            value_.__str__(): key_ for key_, value_ in machines.items()
-        }
-        return INVERSE_LOOKUP.get(short_name)
+        MACHINE_FAMILY_MAP: dict[str, dict[str, bool]] = {}
+        for family, name_ in machines.items():
+            MACHINE_FAMILY_MAP[name_] = family
+
+        if MACHINE_FAMILY_MAP is None:
+            raise Exception(f'Error getting machine family: {short_name}.')
+
+        return MACHINE_FAMILY_MAP[short_name]
 
     def __repr__(self: Machine) -> str:
         ...
@@ -51,4 +55,14 @@ class Dipstick(Machine):
         self.id = self.short_name.replace('dipstick', '')
 
     def __repr__(self: Dipstick) -> str:
+        return self.short_name
+
+
+class Swab(Machine):
+    def __init__(self: Swab, machine_id: str) -> None:
+        self.short_name = machine_id
+        self.name = self.short_name.replace('swab', 'Swab Poucher ')
+        self.id = self.short_name.replace('swab', '')
+
+    def __repr__(self: Swab) -> str:
         return self.short_name
