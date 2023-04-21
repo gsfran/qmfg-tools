@@ -49,12 +49,12 @@ class PouchWorkOrder(db.Model):
 
     status = db.Column(db.String(30), default='Parking Lot')
     created_dt = db.Column(db.DateTime, default=dt.utcnow)
-    load_dt = db.Column(db.DateTime)
+    load_dt = db.Column(db.DateTime, default=None)
 
-    machine = db.Column(db.Integer)
-    priority = db.Column(db.Integer)
-    start_datetime = db.Column(db.DateTime)
-    end_datetime = db.Column(db.DateTime)
+    machine = db.Column(db.Integer, default=None)
+    priority = db.Column(db.Integer, default=None)
+    pouching_start_dt = db.Column(db.DateTime, default=None)
+    pouching_end_dt = db.Column(db.DateTime, default=None)
     pouched_qty = db.Column(db.Integer, nullable=False, default=0)
 
     remaining_qty = db.Column(db.Integer, nullable=False)

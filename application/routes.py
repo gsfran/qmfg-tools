@@ -206,9 +206,9 @@ def load_work_order(lot_number: int) -> str | Response:
 
     if form.validate_on_submit():
         work_order.machine = form.machine.data
-        machine = Machine.create(work_order.machine)
+        machine = Machine.create(short_name=work_order.machine)
         if form.priority.data == 'replace':
-            Schedule.pouching(work_order.machine)
+            Schedule.pouching(machine=machine)
             work_order.queue_position = 0
             work_order.status = 'Pouching'
             work_order.start_datetime = dt.now()

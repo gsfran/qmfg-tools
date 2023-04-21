@@ -15,12 +15,20 @@ class Machine:
     id: str
 
     @classmethod
-    def create(cls: Type, machine_type: str, short_name: str) -> Machine:
-        MACHINE_TYPE_MAP = {
+    def create(cls: Type, short_name: str) -> Machine:
+        machine_family = Machine._get_machine_family(short_name=short_name)
+        MACHINE_FAMILY_MAP = {
             subclass.__name__.lower(): subclass
             for subclass in cls.__subclasses__()
         }
-        return MACHINE_TYPE_MAP[machine_type](short_name)
+        return MACHINE_FAMILY_MAP[machine_family](short_name)
+
+    @classmethod
+    def _get_machine_family(cls: Type, short_name: str) -> str | None:
+        INVERSE_LOOKUP = {
+            value_.__str__(): key_ for key_, value_ in machines.items()
+        }
+        return INVERSE_LOOKUP.get(short_name)
 
     def __repr__(self: Machine) -> str:
         ...

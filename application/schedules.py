@@ -58,10 +58,10 @@ def _map_work_order(
     start_index = _get_first_open_index(_frame_row)
 
     if work_order.status == 'Queued':
-        work_order.start_datetime = start_index
+        work_order.pouching_start_dt = start_index
 
     end_index = _estimate_last_index(_frame_row, work_order, COLS_PER_HOUR)
-    work_order.end_datetime = end_index
+    work_order.pouching_end_dt = end_index
 
     db.session.commit()
 
@@ -87,7 +87,7 @@ def _estimate_last_index(
         )
     elif work_order.status == 'Queued':
         return _snap_dt_to_grid(
-            _frame_row.loc[_snap_dt_to_grid(work_order.start_datetime):].head(
+            _frame_row.loc[_snap_dt_to_grid(work_order.pouching_start_dt):].head(
                 work_order.remaining_time * COLS_PER_HOUR
             ).isna().last_valid_index().to_pydatetime()  # type: ignore
         )
@@ -129,7 +129,6 @@ class Schedule:
         self.year_week = year_week
         self.machine_type = machine_type
         self._init_schedule()
-        self._refresh_work_orders()
 
     def _init_schedule(self) -> None:
         self.dates
@@ -305,11 +304,11 @@ class Schedule:
                     PouchWorkOrder
                 ).where(
                     and_(
-                        PouchWorkOrder.end_datetime >= self.start_datetime,
-                        PouchWorkOrder.start_datetime < self.end_datetime
+                        PouchWorkOrder.pouching_end_dt >= self.start_datetime,
+                        PouchWorkOrder.pouching_start_dt < self.end_datetime
                     )
                 ).order_by(
-                    PouchWorkOrder.start_datetime  # .desc()
+                    PouchWorkOrder.pouching_start_dt  # .desc()
                 )
             ).scalars()
             return self._work_order_cache
@@ -318,6 +317,7 @@ class Schedule:
         self.__init__(
             year_week=self.year_week, machine_type=self.machine_type
         )
+        self._refresh_work_orders
 
     def _refresh_work_orders(self: Schedule) -> None:
         """
