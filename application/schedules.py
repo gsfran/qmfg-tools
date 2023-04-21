@@ -368,7 +368,7 @@ class Schedule:
     @staticmethod
     def pouching(
         machine: Machine | None = None
-    ) -> list[PouchWorkOrder] | PouchWorkOrder | None:
+    ) -> list[PouchWorkOrder] | None:
         """
         Returns database query for all 'Pouching' jobs.
         """
@@ -388,7 +388,7 @@ class Schedule:
                         PouchWorkOrder.machine == machine.short_name
                     )
                 )
-            ).scalar_one_or_none()
+            ).scalars()
 
     @staticmethod
     def queued(machine: Machine | None = None) -> list[PouchWorkOrder] | None:

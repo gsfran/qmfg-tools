@@ -206,27 +206,42 @@ def load_work_order(lot_number: int) -> str | Response:
 
     if form.validate_on_submit():
         work_order.machine = form.machine.data
-        machine = Machine.create(short_name=work_order.machine)
+        if work_order.machine:
+            machine = Machine.create(short_name=work_order.machine)
+        else:
+            raise Exception(f'No machine found: {work_order.machine}')
+
+        current_work_orders = Schedule.pouching(machine=machine)
         if form.priority.data == 'replace':
-            Schedule.pouching(machine=machine)
+            if current_work_orders is None:
+                raise Exception(f'No current job found for {machine}.')
+            elif len(current_work_orders) > 1:
+                raise Exception(f'Multiple current jobs found for {machine}.')
+            else:
+                for wo in current_work_orders:
+                    wo.status = 'Parking Lot'
+                    wo.machine = None
+                    wo.priority = None
             work_order.queue_position = 0
             work_order.status = 'Pouching'
             work_order.start_datetime = dt.now()
+
         elif form.priority.data == 'next':
             # Schedule next
             work_order.status = 'Queued'
             work_order.queue_position = 1
+
         elif form.priority.data == 'append':
             # Schedule last
             work_order.status = 'Queued'
             pass
+
         elif form.priority.data == 'custom':
             # Custom time
             work_order.status = 'Queued'
             pass
 
-
-        ## DOES NOT WORK, NEED FUNCTIONS TO SCRAPE SCHEDULE AND FIND POSITION
+        # DOES NOT WORK, NEED FUNCTIONS TO SCRAPE SCHEDULE AND FIND POSITION
 
         work_order.log += f'Loaded to {work_order.machine}: {dt.now()}\n'
         work_order.load_datetime = dt.now()
