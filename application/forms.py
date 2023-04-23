@@ -201,6 +201,7 @@ class LoadWorkOrderForm(FlaskForm):
             DataRequired()
         ],
         choices=[
+            ('', '--'), 
             ('line5', 'Line 5'),
             ('line6', 'Line 6'),
             ('line7', 'Line 7'),
