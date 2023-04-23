@@ -78,11 +78,11 @@
                             </tr>
                         <tr>
                             <td class="left_col">Job Started</td>
-                            <td class="right_col">{{ work_order.start_datetime.strftime('%I:%M%p %a, %b %d') }}</td>
+                            <td class="right_col">{{ work_order.pouching_start_dt.strftime('%I:%M%p %a, %b %d') }}</td>
                         </tr>
                         <tr>
                             <td class="left_col">Est. Completion</td>
-                            <td class="right_col">{{ work_order.end_datetime.strftime('%I:%M%p %a, %b %d') }}</td>
+                            <td class="right_col">{{ work_order.pouching_end_dt.strftime('%I:%M%p %a, %b %d') }}</td>
                         </tr>
                         {% endif %}
                         <tr>

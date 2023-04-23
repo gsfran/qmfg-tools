@@ -25,12 +25,14 @@ def _dt_now_to_grid() -> dt:
     return _snap_dt_to_grid(dt.now())
 
 
-def _current_year_week() -> str:
+def current_year_week() -> str:
     return dt.strftime(dt.now(), _YEAR_WEEK_FORMAT)
 
 
 def _snap_dt_to_grid(datetime_: dt) -> dt:
-    minute_ = datetime_.minute // (60 // Schedule.COLS_PER_HOUR)
+    minute_ = ((datetime_.minute // (60 // Schedule.COLS_PER_HOUR)) * 
+               (60 // Schedule.COLS_PER_HOUR)
+               )
     return datetime_.replace(minute=minute_, second=0, microsecond=0)
 
 
@@ -56,42 +58,43 @@ def _map_work_order(
         work_order.remaining_qty / work_order.standard_rate
     )
     start_index = _get_first_open_index(_frame_row)
+    print(start_index)
 
     if work_order.status == 'Queued':
         work_order.pouching_start_dt = start_index
 
     end_index = _estimate_last_index(_frame_row, work_order, COLS_PER_HOUR)
     work_order.pouching_end_dt = end_index
-
-    db.session.commit()
+    print(end_index)
 
     _frame_row[start_index:end_index] = work_order.lot_number
+    db.session.commit()
     return _frame_row
 
 
 def _get_first_open_index(_frame_row: pd.Series[str]) -> dt:
-    return _snap_dt_to_grid(
-        _frame_row.isna().first_valid_index().to_pydatetime()  # type: ignore
-    )
+    # type: ignore
+    return _frame_row.loc[
+        _frame_row.isna()
+    ].index[0].to_pydatetime()  # type: ignore
 
 
 def _estimate_last_index(
     _frame_row: pd.Series[str], work_order: PouchWorkOrder,
     COLS_PER_HOUR: int
 ) -> dt:
+    column_span = int(
+        work_order.remaining_time * COLS_PER_HOUR
+    )
     if work_order.status == 'Pouching':
         return _snap_dt_to_grid(
-            _frame_row.loc[_dt_now_to_grid():].head(
-                work_order.remaining_time * COLS_PER_HOUR
-            ).isna().last_valid_index().to_pydatetime()  # type: ignore
+            _frame_row.index[column_span].to_pydatetime()  # type: ignore
         )
     elif work_order.status == 'Queued':
         return _snap_dt_to_grid(
             _frame_row.loc[
-                _snap_dt_to_grid(work_order.pouching_start_dt):
-            ].head(
-                work_order.remaining_time * COLS_PER_HOUR
-            ).isna().last_valid_index().to_pydatetime()  # type: ignore
+                work_order.pouching_start_dt:
+            ].index[column_span].to_pydatetime()  # type: ignore
         )
     else:
         raise Exception(f'Error while scheduling {work_order}.')
@@ -127,9 +130,9 @@ class Schedule:
     COLS_PER_DAY: int = int(timedelta(days=1) / CSS_GRID_PERIOD)
     COLS_PER_WEEK: int = COLS_PER_DAY * 7
 
-    def __init__(self: Schedule, year_week: str, machine_type: str) -> None:
+    def __init__(self: Schedule, year_week: str, machine_family: str) -> None:
         self.year_week = year_week
-        self.machine_type = machine_type
+        self.machine_family = machine_family
         self._init_schedule()
 
     def _init_schedule(self) -> None:
@@ -161,7 +164,7 @@ class Schedule:
             return self._machines
         except AttributeError:
             self._machines = _get_machines(
-                machine_family=self.machine_type
+                machine_family=self.machine_family
             )
             return self._machines
 
@@ -247,28 +250,33 @@ class Schedule:
 
     @property
     def schedule_frame(self: Schedule) -> pd.DataFrame:
-        try:
-            return self._schedule_frame_cache
-        except AttributeError:
-            self._schedule_frame_cache = pd.DataFrame(
-                index=self.schedule_mask.index[self.schedule_mask],
-                columns=[m.short_name for m in self.machines]
-            )
-            return self._schedule_frame_cache
+        # try:
+        #     return self._schedule_frame_cache
+        # except AttributeError:
+        #     self._schedule_frame_cache = pd.DataFrame(
+        #         index=self.schedule_mask.index[self.schedule_mask],
+        #         columns=[m.short_name for m in self.machines]
+        #     )
+        #     return self._schedule_frame_cache
+        self._schedule_frame_cache = pd.DataFrame(
+            index=self.schedule_mask.index[self.schedule_mask],
+            columns=[m.short_name for m in self.machines]
+        )
+        return self._schedule_frame_cache
 
     @property
     def _next_3_weeks_frame(self: Schedule) -> pd.DataFrame:
-        current_week = CurrentSchedule(machine_type=self.machine_type)
+        current_week = CurrentSchedule(machine_family=self.machine_family)
         week_2_obj = Schedule(
-            year_week=current_week.next_week, machine_type=self.machine_type
+            year_week=current_week.next_week, machine_family=self.machine_family
         )
         _frame = pd.concat([
-            CurrentSchedule(machine_type=self.machine_type).schedule_frame,
+            CurrentSchedule(machine_family=self.machine_family).schedule_frame,
             week_2_obj.schedule_frame
         ])
         week_3_obj = Schedule(
             year_week=week_2_obj.next_week,
-            machine_type=self.machine_type
+            machine_family=self.machine_family
         )
         _frame = pd.concat([
             _frame, week_3_obj.schedule_frame
@@ -312,12 +320,12 @@ class Schedule:
                 ).order_by(
                     PouchWorkOrder.pouching_start_dt  # .desc()
                 )
-            ).scalars()
+            ).scalars().all()
             return self._work_order_cache
 
     def _reinitialize(self: Schedule) -> None:
         self.__init__(
-            year_week=self.year_week, machine_type=self.machine_type
+            year_week=self.year_week, machine_family=self.machine_family
         )
         self._refresh_work_orders
 
@@ -333,8 +341,8 @@ class Schedule:
             self._refresh_machine_work_orders(machine)
 
     def _refresh_machine_work_orders(self: Schedule, machine: Machine) -> None:
-        work_order_list = self.scheduled(machine=machine)
-        work_order_list = db.session.execute(
+        work_orders = self.scheduled(machine=machine)
+        work_orders = db.session.execute(
             db.select(
                 PouchWorkOrder
             ).where(
@@ -342,17 +350,19 @@ class Schedule:
             ).order_by(
                 PouchWorkOrder.priority
             )
-        ).scalars()
+        ).scalars().all()
 
-        for work_order in work_order_list:
+        for work_order in work_orders:
             _machine_schedule = self._schedule_temp_frame.loc[
                 _dt_now_to_grid():, machine.short_name
             ]
-            mapped_frame = _map_work_order(
+            print(work_order)
+            _machine_schedule = _map_work_order(
                 work_order=work_order, _frame_row=_machine_schedule,
                 COLS_PER_HOUR=Schedule.COLS_PER_HOUR
             )
-            self._schedule_temp_frame[machine.short_name] = mapped_frame
+            # print(_machine_schedule.head(200))
+            self._schedule_temp_frame[machine.short_name] = _machine_schedule
 
     @staticmethod
     def parking_lot() -> list[PouchWorkOrder]:
@@ -365,7 +375,7 @@ class Schedule:
             ).order_by(
                 PouchWorkOrder.created_dt.desc()
             )
-        ).scalars()
+        ).scalars().all()
 
     @staticmethod
     def pouching(
@@ -381,7 +391,7 @@ class Schedule:
                 ).order_by(
                     PouchWorkOrder.machine
                 )
-            ).scalars()
+            ).scalars().all()
         else:
             return db.session.execute(
                 db.select(PouchWorkOrder).where(
@@ -390,7 +400,7 @@ class Schedule:
                         PouchWorkOrder.machine == machine.short_name
                     )
                 )
-            ).scalars()
+            ).scalars().all()
 
     @staticmethod
     def queued(machine: Machine | None = None) -> list[PouchWorkOrder] | None:
@@ -408,7 +418,7 @@ class Schedule:
                 ).order_by(
                     PouchWorkOrder.priority
                 ).order_by(PouchWorkOrder.machine)
-            ).scalars()
+            ).scalars().all()
         else:
             return db.session.execute(
                 db.select(PouchWorkOrder).where(
@@ -417,7 +427,7 @@ class Schedule:
                         PouchWorkOrder.machine == machine.short_name
                     )
                 ).order_by(PouchWorkOrder.priority)
-            ).scalars()
+            ).scalars().all()
 
     @staticmethod
     def scheduled(
@@ -433,7 +443,7 @@ class Schedule:
                 db.select(PouchWorkOrder).where(
                     PouchWorkOrder.priority >= 0
                 ).order_by(PouchWorkOrder.priority)
-            ).scalars()
+            ).scalars().all()
         else:
             return db.session.execute(
                 db.select(PouchWorkOrder).where(
@@ -442,7 +452,7 @@ class Schedule:
                         PouchWorkOrder.machine == machine.short_name
                     )
                 ).order_by(PouchWorkOrder.priority)
-            ).scalars()
+            ).scalars().all()
 
     @staticmethod
     def dt_to_grid_column(datetime_: dt) -> int:
@@ -469,9 +479,9 @@ class Schedule:
 
 class CurrentSchedule(Schedule):
 
-    def __init__(self: CurrentSchedule, machine_type: str) -> None:
+    def __init__(self: CurrentSchedule, machine_family: str) -> None:
         super().__init__(
-            year_week=_current_year_week(), machine_type=machine_type
+            year_week=current_year_week(), machine_family=machine_family
         )
 
     @property

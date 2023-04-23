@@ -5,6 +5,7 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from application import db, login
+from application.machines import Machine
 
 
 @login.user_loader
@@ -60,7 +61,31 @@ class PouchWorkOrder(db.Model):
     remaining_qty = db.Column(db.Integer, nullable=False)
     remaining_time = db.Column(db.Integer, nullable=False)
 
-    log = db.Column(db.Text, default=f'Created {created_dt}')
+    log = db.Column(db.Text, default=f'{created_dt}\tCreated.')
+
+    def move_to_parking_lot(self: PouchWorkOrder) -> None:
+        self.machine = None
+        self.priority = None
+        self.status = 'Parking Lot'
+        self.load_dt = None
+        self.pouching_start_dt = None
+        self.pouching_end_dt = None
+        self.log += f'{dt.now()}\tMoved to Parking Lot.'
+
+    def schedule_to_machine(
+        self: PouchWorkOrder, machine: Machine, priority: int
+    ) -> None:
+        self.machine = machine
+        self.priority = priority
+        self.load_dt = dt.now()
+        self.log += f'{dt.now}\tScheduled to {machine}.'
+
+    def close_work_order(self: PouchWorkOrder) -> None:
+        self.machine = None
+        self.priority = None
+        self.status = 'Closed'
+        self.pouching_end_dt = dt.now()
+        self.log += f'{dt.now()}\tClosed.'
 
     def __repr__(self: PouchWorkOrder) -> str:
         return f'<WorkOrders object {self.lot_number}>'

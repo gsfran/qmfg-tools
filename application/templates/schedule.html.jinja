@@ -37,15 +37,15 @@
 <div class="card card-style mb-2 col-md-12 col-lg-12" style="min-width: 992px; max-width: 1680px;">
     <div style="display: inline-flex; width: 100%;">
         <div style="width: 50%;">
-            <h3 class="card-title">Pouching - {{ schedule.machine_type }}</h3>
+            <h3 class="card-title">Pouching - {{ schedule.machine_family }}</h3>
         </div>
         <div class="h3-sub-right" style="width: 50%;  min-width: fit-content; margin-top: 25px; text-align: right;">
-            <a href="/schedule/{{ schedule.machine_type }}/{{ schedule.prior_week }}">
+            <a href="/schedule/{{ schedule.machine_family }}/{{ schedule.prior_week }}">
                 <div class="h3-sub-right arrows">
                     < </div>
             </a>
             <div class="h3-sub-right arrows">{{ schedule }}</div>
-            <a href="/schedule/{{ schedule.machine_type }}/{{ schedule.next_week }}">
+            <a href="/schedule/{{ schedule.machine_family }}/{{ schedule.next_week }}">
                 <div class="h3-sub-right arrows"> > </div>
             </a>
         </div>
@@ -57,7 +57,7 @@
 
 
             <!--  PREVIOUS WEEK ARROWS  -->
-            <a href="/schedule/{{ schedule.machine_type }}/{{ schedule.prior_week }}">
+            <a href="/schedule/{{ schedule.machine_family }}/{{ schedule.prior_week }}">
                 <div class="corner">
                     << </div>
             </a>
@@ -71,7 +71,7 @@
             {% endfor %}
 
             <!-- FOLLOWING WEEK ARROWS -->
-            <a href="/schedule/{{ schedule.machine_type }}/{{ schedule.next_week }}">
+            <a href="/schedule/{{ schedule.machine_family }}/{{ schedule.next_week }}">
                 <div class="corner">
                     >> </div>
             </a>
@@ -119,7 +119,7 @@
 
             <!-- WORK ORDERS -->
             {% for work_order in schedule.work_orders %}
-            {% if work_order.start_datetime < schedule.start_datetime and work_order.end_datetime > schedule.end_datetime %}
+            {% if work_order.pouching_start_dt < schedule.start_datetime and work_order.pouching_end_dt > schedule.end_datetime %}
                 <!-- WORK ORDERS THAT SPAN THE CURRENT WEEK -->
                 {% set start_col = schedule_offset %}
                 {% set end_col = schedule_offset + schedule.COLS_PER_WEEK - 1 %}
@@ -132,11 +132,11 @@
                         </li>
                     </a>
                 </div>
-                {% elif work_order.start_datetime < schedule.start_datetime %}
+                {% elif work_order.pouching_start_dt < schedule.start_datetime %}
                 <!-- WORK ORDERS THAT STARTED THE PREVIOUS WEEK -->
                     {% set start_col = schedule_offset %}
-                    {% set end_col = (schedule_offset + (work_order.end_datetime.weekday() * schedule.COLS_PER_DAY)
-                     + (work_order.end_datetime.hour * schedule.COLS_PER_HOUR)) %}
+                    {% set end_col = schedule_offset + (work_order.pouching_end_dt.weekday() * schedule.COLS_PER_DAY)
+                     + (work_order.pouching_end_dt.hour * schedule.COLS_PER_HOUR) + 1 %}
                     <div id="sched_{{ work_order.lot_number }}" style="grid-column-start: {{ start_col }};
                             grid-column-end: {{ end_col }}; grid-row: {{ work_order.machine }};">
                         <a href="/view-work-order/{{ work_order.lot_number }}">
@@ -146,10 +146,10 @@
                             </li>
                         </a>
                     </div>
-                {% elif work_order.end_datetime > schedule.end_datetime %}
+                {% elif work_order.pouching_end_dt > schedule.end_datetime %}
                 <!-- WORK ORDERS THAT WILL END THE FOLLOWING WEEK -->
-                    {% set start_col = (schedule_offset + (work_order.start_datetime.weekday() * schedule.COLS_PER_DAY)
-                     + (work_order.start_datetime.hour * schedule.COLS_PER_HOUR)) %}
+                    {% set start_col = (schedule_offset + (work_order.pouching_start_dt.weekday() * schedule.COLS_PER_DAY)
+                     + (work_order.pouching_start_dt.hour * schedule.COLS_PER_HOUR)) %}
                     {% set end_col = (schedule_offset + schedule.COLS_PER_WEEK) %}
                     <div id="sched_{{ work_order.lot_number }}" style="grid-column-start: {{ start_col }};
                             grid-column-end: {{ end_col }}; grid-row: {{ work_order.machine }};">
@@ -162,10 +162,10 @@
                     </div>
                 {% else %}
                 <!-- WORK ORDERS -->
-                    {% set start_col = schedule_offset + (work_order.start_datetime.weekday() * schedule.COLS_PER_DAY)
-                     + (work_order.start_datetime.hour * schedule.COLS_PER_HOUR) %}
-                    {% set end_col = schedule_offset + (work_order.end_datetime.weekday() * schedule.COLS_PER_DAY)
-                     + (work_order.end_datetime.hour * schedule.COLS_PER_HOUR) %}
+                    {% set start_col = schedule_offset + (work_order.pouching_start_dt.weekday() * schedule.COLS_PER_DAY)
+                     + (work_order.pouching_start_dt.hour * schedule.COLS_PER_HOUR) %}
+                    {% set end_col = schedule_offset + (work_order.pouching_end_dt.weekday() * schedule.COLS_PER_DAY)
+                     + (work_order.pouching_end_dt.hour * schedule.COLS_PER_HOUR) + schedule.COLS_PER_HOUR + 1 %}
                     <div id="sched_{{ work_order.lot_number }}" style="grid-column-start: {{ start_col }};
                             grid-column-end: {{ end_col }}; grid-row: {{ work_order.machine }};">
                         <a href="/view-work-order/{{ work_order.lot_number }}">

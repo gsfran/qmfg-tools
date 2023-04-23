@@ -26,7 +26,7 @@ def index() -> Response:
 
 @app.route('/schedule/<string:machine_type>')
 def current_schedule(machine_type: str) -> str:
-    schedule = CurrentSchedule(machine_type=machine_type)
+    schedule = CurrentSchedule(machine_family=machine_type)
     schedule._refresh_work_orders()
 
     return render_template(
@@ -41,7 +41,7 @@ def view_schedule(machine_type: str, year_week: str) -> str | Response:
     if year_week == dt.strftime(dt.now(), '%G-%V'):
         return redirect(url_for('current_schedule'))
 
-    schedule = Schedule(year_week=year_week, machine_type=machine_type)
+    schedule = Schedule(year_week=year_week, machine_family=machine_type)
     schedule._refresh_work_orders()
     return render_template(
         'schedule.html.jinja', title='View Schedule',
@@ -55,7 +55,7 @@ def view_all_work_orders() -> str:
         db.select(PouchWorkOrder).order_by(
             PouchWorkOrder.lot_number.desc()
         )
-    ).scalars()
+    ).scalars().all()
     return render_template(
         'view-all-work-orders.html.jinja', title='All Work Orders',
         work_orders=work_orders
@@ -214,7 +214,7 @@ def load_work_order(lot_number: int) -> str | Response:
         current_work_orders = Schedule.pouching(machine=machine)
         if form.priority.data == 'replace':
             if current_work_orders is None:
-                raise Exception(f'No current job found for {machine}.')
+                raise Exception(f'No current work orders found for {machine}.')
             elif len(current_work_orders) > 1:
                 raise Exception(f'Multiple current jobs found for {machine}.')
             else:
@@ -222,24 +222,27 @@ def load_work_order(lot_number: int) -> str | Response:
                     wo.status = 'Parking Lot'
                     wo.machine = None
                     wo.priority = None
-            work_order.queue_position = 0
+            work_order.priority = 0
             work_order.status = 'Pouching'
-            work_order.start_datetime = dt.now()
+            work_order.pouching_start_dt = dt.now()
 
         elif form.priority.data == 'next':
             # Schedule next
             work_order.status = 'Queued'
-            work_order.queue_position = 1
+            work_order.priority = 1
 
         elif form.priority.data == 'append':
             # Schedule last
+            if current_work_orders is None:
+                raise Exception(f'No current work orders found for {machine}.')
+            last_work_order = current_work_orders[-1]
             work_order.status = 'Queued'
-            pass
+            work_order.priority = 1
 
         elif form.priority.data == 'custom':
             # Custom time
             work_order.status = 'Queued'
-            pass
+            work_order.priority = 1
 
         # DOES NOT WORK, NEED FUNCTIONS TO SCRAPE SCHEDULE AND FIND POSITION
 
@@ -283,10 +286,10 @@ def unload_work_order(lot_number: int) -> Response:
             'warning'
         )
         work_order.status = 'Parking Lot'
-        work_order.queue_position = None
-        work_order.start_datetime = None
-        work_order.end_datetime = None
-        work_order.load_datetime = None
+        work_order.priority = None
+        work_order.pouching_start_dt = None
+        work_order.pouching_end_dt = None
+        work_order.load_dt = None
 
         work_order.log += f'Unloaded from {work_order.machine}: {dt.now()}\n'
         work_order.machine = None

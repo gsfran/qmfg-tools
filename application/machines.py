@@ -25,9 +25,10 @@ class Machine:
 
     @classmethod
     def _get_machine_family(cls: Type, short_name: str) -> str | None:
-        MACHINE_FAMILY_MAP: dict[str, dict[str, bool]] = {}
-        for family, name_ in machines.items():
-            MACHINE_FAMILY_MAP[name_] = family
+        MACHINE_FAMILY_MAP: dict[str, str] = {}
+        for family, machine_dicts in machines.items():
+            for machine in machine_dicts.keys():
+                MACHINE_FAMILY_MAP[machine] = family
 
         if MACHINE_FAMILY_MAP is None:
             raise Exception(f'Error getting machine family: {short_name}.')
