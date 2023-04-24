@@ -23,8 +23,8 @@ class Machine:
         machine_family = Machine._get_machine_family(short_name=short_name)
         return CREATE_MACHINE_MAP[machine_family](short_name)
 
-    @classmethod
-    def _get_machine_family(cls: Type, short_name: str) -> str | None:
+    @staticmethod
+    def _get_machine_family(short_name: str) -> str | None:
         MACHINE_FAMILY_MAP: dict[str, str] = {}
         for family, machine_dicts in machines.items():
             for machine in machine_dicts.keys():

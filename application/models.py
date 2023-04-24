@@ -77,11 +77,11 @@ class PouchWorkOrder(db.Model):
     ) -> None:
         self.machine = machine
         self.priority = priority
+        self.status = 'Queued'
         self.load_dt = dt.now()
         self.log += f'{dt.now}\tScheduled to {machine}.'
 
     def close_work_order(self: PouchWorkOrder) -> None:
-        self.machine = None
         self.priority = None
         self.status = 'Closed'
         self.pouching_end_dt = dt.now()
