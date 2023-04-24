@@ -11,7 +11,7 @@ import pandas as pd
 from sqlalchemy import and_
 
 from application import db
-from application.machines import Machine, machines
+from application.machines import Machine, machines 
 from application.models import PouchWorkOrder, WorkWeek
 
 _YEAR_WEEK_FORMAT: str = '%G-%V'
@@ -30,7 +30,7 @@ def current_year_week() -> str:
 
 
 def _snap_dt_to_grid(datetime_: dt) -> dt:
-    minute_ = ((datetime_.minute // (60 // Schedule.COLS_PER_HOUR)) * 
+    minute_ = ((datetime_.minute // (60 // Schedule.COLS_PER_HOUR)) *
                (60 // Schedule.COLS_PER_HOUR)
                )
     return datetime_.replace(minute=minute_, second=0, microsecond=0)
@@ -73,7 +73,6 @@ def _map_work_order(
 
 
 def _get_first_open_index(_frame_row: pd.Series[str]) -> dt:
-    # type: ignore
     return _frame_row.loc[
         _frame_row.isna()
     ].index[0].to_pydatetime()  # type: ignore
@@ -268,7 +267,8 @@ class Schedule:
     def _next_3_weeks_frame(self: Schedule) -> pd.DataFrame:
         current_week = CurrentSchedule(machine_family=self.machine_family)
         week_2_obj = Schedule(
-            year_week=current_week.next_week, machine_family=self.machine_family
+            year_week=current_week.next_week,
+            machine_family=self.machine_family
         )
         _frame = pd.concat([
             CurrentSchedule(machine_family=self.machine_family).schedule_frame,
@@ -314,11 +314,13 @@ class Schedule:
                     PouchWorkOrder
                 ).where(
                     and_(
-                        PouchWorkOrder.pouching_end_dt >= self.start_datetime,
-                        PouchWorkOrder.pouching_start_dt < self.end_datetime
+                        PouchWorkOrder.pouching_end_dt  # type: ignore
+                        >= self.start_datetime,
+                        PouchWorkOrder.pouching_start_dt  # type: ignore
+                        < self.end_datetime
                     )
                 ).order_by(
-                    PouchWorkOrder.pouching_start_dt  # .desc()
+                    PouchWorkOrder.pouching_start_dt
                 )
             ).scalars().all()
             return self._work_order_cache
@@ -395,10 +397,8 @@ class Schedule:
         else:
             return db.session.execute(
                 db.select(PouchWorkOrder).where(
-                    and_(
-                        PouchWorkOrder.priority == 0,
-                        PouchWorkOrder.machine == machine.short_name
-                    )
+                    PouchWorkOrder.priority == 0,
+                    PouchWorkOrder.machine == machine.short_name
                 )
             ).scalars().all()
 
@@ -414,7 +414,7 @@ class Schedule:
         if machine is None:
             return db.session.execute(
                 db.select(PouchWorkOrder).where(
-                    PouchWorkOrder.priority > 0
+                    PouchWorkOrder.priority > 0  # type: ignore
                 ).order_by(
                     PouchWorkOrder.priority
                 ).order_by(PouchWorkOrder.machine)
@@ -423,8 +423,9 @@ class Schedule:
             return db.session.execute(
                 db.select(PouchWorkOrder).where(
                     and_(
-                        PouchWorkOrder.priority > 0,
-                        PouchWorkOrder.machine == machine.short_name
+                        PouchWorkOrder.priority > 0,  # type: ignore
+                        PouchWorkOrder.machine  # type: ignore
+                        == machine.short_name
                     )
                 ).order_by(PouchWorkOrder.priority)
             ).scalars().all()
@@ -441,15 +442,16 @@ class Schedule:
         if machine is None:
             return db.session.execute(
                 db.select(PouchWorkOrder).where(
-                    PouchWorkOrder.priority >= 0
+                    PouchWorkOrder.priority >= 0  # type: ignore
                 ).order_by(PouchWorkOrder.priority)
             ).scalars().all()
         else:
             return db.session.execute(
                 db.select(PouchWorkOrder).where(
                     and_(
-                        PouchWorkOrder.priority >= 0,
-                        PouchWorkOrder.machine == machine.short_name
+                        PouchWorkOrder.priority >= 0,  # type: ignore
+                        PouchWorkOrder.machine  # type: ignore
+                        == machine.short_name
                     )
                 ).order_by(PouchWorkOrder.priority)
             ).scalars().all()
