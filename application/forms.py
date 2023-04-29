@@ -83,7 +83,7 @@ class RegistrationForm(FlaskForm):
             db.select(User).where(
                 User.email == email.data
             )
-        ).select_one_or_none()
+        ).scalar_one_or_none()
         if user is not None:
             raise ValidationError('Email address unavailable.')
 
@@ -201,7 +201,7 @@ class LoadWorkOrderForm(FlaskForm):
             DataRequired()
         ],
         choices=[
-            ('', '--'), 
+            (None, '--'),
             ('line5', 'Line 5'),
             ('line6', 'Line 6'),
             ('line7', 'Line 7'),

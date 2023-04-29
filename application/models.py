@@ -33,7 +33,7 @@ class User(db.Model, UserMixin):
         return f'<User {self.username}>'
 
 
-class PouchWorkOrder(db.Model):
+class WorkOrder(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     product = db.Column(db.String(30), nullable=False)
     product_name = db.Column(db.String(30), nullable=False)
@@ -63,7 +63,7 @@ class PouchWorkOrder(db.Model):
 
     log = db.Column(db.Text, default=f'{created_dt}\tCreated.')
 
-    def move_to_parking_lot(self: PouchWorkOrder) -> None:
+    def move_to_parking_lot(self: WorkOrder) -> None:
         self.machine = None
         self.priority = None
         self.status = 'Parking Lot'
@@ -73,7 +73,7 @@ class PouchWorkOrder(db.Model):
         self.log += f'{dt.now()}\tMoved to Parking Lot.'
 
     def schedule_to_machine(
-        self: PouchWorkOrder, machine: Machine, priority: int
+        self: WorkOrder, machine: Machine, priority: int
     ) -> None:
         self.machine = machine
         self.priority = priority
@@ -81,14 +81,23 @@ class PouchWorkOrder(db.Model):
         self.load_dt = dt.now()
         self.log += f'{dt.now}\tScheduled to {machine}.'
 
-    def close_work_order(self: PouchWorkOrder) -> None:
+    def close_work_order(self: WorkOrder) -> None:
         self.priority = None
         self.status = 'Closed'
         self.pouching_end_dt = dt.now()
         self.log += f'{dt.now()}\tClosed.'
 
-    def __repr__(self: PouchWorkOrder) -> str:
+    def __str__(self: WorkOrder) -> str:
         return f'<WorkOrders object {self.lot_number}>'
+    
+    def __repr__(self: WorkOrder) -> str:
+        return (
+            f'Work Order {self.short_name} {self.lot_id}\n'
+            f'Status: {self.status}\n'
+            f'Machine: {self.machine}\n'
+            f'Pouching Started: {self.pouching_start_dt}\n'
+            f'Estimated Completion: {self.pouching_end_dt}'
+        )
 
 
 class WorkWeek(db.Model):
