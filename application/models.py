@@ -92,7 +92,7 @@ class WorkOrder(db.Model):
     
     def __repr__(self: WorkOrder) -> str:
         return (
-            f'Work Order {self.short_name} {self.lot_id}\n'
+            f'\n\nWork Order {self.short_name} {self.lot_id}\n'
             f'Status: {self.status}\n'
             f'Machine: {self.machine}\n'
             f'Pouching Started: {self.pouching_start_dt}\n'

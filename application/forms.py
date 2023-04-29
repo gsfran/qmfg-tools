@@ -218,9 +218,9 @@ class LoadWorkOrderForm(FlaskForm):
         ],
         choices=[
             ('append', 'Next Available Time'),
-            ('next', 'After Current Work Order'),
-            ('replace', 'Replace Current Work Order'),
-            ('custom', 'Custom Start Time:')
+            ('insert_next', 'After Current Job Ends'),
+            ('replace', 'Replace Current Job Now'),
+            ('custom', 'Specify Future Time (first available):')
         ], default='append'
     )
 

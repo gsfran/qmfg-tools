@@ -55,19 +55,3 @@ class iTrak:
         for line_number in line_numbers:
             lines[line_number] = iTrak(line_number)
         return lines
-
-    @property
-    def current_jobs(self: iTrak) -> list[WorkOrder]:
-        return db.session.execute(
-            db.select(WorkOrder).where(
-                and_(
-                    or_(
-                        WorkOrder.status == 'Pouching',
-                        WorkOrder.status == 'Queued'
-                    ),
-                    WorkOrder.machine == str(self.number)
-                )
-            ).order_by(
-                WorkOrder.created_dt.desc()
-            )
-        ).scalars()

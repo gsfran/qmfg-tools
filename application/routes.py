@@ -25,7 +25,7 @@ def index() -> Response:
 
 
 @app.route('/schedule/<string:machine_type>')
-def current_schedule(machine_type: str) -> str:
+def current_schedule(machine_type: str = 'itrak') -> str:
     schedule = CurrentSchedule(machine_family=machine_type)
     schedule._refresh_work_orders()
 
@@ -211,6 +211,7 @@ def load_work_order(lot_number: int) -> str | Response:
         else:
             raise Exception(f'No machine found: {work_order.machine}')
 
+        # DOES NOT WORK, NEED FUNCTIONS TO SCRAPE SCHEDULE AND FIND POSITION
         current_work_orders = Schedule.pouching(machine=machine)
         if form.priority.data == 'replace':
             if current_work_orders is None:
@@ -243,7 +244,6 @@ def load_work_order(lot_number: int) -> str | Response:
             # Custom time
             work_order.status = 'Queued'
             work_order.priority = 1
-
         # DOES NOT WORK, NEED FUNCTIONS TO SCRAPE SCHEDULE AND FIND POSITION
 
         work_order.log += f'Loaded to {work_order.machine}: {dt.now()}\n'

@@ -17,19 +17,45 @@ from application.models import WorkOrder, WorkWeek
 _YEAR_WEEK_FORMAT: str = '%G-%V'
 
 
-with open(os.environ['SCHEDULE_JSON'], 'r') as SCHEDULE_JSON:
-    schedule_times: dict[str, str] = json.load(SCHEDULE_JSON)
-
-
-def _dt_now_to_grid() -> dt:
-    return _snap_dt_to_grid(dt.now())
-
-
 def current_year_week() -> str:
+    """Returns the year_week string for the current week
+    as specified in .
+
+    Returns:
+        str: _description_
+    """
     return dt.strftime(dt.now(), _YEAR_WEEK_FORMAT)
 
 
+def _get_schedule_times() -> dict[str, str]:
+    """Reads production start and end times from the
+    schedule.json file specified in .env
+    """
+    with open(os.environ['SCHEDULE_JSON'], 'r') as json_file:
+        schedule_times = json.load(json_file)
+    return schedule_times
+
+
+def _dt_now_to_grid() -> dt:
+    """Returns the index of the last time division
+    prior to the user's current time.
+
+    Returns:
+        dt: datetime of the most recent grid column
+    """
+    return _snap_dt_to_grid(dt.now())
+
+
 def _snap_dt_to_grid(datetime_: dt) -> dt:
+    """Returns the index of the last last time division
+    prior to the given datetime.
+
+    Args:
+        datetime_ (dt): datetime to snap
+
+    Returns:
+        dt: datetime of the grid column prior to the given datetime
+    """
     minute_ = ((datetime_.minute // (60 // Schedule.COLS_PER_HOUR)) *
                (60 // Schedule.COLS_PER_HOUR)
                )
@@ -37,11 +63,23 @@ def _snap_dt_to_grid(datetime_: dt) -> dt:
 
 
 def _create_work_week(year_week: str) -> WorkWeek:
-    print(f'Creating week {year_week}')
+    """Instantiates and returns a WorkWeek Object
+    for the given year_week string.
+
+    Args:
+        year_week (str): year_week string of the specified format
+
+    Returns:
+        WorkWeek: Instance of the WorkWeek object
+        (specified in application/models.py).
+    """
     work_week = WorkWeek(year_week=year_week)
+    schedule_times = _get_schedule_times()
     for day_, time_ in schedule_times.items():
         if time_ is not None:
-            work_week.__setattr__(day_, dt.strptime(time_, '%H:%M').time())
+            work_week.__setattr__(
+                day_, dt.strptime(time_, '%H:%M').time()
+            )
     for machine_, active_ in machines.items():
         work_week.__setattr__(machine_, active_)
     db.session.add(work_week)
@@ -53,6 +91,18 @@ def _map_work_order(
         work_order: WorkOrder, _frame_row: pd.Series[str],
         COLS_PER_HOUR: int
 ) -> pd.Series[str]:
+    """Maps the given WorkOrder object to the pandas Series
+    representing the specified machine's schedule.
+
+    Args:\n
+        work_order (WorkOrder): Work order to be scheduled\n
+        _frame_row (pd.Series[str]): A row of the schedule Dataframe\n
+        COLS_PER_HOUR (int): Constant which sets the time divisions each hour\n
+
+    Returns:
+        pd.Series[str]: The updated machine schedule
+        with the work order mapped.
+    """
     work_order.remaining_qty = work_order.strip_qty - work_order.pouched_qty
     work_order.remaining_time = math.ceil(
         work_order.remaining_qty / work_order.standard_rate
@@ -67,15 +117,20 @@ def _map_work_order(
 
     _frame_row[start_index:end_index] = work_order.lot_number
     db.session.commit()
-    print(
-        f'{work_order.lot_number=} '
-        f'{work_order.pouching_start_dt=} '
-        f'{work_order.pouching_end_dt=}'
-        )
+
     return _frame_row
 
 
 def _get_first_open_index(_frame_row: pd.Series[str]) -> dt:
+    """Returns the datetime representing the 
+    first open index for the given machine schedule.
+
+    Args:
+        _frame_row (pd.Series[str]): A row of the schedule Dataframe
+
+    Returns:
+        dt: datetime of the first open schedule index
+    """
     _index = _frame_row.loc[
         _frame_row.isna()
     ].index[0].to_pydatetime()  # type: ignore
@@ -87,6 +142,21 @@ def _estimate_last_index(
     _frame_row: pd.Series[str], work_order: WorkOrder,
     COLS_PER_HOUR: int
 ) -> dt:
+    """Returns the datetime representing the grid column after
+    pouching is estimated to end.
+
+    Args:\n
+        _frame_row (pd.Series[str]): A row of the schedule Dataframe\n
+        work_order (WorkOrder): The work order to be scheduled\n
+        COLS_PER_HOUR (int): Constant which sets the time divisions each hour\n
+
+    Raises:
+        Exception: Raises if attempting to schedule a work_order
+        with status other than 'Pouching' or 'Queued'
+
+    Returns:
+        dt: datetime of the schedule index after estimated completion
+    """
     column_span = int(
         work_order.remaining_time * COLS_PER_HOUR
     )
@@ -103,11 +173,13 @@ def _estimate_last_index(
 
 
 def _get_machines(machine_family: str) -> list[Machine]:
-    """
-    Returns list of Machine objects of the given type.
+    """Returns list of Machine objects of the given type.
+
+    Args:
+        machine_family (str): The family of machines to fetch
 
     Returns:
-        list[Machine]: Machines available for production.
+        list[Machine]: Machines of the specified machine family
     """
     machine_list: list[Machine] = []
     for mach_id in machines[machine_family].keys():
@@ -120,16 +192,17 @@ def _get_machines(machine_family: str) -> list[Machine]:
 
 
 class Schedule:
-    """
-    Schedule for a single production week.
 
-    Returns:
-        Schedule: An instance of this class.
-    """
-
+    # Time period representing the width of each CSS grid column
     CSS_GRID_PERIOD: timedelta = timedelta(minutes=30)
+
+    # Number of grid columns/time divisions per hour
     COLS_PER_HOUR: int = int(timedelta(hours=1) / CSS_GRID_PERIOD)
-    COLS_PER_DAY: int = int(timedelta(days=1) / CSS_GRID_PERIOD)
+
+    # Number of grid columns/time divisions per day
+    COLS_PER_DAY: int = COLS_PER_HOUR * 24
+
+    # Number of grid columns/time divisions per week
     COLS_PER_WEEK: int = COLS_PER_DAY * 7
 
     def __init__(self: Schedule, year_week: str, machine_family: str) -> None:
@@ -137,11 +210,26 @@ class Schedule:
         self.machine_family = machine_family
         self._init_schedule()
 
-    def _init_schedule(self) -> None:
+    def _init_schedule(self: Schedule) -> None:
         self.dates
         self.schedule_tense
         self.work_week = self._get_work_week_from_db()
         self.scheduled_days = self._get_scheduled_days_from_db()
+
+    def _reinitialize(self: Schedule) -> None:
+        """Reinitializes the schedule, used after changing
+        week parameters or as a generic refresh.
+
+        Args:
+            self (Schedule)
+
+        Returns:
+            None
+        """
+        self.__init__(
+            year_week=self.year_week, machine_family=self.machine_family
+        )
+        self._refresh_work_orders
 
     @property
     def dates(self: Schedule) -> pd.DatetimeIndex:
@@ -309,7 +397,7 @@ class Schedule:
                     WorkOrder
                 ).where(
                     and_(
-                        WorkOrder.pouching_end_dt  # type: ignore
+                        WorkOrder.pouching_end_dt    # type: ignore
                         >= self.start_datetime,
                         WorkOrder.pouching_start_dt  # type: ignore
                         < self.end_datetime
@@ -319,12 +407,6 @@ class Schedule:
                 )
             ).scalars().all()
             return self._work_order_cache
-
-    def _reinitialize(self: Schedule) -> None:
-        self.__init__(
-            year_week=self.year_week, machine_family=self.machine_family
-        )
-        self._refresh_work_orders
 
     def _refresh_work_orders(self: Schedule) -> None:
         """
@@ -376,7 +458,7 @@ class Schedule:
     @staticmethod
     def pouching(
         machine: Machine | None = None
-    ) -> list[WorkOrder] | None:
+    ) -> list[WorkOrder]:
         """
         Returns database query for all 'Pouching' jobs.
         """
@@ -391,13 +473,15 @@ class Schedule:
         else:
             return db.session.execute(
                 db.select(WorkOrder).where(
-                    WorkOrder.priority == 0,
-                    WorkOrder.machine == machine.short_name
+                    and_(
+                        WorkOrder.priority == 0,                 # type: ignore
+                        WorkOrder.machine == machine.short_name  # type: ignore
+                    )
                 )
             ).scalars().all()
 
     @staticmethod
-    def queued(machine: Machine | None = None) -> list[WorkOrder] | None:
+    def queued(machine: Machine | None = None) -> list[WorkOrder]:
         """
         Returns db query for all Queued jobs.
         Optionally,
@@ -418,7 +502,7 @@ class Schedule:
                 db.select(WorkOrder).where(
                     and_(
                         WorkOrder.priority > 0,  # type: ignore
-                        WorkOrder.machine  # type: ignore
+                        WorkOrder.machine        # type: ignore
                         == machine.short_name
                     )
                 ).order_by(WorkOrder.priority)
@@ -427,7 +511,7 @@ class Schedule:
     @staticmethod
     def scheduled(
         machine: Machine | None = None
-    ) -> list[WorkOrder] | None:
+    ) -> list[WorkOrder]:
         """Returns db query for all Pouching and Queued jobs.
 
         Returns:
@@ -444,7 +528,7 @@ class Schedule:
                 db.select(WorkOrder).where(
                     and_(
                         WorkOrder.priority >= 0,  # type: ignore
-                        WorkOrder.machine  # type: ignore
+                        WorkOrder.machine         # type: ignore
                         == machine.short_name
                     )
                 ).order_by(WorkOrder.priority)
