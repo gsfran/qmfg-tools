@@ -25,7 +25,7 @@ def index() -> Response:
 
 
 @app.route('/schedule/<string:machine_type>')
-def current_schedule(machine_type: str = 'itrak') -> str:
+def current_schedule(machine_type: str) -> str:
     schedule = CurrentSchedule(machine_family=machine_type)
     schedule._refresh_work_orders()
 
