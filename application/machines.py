@@ -4,8 +4,27 @@ import os
 import json
 from typing import Type
 
+from application import db
+from application.models import WorkOrder
+
 with open(os.environ['MACHINES_JSON'], 'r') as machines_json:
     machines: dict[str, dict[str, bool]] = json.load(machines_json)
+
+
+def machine_list(machine_family: str) -> list[Machine]:
+    """Returns a list of machines in the given family (e.g. 'itrak').
+    Machines may be added directly to machines.json in the data folder.
+
+    Args:
+        machine_family (str): Machine family identifier
+
+    Returns:
+        list[Machine]: A list of machines under the given family.
+    """
+    list_: list[Machine] = [
+        Machine.create(m) for m in machines[machine_family]
+    ]
+    return list_
 
 
 class Machine:
@@ -34,6 +53,16 @@ class Machine:
             raise Exception(f'Error getting machine family: {short_name}.')
 
         return MACHINE_FAMILY_MAP[short_name]
+
+    def pouching(self: Machine) -> WorkOrder | None:
+        """Returns the currently pouching WorkOrder or None.
+
+        Returns:
+            WorkOrder: WorkOrder object from models
+        """
+        return db.session.execute(db.select(WorkOrder).where(
+            WorkOrder.machine == self.short_name
+        )).scalar_one_or_none()
 
     def __repr__(self: Machine) -> str:
         ...

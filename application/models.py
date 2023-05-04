@@ -5,7 +5,6 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from application import db, login
-from application.machines import Machine
 
 
 @login.user_loader
@@ -63,7 +62,12 @@ class WorkOrder(db.Model):
 
     log = db.Column(db.Text, default=f'{created_dt}\tCreated.')
 
-    def move_to_parking_lot(self: WorkOrder) -> None:
+    def park(self: WorkOrder) -> None:
+        """Moves the WorkOrder object to the Parking Lot.
+
+        Args:
+            self (WorkOrder): _description_
+        """
         self.machine = None
         self.priority = None
         self.status = 'Parking Lot'
@@ -72,23 +76,14 @@ class WorkOrder(db.Model):
         self.pouching_end_dt = None
         self.log += f'{dt.now()}\tMoved to Parking Lot.'
 
-    def schedule_to_machine(
-        self: WorkOrder, machine: Machine, priority: int
-    ) -> None:
-        self.machine = machine
-        self.priority = priority
-        self.status = 'Queued'
-        self.load_dt = dt.now()
-        self.log += f'{dt.now}\tScheduled to {machine}.'
-
-    def close_work_order(self: WorkOrder) -> None:
+    def close(self: WorkOrder) -> None:
         self.priority = None
         self.status = 'Closed'
         self.pouching_end_dt = dt.now()
         self.log += f'{dt.now()}\tClosed.'
 
     def __str__(self: WorkOrder) -> str:
-        return f'<WorkOrders object {self.lot_number}>'
+        return f'<WorkOrder object {self.lot_number}>'
     
     def __repr__(self: WorkOrder) -> str:
         return (

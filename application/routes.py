@@ -202,10 +202,11 @@ def load_work_order(lot_number: int) -> str | Response:
             WorkOrder.lot_number == lot_number
         )
     ).scalar_one_or_none()
-    form = LoadWorkOrderForm()
+    product: str = work_order.product
+    machine_family = products[product].get('pouch_type')
+    form = LoadWorkOrderForm(machine_family)
 
     if form.validate_on_submit():
-        work_order.machine = form.machine.data
         if work_order.machine:
             machine = Machine.create(short_name=work_order.machine)
         else:
@@ -223,12 +224,14 @@ def load_work_order(lot_number: int) -> str | Response:
                     wo.status = 'Parking Lot'
                     wo.machine = None
                     wo.priority = None
+            work_order.machine = form.machine.data
             work_order.priority = 0
             work_order.status = 'Pouching'
             work_order.pouching_start_dt = dt.now()
 
         elif form.priority.data == 'next':
             # Schedule next
+            work_order.machine = form.machine.data
             work_order.status = 'Queued'
             work_order.priority = 1
 
@@ -236,12 +239,14 @@ def load_work_order(lot_number: int) -> str | Response:
             # Schedule last
             if current_work_orders is None:
                 raise Exception(f'No current work orders found for {machine}.')
-            last_work_order = current_work_orders[-1]
+            # last_work_order = current_work_orders[-1]
+            work_order.machine = form.machine.data
             work_order.status = 'Queued'
             work_order.priority = 1
 
         elif form.priority.data == 'custom':
             # Custom time
+            work_order.machine = form.machine.data
             work_order.status = 'Queued'
             work_order.priority = 1
         # DOES NOT WORK, NEED FUNCTIONS TO SCRAPE SCHEDULE AND FIND POSITION

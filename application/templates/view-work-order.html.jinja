@@ -15,7 +15,7 @@
                         </div>
                         <div>
                             <div class="form-group">
-                            {{ form.delete.label(class="form-control-label") }}
+                            {{ form.delete.label(class="form-control-label", autocomplete="off") }}
                             {% if form.delete.errors %}
                                 {{ form.delete(class="form-control form-control-sm is-invalid") }}
                                 {% for error in form.delete.errors %}

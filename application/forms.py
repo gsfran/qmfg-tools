@@ -10,6 +10,7 @@ from wtforms.validators import (DataRequired, Email, EqualTo, Length,
                                 NumberRange, ValidationError)
 
 from application import db
+from application.machines import Machine, machine_list
 from application.models import User
 from application.products import products
 
@@ -137,16 +138,12 @@ class NewWorkOrderForm(FlaskForm):
         'Product', validators=[
             DataRequired()
         ],
-        choices=[
-            ('', '--'),
-            ('flu', '1169100 - Flu A/B'),
-            ('abc', '1451300 - ABC (Flu+SARS)'),
-            ('strep_aplus', '1330700 - Strep A+'),
-            ('rsv', '1175000 - RSV'),
-            ('sars', '1440700 - SARS Antigen'),
-            ('strep_inline', '1094000 - Strep Inline'),
-            ('other', '< Other >')
-        ]
+        choices=(
+            [(None, 'Select One')] +
+            [(
+                k_, f"{prod_['item_number']} - {prod_['product_name']}"
+            ) for k_, prod_ in products.items()]
+        )
     )
 
     lot_id = StringField(
@@ -199,16 +196,6 @@ class LoadWorkOrderForm(FlaskForm):
     machine = SelectField(
         'Poucher', validators=[
             DataRequired()
-        ],
-        choices=[
-            (None, '--'),
-            ('line5', 'Line 5'),
-            ('line6', 'Line 6'),
-            ('line7', 'Line 7'),
-            ('line8', 'Line 8'),
-            ('line9', 'Line 9'),
-            ('line10', 'Line 10'),
-            ('line11', 'Line 11')
         ]
     )
 
@@ -239,6 +226,18 @@ class LoadWorkOrderForm(FlaskForm):
     )
 
     submit = SubmitField('Load to Poucher')
+
+    def __init__(
+        self: LoadWorkOrderForm,
+        machine_family: str | None,
+        *args, **kwargs
+    ) -> None:
+        if machine_family is None:
+            raise Exception('Machine family not specified.')
+        super().__init__(*args, **kwargs)
+        self.machine.choices = [(None, '--')] + [(
+            mach_.short_name, mach_.name
+        ) for mach_ in machine_list(machine_family)]
 
 
 class ConfirmDeleteForm(FlaskForm):
