@@ -96,7 +96,7 @@ def add_work_order() -> str | Response:
         product = str(form.product.data)
         lot_number = form.lot_number.data
         [product_name, short_name,
-         item_number, standard_rate
+         item_number, standard_rate, pouch_type
          ] = products[product].values()
 
         strip_qty = form.strip_qty.data
@@ -202,6 +202,9 @@ def load_work_order(lot_number: int) -> str | Response:
             WorkOrder.lot_number == lot_number
         )
     ).scalar_one_or_none()
+    if work_order is None:
+        raise Exception(f'Error finding lot number: {lot_number}')
+
     product: str = work_order.product
     machine_family = products[product].get('pouch_type')
     form = LoadWorkOrderForm(machine_family)
@@ -278,7 +281,7 @@ def unload_work_order(lot_number: int) -> Response:
             WorkOrder.lot_number == lot_number
         )
     ).scalar_one_or_none()
-    
+
     if work_order.machine:
         machine = Machine.create(short_name=work_order.machine)
     else:

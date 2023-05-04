@@ -38,7 +38,8 @@
         "product_name": "Strep A Inline",
         "short_name": "Strep IL",
         "item_number": 1094000,
-        "standard_rate": 3500
+        "standard_rate": 3500,
+        "pouch_type": "itrak"
     },
     "other": {
         "product_name": "Other Product",
