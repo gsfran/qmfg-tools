@@ -14,7 +14,7 @@ from application.forms import (ConfirmDeleteForm, LoadWorkOrderForm, LoginForm,
                                RegistrationForm)
 from application.machines import Machine
 from application.models import User, WorkOrder
-from application.products import products
+from application.products import Product, products
 from application.schedules import CurrentSchedule, Schedule
 
 
@@ -93,33 +93,32 @@ def add_work_order() -> str | Response:
 
     form = NewWorkOrderForm()
     if form.validate_on_submit():
-        product = str(form.product.data)
+        # product = str(form.product.data)
+        # [product_name, short_name,
+        #  item_number, standard_rate, pouch_type
+        #  ] = products[product].values()
+        product = Product(form.product.data)
         lot_number = form.lot_number.data
-        [product_name, short_name,
-         item_number, standard_rate, pouch_type
-         ] = products[product].values()
-
+        lot_id = form.lot_id.data
+        strip_lot_number = form.strip_lot_number.data
         strip_qty = form.strip_qty.data
-        if strip_qty is not None and standard_rate is not None:
-            standard_time = ceil(
-                int(strip_qty) / int(standard_rate)
-            )
-        else:
-            raise Exception('Error calculating lot standard time.')
+        standard_time = ceil(
+            int(strip_qty) / int(product.standard_rate)  # type:ignore
+        )
 
         work_order = WorkOrder(
             product=product,
-            product_name=product_name,
-            short_name=short_name,
-            item_number=item_number,
+            product_name=product.name,
+            short_name=product.short_name,
+            item_number=product.item_number,
+            standard_rate=product.standard_rate,
 
-            lot_id=form.lot_id.data,
+            lot_id=lot_id,
             lot_number=lot_number,
-            strip_lot_number=int(form.strip_lot_number.data),
+            strip_lot_number=strip_lot_number,
 
             strip_qty=strip_qty,
             remaining_qty=strip_qty,
-            standard_rate=standard_rate,
             standard_time=standard_time,
             remaining_time=standard_time
         )
@@ -128,7 +127,7 @@ def add_work_order() -> str | Response:
         db.session.commit()
 
         flash(
-            f'{short_name} {form.lot_id.data} '
+            f'{product.short_name} {form.lot_id.data} '
             f'(Lot {lot_number}) added.',
             'success'
         )

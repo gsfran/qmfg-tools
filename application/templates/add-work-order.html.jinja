@@ -9,7 +9,7 @@
 
                 <!-- PRODUCT TYPE FIELD -->
                 <div class="form-group">
-                    {{ form.product.label(class="form-control-label") }}
+                    {# {{ form.product.label(class="form-control-label") }} #}
                     {{ form.product(class="form-control form-control-md") }}
                 </div>
 
@@ -24,7 +24,7 @@
                             </div>
                         {% endfor %}
                     {% else %}
-                        {{ form.lot_id(class="form-control form-control-sm") }}
+                        {{ form.lot_id(class="form-control form-control-sm", autocomplete="off") }}
                     {% endif %}
                 </div>
 
@@ -39,7 +39,7 @@
                             </div>
                         {% endfor %}
                     {% else %}
-                        {{ form.lot_number(class="form-control form-control-sm") }}
+                        {{ form.lot_number(class="form-control form-control-sm", autocomplete="off") }}
                     {% endif %}
                 </div>
 
@@ -54,7 +54,7 @@
                             </div>
                         {% endfor %}
                     {% else %}
-                        {{ form.strip_lot_number(class="form-control form-control-sm") }}
+                        {{ form.strip_lot_number(class="form-control form-control-sm", autocomplete="off") }}
                     {% endif %}
                 </div>
 
@@ -69,7 +69,7 @@
                             </div>
                         {% endfor %}
                     {% else %}
-                        {{ form.strip_qty(class="form-control form-control-sm") }}
+                        {{ form.strip_qty(class="form-control form-control-sm", autocomplete="off") }}
                     {% endif %}
                 </div>
 

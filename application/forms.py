@@ -139,7 +139,7 @@ class NewWorkOrderForm(FlaskForm):
             DataRequired()
         ],
         choices=(
-            [(None, 'Select One')] +
+            [('', 'Select Product')] +
             [(
                 k_, f"{prod_['item_number']} - {prod_['product_name']}"
             ) for k_, prod_ in products.items()]
@@ -235,7 +235,7 @@ class LoadWorkOrderForm(FlaskForm):
         if machine_family is None:
             raise Exception('Machine family not specified.')
         super().__init__(*args, **kwargs)
-        self.machine.choices = [(None, '--')] + [(
+        self.machine.choices = [(None, 'Select Machine')] + [(
             mach_.short_name, mach_.name
         ) for mach_ in machine_list(machine_family)]
 
