@@ -1,14 +1,16 @@
 from __future__ import annotations
 
-import os
 import json
+import os
+from datetime import datetime as dt
 from typing import Type
 
 from application import db
 from application.models import WorkOrder
 
-with open(os.environ['MACHINES_JSON'], 'r') as machines_json:
-    machines: dict[str, dict[str, bool]] = json.load(machines_json)
+json_file = os.environ['MACHINES_JSON']
+with open(json_file, 'r') as j:
+    machines_dict: dict[str, dict[str, bool]] = json.load(j)
 
 
 def machine_list(machine_family: str) -> list[Machine]:
@@ -22,7 +24,7 @@ def machine_list(machine_family: str) -> list[Machine]:
         list[Machine]: A list of machines under the given family.
     """
     list_: list[Machine] = [
-        Machine.create(m) for m in machines[machine_family]
+        Machine.new_(m) for m in machines_dict[machine_family]
     ]
     return list_
 
@@ -34,35 +36,108 @@ class Machine:
     id: str
 
     @classmethod
-    def create(cls: Type, short_name: str) -> Machine:
-        CREATE_MACHINE_MAP = {
+    def new_(cls: Type, short_name: str) -> Machine:
+        SUBCLASS_MAP = {
             subclass.__name__.lower(): subclass
             for subclass in cls.__subclasses__()
         }
         machine_family = Machine._get_machine_family(short_name=short_name)
-        return CREATE_MACHINE_MAP[machine_family](short_name)
+        return SUBCLASS_MAP[machine_family](short_name)
 
     @staticmethod
     def _get_machine_family(short_name: str) -> str | None:
-        MACHINE_FAMILY_MAP: dict[str, str] = {}
-        for family, machine_dicts in machines.items():
+        FAMILY_REVERSE_MAP: dict[str, str] = {}
+        for family, machine_dicts in machines_dict.items():
             for machine in machine_dicts.keys():
-                MACHINE_FAMILY_MAP[machine] = family
-
-        if MACHINE_FAMILY_MAP is None:
+                FAMILY_REVERSE_MAP[machine] = family
+        if FAMILY_REVERSE_MAP is None:
             raise Exception(f'Error getting machine family: {short_name}.')
+        return FAMILY_REVERSE_MAP[short_name]
 
-        return MACHINE_FAMILY_MAP[short_name]
-
-    def pouching(self: Machine) -> WorkOrder | None:
-        """Returns the currently pouching WorkOrder or None.
+    def active_jobs(self: Machine) -> list[WorkOrder] | None:
+        """Returns all currently scheduled WorkOrders.
 
         Returns:
-            WorkOrder: WorkOrder object from models
+            list[WorkOrder] | None: WorkOrder list
         """
         return db.session.execute(db.select(WorkOrder).where(
             WorkOrder.machine == self.short_name
-        )).scalar_one_or_none()
+        ).order_by(
+            WorkOrder.priority
+        )).scalars().all()
+
+    def schedule_job(self: Machine, work_order: WorkOrder, mode: str) -> None:
+        MODE_MAP = {
+            'replace': self._job_replace,
+            'insert': self._job_insert,
+            'append': self._job_append,
+            'custom': self._job_custom
+        }
+
+        if work_order is None:
+            raise Exception(f'No WorkOrder found: {work_order}')
+        jobs = self.active_jobs()
+        if jobs is None:
+            jobs = []
+
+        work_order.load_dt = dt.now()
+        work_order.machine = self.short_name
+        MODE_MAP[mode](work_order, jobs)
+
+    def _job_replace(
+        self: Machine, work_order: WorkOrder, jobs: list[WorkOrder]
+    ) -> None:
+        if jobs:
+            jobs[0].park()
+            jobs.pop(0)
+
+        jobs.insert(0, work_order)
+        work_order.priority = 0
+        work_order.status = 'Pouching'
+        work_order.pouching_start_dt = dt.now()
+        work_order.log += (
+            f'{self.name}: {work_order} replace scheduled for '
+            f' {dt.now()}\n'
+        )
+        db.session.commit()
+
+    def _job_insert(
+        self: Machine, work_order: WorkOrder, jobs: list[WorkOrder]
+    ) -> None:
+
+        jobs.insert(1, work_order)
+        work_order.status = 'Queued'
+        work_order.log += (
+            f'{self.name}: {work_order} insert scheduled. {dt.now()}\n'
+        )
+
+        for job in jobs:
+            job.priority = jobs.index(job)
+            if job.priority == 0:
+                job.status = 'Pouching'
+                job.pouching_start_dt = dt.now()
+
+        db.session.commit()
+
+    def _job_append(
+        self: Machine, work_order: WorkOrder, jobs: list[WorkOrder]
+    ) -> None:
+        jobs.append(work_order)
+        work_order.priority = jobs.index(work_order)
+        if work_order.priority == 0:
+            work_order.status = 'Pouching'
+            work_order.pouching_start_dt = dt.now()
+        else:
+            work_order.status = 'Queued'
+        work_order.log += (
+            f'{self.name}: {work_order} append scheduled. {dt.now()}\n'
+        )
+        db.session.commit()
+
+    def _job_custom(
+        self: Machine, work_order: WorkOrder, jobs: list[WorkOrder]
+    ) -> None:
+        ...
 
     def __repr__(self: Machine) -> str:
         ...
@@ -75,7 +150,7 @@ class iTrak(Machine):
         self.id = self.short_name.replace('line', '')
 
     def __repr__(self: iTrak) -> str:
-        return self.short_name
+        return f'iTrak({self.short_name})'
 
 
 class Dipstick(Machine):
@@ -85,7 +160,7 @@ class Dipstick(Machine):
         self.id = self.short_name.replace('dipstick', '')
 
     def __repr__(self: Dipstick) -> str:
-        return self.short_name
+        return f'Dipstick({self.short_name})'
 
 
 class Swab(Machine):
@@ -95,4 +170,4 @@ class Swab(Machine):
         self.id = self.short_name.replace('swab', '')
 
     def __repr__(self: Swab) -> str:
-        return self.short_name
+        return f'Swab({self.short_name})'

@@ -13,15 +13,15 @@
         grid-template-rows:
             [weekday_header] .20fr
             {% for machine in schedule.machines %}
-            [{{ machine }}] 1fr
+            [{{ machine.short_name }}] 1fr
             {% endfor %}
             [end-row];
     }
 
     {# MACHINE ROW HEADERS #}
     {% for machine in schedule.machines %}
-    .{{ machine }} {
-        grid-area: {{ machine }} / machine_index;
+    .{{ machine.short_name }} {
+        grid-area: {{ machine.short_name }} / machine_index;
     }
     {% endfor %}
 
@@ -78,7 +78,7 @@
 
             <!--  PRODUCTION LINES  -->
             {% for machine in schedule.machines %}
-            <div class="machine_index {{ machine }}">{{ machine.id }}</div>
+            <div class="machine_index {{ machine.short_name }}">{{ machine.id }}</div>
 
             <!-- HOURS OF THE WEEK-->
             {% for schedule_column in range(schedule.COLS_PER_WEEK) %}
@@ -112,7 +112,7 @@
 
                         {% if schedule_column == (schedule.COLS_PER_WEEK - 1) %}
                             last_column 
-                        {% endif %}" style="grid-row: {{ machine }}; grid-column: {{ column_number }}">
+                        {% endif %}" style="grid-row: {{ machine.short_name }}; grid-column: {{ column_number }}">
             </div>
             {% endfor %}
             {% endfor %}

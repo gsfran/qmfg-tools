@@ -10,15 +10,14 @@
 
                 <!-- MACHINE FIELD -->
                 <div class="form-group">
-                    {{ form.machine.label(class="form-control-label") }}
+                    {# {{ form.machine.label(class="form-control-label") }} #}
                     {{ form.machine(class="form-control form-control-md") }}
                 </div>
 
                 <div>
-                    <!-- PRIORITY FIELD -->
+                    <!-- MODE FIELD -->
                     <div class="form-group">
-                        {# {{ form.priority.label(class="form-control-label", style="font-style: bold") }} #}
-                        {{ form.priority(class="form-control form-control-sm", style="border: none; list-style: none;") }}
+                        {{ form.mode(class="form-control form-control-sm", style="border: none; list-style: none;") }}
                         <div class="col", style="text-align: right; margin-bottom: 100px;">
                             <p>
                                 {{ form.start_date }}  {{ form.start_time }}

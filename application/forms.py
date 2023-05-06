@@ -10,7 +10,7 @@ from wtforms.validators import (DataRequired, Email, EqualTo, Length,
                                 NumberRange, ValidationError)
 
 from application import db
-from application.machines import Machine, machine_list
+from application.machines import machine_list
 from application.models import User
 from application.products import products
 
@@ -199,15 +199,15 @@ class LoadWorkOrderForm(FlaskForm):
         ]
     )
 
-    priority = RadioField(
-        'Schedule Time', validators=[
+    mode = RadioField(
+        'Schedule Method', validators=[
             DataRequired()
         ],
         choices=[
             ('append', 'Next Available Time'),
-            ('insert_next', 'After Current Job Ends'),
-            ('replace', 'Replace Current Job Now'),
-            ('custom', 'Specify Future Time (first available):')
+            ('insert', 'Expedite (After Current)'),
+            ('replace', 'Replace Current Job'),
+            ('custom', 'Specify a Time:')
         ], default='append'
     )
 

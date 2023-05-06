@@ -11,7 +11,7 @@ import pandas as pd
 from sqlalchemy import and_
 
 from application import db
-from application.machines import Machine, machines
+from application.machines import Machine, machine_list, machines_dict
 from application.models import WorkOrder, WorkWeek
 
 _YEAR_WEEK_FORMAT: str = '%G-%V'
@@ -31,8 +31,9 @@ def _get_schedule_times() -> dict[str, str]:
     """Reads production start and end times from the
     schedule.json file specified in .env
     """
-    with open(os.environ['SCHEDULE_JSON'], 'r') as json_file:
-        schedule_times = json.load(json_file)
+    json_file = os.environ['SCHEDULE_JSON']
+    with open(json_file, 'r') as j:
+        schedule_times = json.load(j)
     return schedule_times
 
 
@@ -80,7 +81,7 @@ def _create_work_week(year_week: str) -> WorkWeek:
             work_week.__setattr__(
                 day_, dt.strptime(time_, '%H:%M').time()
             )
-    for machine_, active_ in machines.items():
+    for machine_, active_ in machines_dict.items():
         work_week.__setattr__(machine_, active_)
     db.session.add(work_week)
     db.session.commit()
@@ -122,7 +123,7 @@ def _map_work_order(
 
 
 def _get_first_open_index(_frame_row: pd.Series[str]) -> dt:
-    """Returns the datetime representing the 
+    """Returns the datetime representing the
     first open index for the given machine schedule.
 
     Args:
@@ -170,25 +171,6 @@ def _estimate_last_index(
         ].index[index_num].to_pydatetime()  # type: ignore
     else:
         raise Exception(f'Error while scheduling {work_order}.')
-
-
-def _get_machines(machine_family: str) -> list[Machine]:
-    """Returns list of Machine objects of the given type.
-
-    Args:
-        machine_family (str): The family of machines to fetch
-
-    Returns:
-        list[Machine]: Machines of the specified machine family
-    """
-    machine_list: list[Machine] = []
-    for mach_id in machines[machine_family].keys():
-        mach = Machine.create(mach_id)
-        machine_list.append(mach)
-
-    if machine_list is None:
-        raise Exception(f"No machines found for '{machine_family}' type.")
-    return machine_list
 
 
 class Schedule:
@@ -253,7 +235,7 @@ class Schedule:
         try:
             return self._machines
         except AttributeError:
-            self._machines = _get_machines(
+            self._machines = machine_list(
                 machine_family=self.machine_family
             )
             return self._machines
@@ -483,8 +465,8 @@ class Schedule:
     @staticmethod
     def queued(machine: Machine | None = None) -> list[WorkOrder]:
         """
-        Returns db query for all Queued jobs.
-        Optionally,
+        Returns db query for queued jobs on the machine.
+        If machine is None, returns all queued jobs on all machines.
 
         Returns:
             list[WorkOrders]: Scheduled work orders.

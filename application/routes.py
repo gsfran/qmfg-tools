@@ -14,7 +14,7 @@ from application.forms import (ConfirmDeleteForm, LoadWorkOrderForm, LoginForm,
                                RegistrationForm)
 from application.machines import Machine
 from application.models import User, WorkOrder
-from application.products import Product, products
+from application.products import Product
 from application.schedules import CurrentSchedule, Schedule
 
 
@@ -93,10 +93,6 @@ def add_work_order() -> str | Response:
 
     form = NewWorkOrderForm()
     if form.validate_on_submit():
-        # product = str(form.product.data)
-        # [product_name, short_name,
-        #  item_number, standard_rate, pouch_type
-        #  ] = products[product].values()
         product = Product(form.product.data)
         lot_number = form.lot_number.data
         lot_id = form.lot_id.data
@@ -107,7 +103,7 @@ def add_work_order() -> str | Response:
         )
 
         work_order = WorkOrder(
-            product=product,
+            product=product.key_,
             product_name=product.name,
             short_name=product.short_name,
             item_number=product.item_number,
@@ -204,66 +200,26 @@ def load_work_order(lot_number: int) -> str | Response:
     if work_order is None:
         raise Exception(f'Error finding lot number: {lot_number}')
 
-    product: str = work_order.product
-    machine_family = products[product].get('pouch_type')
+    product: Product = Product(work_order.product)
+    machine_family = product.pouch_type
     form = LoadWorkOrderForm(machine_family)
 
     if form.validate_on_submit():
-        if work_order.machine:
-            machine = Machine.create(short_name=work_order.machine)
+        if form.machine.data:
+            machine = Machine.new_(form.machine.data)
         else:
-            raise Exception(f'No machine found: {work_order.machine}')
-
-        # DOES NOT WORK, NEED FUNCTIONS TO SCRAPE SCHEDULE AND FIND POSITION
-        current_work_orders = Schedule.pouching(machine=machine)
-        if form.priority.data == 'replace':
-            if current_work_orders is None:
-                raise Exception(f'No current work orders found for {machine}.')
-            elif len(current_work_orders) > 1:
-                raise Exception(f'Multiple current jobs found for {machine}.')
-            else:
-                for wo in current_work_orders:
-                    wo.status = 'Parking Lot'
-                    wo.machine = None
-                    wo.priority = None
-            work_order.machine = form.machine.data
-            work_order.priority = 0
-            work_order.status = 'Pouching'
-            work_order.pouching_start_dt = dt.now()
-
-        elif form.priority.data == 'next':
-            # Schedule next
-            work_order.machine = form.machine.data
-            work_order.status = 'Queued'
-            work_order.priority = 1
-
-        elif form.priority.data == 'append':
-            # Schedule last
-            if current_work_orders is None:
-                raise Exception(f'No current work orders found for {machine}.')
-            # last_work_order = current_work_orders[-1]
-            work_order.machine = form.machine.data
-            work_order.status = 'Queued'
-            work_order.priority = 1
-
-        elif form.priority.data == 'custom':
-            # Custom time
-            work_order.machine = form.machine.data
-            work_order.status = 'Queued'
-            work_order.priority = 1
-        # DOES NOT WORK, NEED FUNCTIONS TO SCRAPE SCHEDULE AND FIND POSITION
-
-        work_order.log += f'Loaded to {work_order.machine}: {dt.now()}\n'
-        work_order.load_dt = dt.now()
-        db.session.commit()
-
+            raise Exception(f'No machine found: {form.machine.data}')
+        mode = form.mode.data
+        if mode:
+            machine.schedule_job(work_order, mode)
+        else:
+            raise Exception(f'No mode found: {form.mode.data}')
         flash(
             f'{work_order.short_name} {work_order.lot_id} '
-            f'Lot {lot_number} loaded to '
+            f'/ {lot_number} loaded to '
             f'{machine.name}.',
             'info'
         )
-
         return redirect(url_for('current_schedule', machine_type='itrak'))
 
     return render_template(
@@ -282,7 +238,7 @@ def unload_work_order(lot_number: int) -> Response:
     ).scalar_one_or_none()
 
     if work_order.machine:
-        machine = Machine.create(short_name=work_order.machine)
+        machine = Machine.new_(short_name=work_order.machine)
     else:
         raise Exception(f'No machine found: {work_order.machine}')
 
@@ -290,21 +246,17 @@ def unload_work_order(lot_number: int) -> Response:
         flash(f'Work Order #{lot_number} Not Found', 'warning')
         return redirect(url_for('index'))
 
-    if work_order.status == 'Pouching' or work_order.status == 'Queued':
+    if work_order.machine == None:
+        flash(f'Work Order #{lot_number} Not Scheduled', 'warning')
+        return redirect(url_for('index'))
+    else:
         flash(
             f'{work_order.short_name} {work_order.lot_id} '
             f'(Lot {work_order.lot_number}) unloaded from '
             f'{machine.name}.',
             'warning'
         )
-        work_order.status = 'Parking Lot'
-        work_order.priority = None
-        work_order.pouching_start_dt = None
-        work_order.pouching_end_dt = None
-        work_order.load_dt = None
-
-        work_order.log += f'Unloaded from {work_order.machine}: {dt.now()}\n'
-        work_order.machine = None
+        work_order.park()
         db.session.commit()
 
     return redirect(url_for('current_schedule', machine_type='itrak'))

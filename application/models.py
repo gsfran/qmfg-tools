@@ -64,9 +64,6 @@ class WorkOrder(db.Model):
 
     def park(self: WorkOrder) -> None:
         """Moves the WorkOrder object to the Parking Lot.
-
-        Args:
-            self (WorkOrder): _description_
         """
         self.machine = None
         self.priority = None
@@ -83,9 +80,6 @@ class WorkOrder(db.Model):
         self.log += f'{dt.now()}\tClosed.'
 
     def __str__(self: WorkOrder) -> str:
-        return f'<WorkOrder object {self.lot_number}>'
-    
-    def __repr__(self: WorkOrder) -> str:
         return (
             f'\n\nWork Order {self.short_name} {self.lot_id}\n'
             f'Status: {self.status}\n'
@@ -93,6 +87,9 @@ class WorkOrder(db.Model):
             f'Pouching Started: {self.pouching_start_dt}\n'
             f'Estimated Completion: {self.pouching_end_dt}'
         )
+
+    def __repr__(self: WorkOrder) -> str:
+        return f'<WorkOrder object {self.lot_number}>'
 
 
 class WorkWeek(db.Model):
