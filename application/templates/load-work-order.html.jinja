@@ -8,23 +8,22 @@
             {{ form.hidden_tag() }}
             <fieldset class="form-group">
 
-                <!-- LINE FIELD -->
+                <!-- MACHINE FIELD -->
                 <div class="form-group">
-                    {{ form.line.label(class="form-control-label") }}
-                    {{ form.line(class="form-control form-control-md") }}
+                    {# {{ form.machine.label(class="form-control-label") }} #}
+                    {{ form.machine(class="form-control form-control-md") }}
                 </div>
 
-                <!-- START DATE FIELD -->
-                <div class="form-group">
-                    {{ form.start_date.label(class="form-control-label") }}
-                    {{ form.start_date(class="form-control form-control-md") }}
-                </div>
-
-                <!-- START TIME FIELD -->
-                <div class="form-group">
-                    {{ form.start_time.label(class="form-control-label") }}
-                    {{ form.start_time(class="form-control form-control-md") }}
-                </div>
+                <div>
+                    <!-- MODE FIELD -->
+                    <div class="form-group">
+                        {{ form.mode(class="form-control form-control-sm", style="border: none; list-style: none;") }}
+                        <div class="col", style="text-align: right; margin-bottom: 100px;">
+                            <p>
+                                {{ form.start_date }}  {{ form.start_time }}
+                            </p>
+                        </div>
+                    </div>
 
                 <!-- SUBMIT BUTTON -->
                 <div class="form-group border-bottom pb-3">

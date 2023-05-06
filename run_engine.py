@@ -27,18 +27,18 @@ def main():
 
     pd.set_option('display.max_rows', 100)
 
-    db = line.product_inspect.new_block(start, end)
+    test_data_block = line.product_inspect.new_block(start, end)
 
     # print(line.product_inspect.cached_data.items())s
 
     # print(line.product_inspect.cached_data[start])
 
-    db.all_stats
-    _ = db.productivity
+    test_data_block.all_stats
+    _ = test_data_block.productivity
 
-    db.stats_to_xls()
-    db.stops_to_xls()
-    db.prod_to_xls()
+    test_data_block.stats_to_xls()
+    test_data_block.stops_to_xls()
+    test_data_block.prod_to_xls()
 
     """
     OLD_VS_NEW

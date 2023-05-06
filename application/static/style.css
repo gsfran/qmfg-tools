@@ -9,7 +9,6 @@
     --strep_inline: #00bfff;
     --other: #aaaaaa;
 
-
 }
 
 body {
@@ -96,7 +95,6 @@ h3.sub {
 
 .qmfg-nav-link {
     margin-inline: 10px;
-    /* min-width: 200px; */
 }
 
 .confirm-modal {
@@ -214,7 +212,6 @@ h3.sub {
 }
 
 .parking_lot .add {
-    /* display: block; */
     height: 40px;
     line-height: 2.2rem;
     width: auto;
@@ -248,19 +245,6 @@ h3.sub {
     margin-inline: 5px;
 }
 
-.schedule.weekly-byline {
-    grid-template-columns:
-        [machine_index] 1fr repeat(168, 1fr) [last_col] 1fr [end-col];
-    grid-template-rows:
-        [weekday_header] .20fr 
-        [line_5] 1fr 
-        [line_6] 1fr 
-        [line_7] 1fr 
-        [line_8] 1fr 
-        [line_9] 1fr 
-        [end-row];
-}
-
 /* GENERAL ITEM SETUP */
 /* SCHEDULE BLOCKS */
 .corner {
@@ -292,37 +276,35 @@ h3.sub {
     font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
-/* HOUR TYPES */
-.hour {
+/* SCHEDULE ELEMENT TYPES */
+.schedule_column {
     background-color: #fff;
     border-bottom: 1px solid #000;
-    /* z-index: 0; */
     height: 80px;
 }
 
-.hour.elapsed {
+.schedule_column.elapsed {
     background-color: #00000018;
 }
 
-.hour.last_hour {
+.schedule_column.last_column {
     border-right: 1px solid #000;
 }
 
-.hour.not-scheduled {
+.schedule_column.not_scheduled {
     background-color: #00000033;
-    /* z-index: 3; */
 }
 
-.hour.current_hour {
+.schedule_column.current_column {
     border-inline: 1px solid #774defc0;
     background-color: #774defc0;
 }
 
-.hour.start_of_day {
+.schedule_column.start_of_day {
     border-left: 1px solid #000;
 }
 
-.hour.midday {
+.schedule_column.midday {
     border-left: 1px dashed #000;
 }
 
@@ -344,11 +326,7 @@ h3.sub {
 
     padding-inline: 8px;
 
-    /* z-index: 30; */
     opacity: .85;
-    /* color: #fff; */
-	/* -webkit-text-stroke: .75px #000000d5; */
-	/* -webkit-text-fill-color: #ddddddd5; */
     transition: all 200ms;
 }
 
@@ -363,6 +341,7 @@ h3.sub {
     margin-block: 10px;
     border-radius: 16px;
     margin-inline: 1px;
+    overflow: hidden;
 }
 
 .work_order.week_start {
@@ -424,61 +403,4 @@ h3.sub {
 .work_order.other {
     background-color: var(--other);
     border: 2px solid var(--other);
-}
-
-/* WEEKDAY SELECTORS */
-.mon {
-    grid-row: weekday_header;
-    grid-column: 2 / span 24;
-}
-
-.tue {
-    grid-row: weekday_header;
-    grid-column: 26 / span 24;
-}
-
-.wed {
-    grid-row: weekday_header;
-    grid-column: 50 / span 24;
-}
-
-.thu {
-    grid-row: weekday_header;
-    grid-column: 74 / span 24;
-}
-
-.fri {
-    grid-row: weekday_header;
-    grid-column: 98 / span 24;
-}
-
-.sat {
-    grid-row: weekday_header;
-    grid-column: 122 / span 24;
-}
-
-.sun {
-    grid-row: weekday_header;
-    grid-column: 146 / span 24;
-}
-
-/* MACHINE SELECTORS */
-.line_5 {
-    grid-area: line_5 / machine_index;
-}
-
-.line_6 {
-    grid-area: line_6 / machine_index;
-}
-
-.line_7 {
-    grid-area: line_7 / machine_index;
-}
-
-.line_8 {
-    grid-area: line_8 / machine_index;
-}
-
-.line_9 {
-    grid-area: line_9 / machine_index;
 }

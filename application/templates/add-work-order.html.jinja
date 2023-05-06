@@ -9,86 +9,22 @@
 
                 <!-- PRODUCT TYPE FIELD -->
                 <div class="form-group">
-                    {{ form.product.label(class="form-control-label") }}
+                    {# {{ form.product.label(class="form-control-label") }} #}
                     {{ form.product(class="form-control form-control-md") }}
                 </div>
-                
-                {% if False %}
-                <!-- PRODUCT INFO MODAL -->
-                <div id="product-info" class="other-modal window">
-                    <h4>Product Info</h4>
-                        <!-- PRODUCT NAME -->
-                        <div class="form-group">
-                            {{ form.name.label(class="form-control-label") }}
-                            {% if form.name.errors %}
-                                {{ form.name(class="form-control form-control-sm is-invalid") }}
-                                {% for error in form.name.errors %}
-                                    <div class="invalid-feedback">
-                                        <span>{{ error }}</span>
-                                    </div>
-                                {% endfor %}
-                            {% else %}
-                                {{ form.name(class="form-control form-control-sm") }}
-                            {% endif %}
-                        </div>
-
-                        <!-- ITEM NUMBER -->
-                        <div class="form-group">
-                            {{ form.item_number.label(class="form-control-label") }}
-                            {% if form.item_number.errors %}
-                                {{ form.item_number(class="form-control form-control-sm is-invalid") }}
-                                {% for error in form.item_number.errors %}
-                                    <div class="invalid-feedback">
-                                        <span>{{ error }}</span>
-                                    </div>
-                                {% endfor %}
-                            {% else %}
-                                {{ form.item_number(class="form-control form-control-sm") }}
-                            {% endif %}
-                        </div>
-
-                        <!-- STD RATE -->
-                        <div class="form-group">
-                            {{ form.rate.label(class="form-control-label") }}
-                            {% if form.rate.errors %}
-                                {{ form.rate(class="form-control form-control-sm is-invalid") }}
-                                {% for error in form.rate.errors %}
-                                    <div class="invalid-feedback">
-                                        <span>{{ error }}</span>
-                                    </div>
-                                {% endfor %}
-                            {% else %}
-                                {{ form.rate(class="form-control form-control-sm") }}
-                            {% endif %}
-                        </div>
-
-                        <!-- SUBMIT -->
-                        <div class="form-group border-bottom pb-3" style="margin-top: 50px;">
-                            {{ form.other.form.submit(class="btn btn-outline-info", style="width: 100%")}}
-                        </div>
-
-                    <!-- CANCEL -->
-                    <a href="#" title="Cancel">
-                        <div class="other-modal-close">
-                            Cancel
-                        </div>
-                    </a>
-                </div>
-                <!-- END MODAL -->
-                {% endif %}
 
                 <!-- LOT ID FIELD -->
                 <div class="form-group">
                     {{ form.lot_id.label(class="form-control-label") }}
                     {% if form.lot_id.errors %}
-                        {{ form.lot_id(class="form-control form-control-sm is-invalid") }}
+                        {{ form.lot_id(class="form-control form-control-sm is-invalid", autocomplete="off") }}
                         {% for error in form.lot_id.errors %}
                             <div class="invalid-feedback">
                                 <span>{{ error }}</span>
                             </div>
                         {% endfor %}
                     {% else %}
-                        {{ form.lot_id(class="form-control form-control-sm") }}
+                        {{ form.lot_id(class="form-control form-control-sm", autocomplete="off") }}
                     {% endif %}
                 </div>
 
@@ -96,14 +32,14 @@
                 <div class="form-group">
                     {{ form.lot_number.label(class="form-control-label") }}
                     {% if form.lot_number.errors %}
-                        {{ form.lot_number(class="form-control form-control-sm is-invalid") }}
+                        {{ form.lot_number(class="form-control form-control-sm is-invalid", autocomplete="off") }}
                         {% for error in form.lot_number.errors %}
                             <div class="invalid-feedback">
                                 <span>{{ error }}</span>
                             </div>
                         {% endfor %}
                     {% else %}
-                        {{ form.lot_number(class="form-control form-control-sm") }}
+                        {{ form.lot_number(class="form-control form-control-sm", autocomplete="off") }}
                     {% endif %}
                 </div>
 
@@ -111,14 +47,14 @@
                 <div class="form-group">
                     {{ form.strip_lot_number.label(class="form-control-label") }}
                     {% if form.strip_lot_number.errors %}
-                        {{ form.strip_lot_number(class="form-control form-control-sm is-invalid") }}
+                        {{ form.strip_lot_number(class="form-control form-control-sm is-invalid", autocomplete="off") }}
                         {% for error in form.strip_lot_number.errors %}
                             <div class="invalid-feedback">
                                 <span>{{ error }}</span>
                             </div>
                         {% endfor %}
                     {% else %}
-                        {{ form.strip_lot_number(class="form-control form-control-sm") }}
+                        {{ form.strip_lot_number(class="form-control form-control-sm", autocomplete="off") }}
                     {% endif %}
                 </div>
 
@@ -126,14 +62,14 @@
                 <div class="form-group">
                     {{ form.strip_qty.label(class="form-control-label") }}
                     {% if form.strip_qty.errors %}
-                        {{ form.strip_qty(class="form-control form-control-sm is-invalid") }}
+                        {{ form.strip_qty(class="form-control form-control-sm is-invalid", autocomplete="off") }}
                         {% for error in form.quantity.errors %}
                             <div class="invalid-feedback">
                                 <span>{{ error }}</span>
                             </div>
                         {% endfor %}
                     {% else %}
-                        {{ form.strip_qty(class="form-control form-control-sm") }}
+                        {{ form.strip_qty(class="form-control form-control-sm", autocomplete="off") }}
                     {% endif %}
                 </div>
 

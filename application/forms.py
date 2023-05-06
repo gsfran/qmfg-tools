@@ -10,7 +10,9 @@ from wtforms.validators import (DataRequired, Email, EqualTo, Length,
                                 NumberRange, ValidationError)
 
 from application import db
+from application.machines import machine_list
 from application.models import User
+from application.products import products
 
 
 class LoginForm(FlaskForm):
@@ -82,7 +84,7 @@ class RegistrationForm(FlaskForm):
             db.select(User).where(
                 User.email == email.data
             )
-        ).select_one_or_none()
+        ).scalar_one_or_none()
         if user is not None:
             raise ValidationError('Email address unavailable.')
 
@@ -136,16 +138,12 @@ class NewWorkOrderForm(FlaskForm):
         'Product', validators=[
             DataRequired()
         ],
-        choices=[
-            ('', '--'),
-            ('flu', '1169100 - Flu A/B'),
-            ('abc', '1451300 - ABC (Flu+SARS)'),
-            ('strep_aplus', '1330700 - Strep A+'),
-            ('rsv', '1175000 - RSV'),
-            ('sars', '1440700 - SARS Antigen'),
-            ('strep_inline', '1094000 - Strep Inline'),
-            ('other', '< Other >')
-        ]
+        choices=(
+            [('', 'Select Product')] +
+            [(
+                k_, f"{prod_['item_number']} - {prod_['product_name']}"
+            ) for k_, prod_ in products.items()]
+        )
     )
 
     lot_id = StringField(
@@ -181,7 +179,7 @@ class NewWorkOrderForm(FlaskForm):
         try:
             int(lot_number.data)
         except ValueError:
-            raise ValidationError('Please enter a valid number.')
+            raise ValidationError('Please enter a valid lot number.')
 
     @staticmethod
     def validate_strip_lot_number(
@@ -190,39 +188,36 @@ class NewWorkOrderForm(FlaskForm):
         try:
             int(strip_lot_number.data)
         except ValueError:
-            raise ValidationError('Please enter a valid number.')
+            raise ValidationError('Please enter a valid lot number.')
 
 
 class LoadWorkOrderForm(FlaskForm):
 
-    line = SelectField(
+    machine = SelectField(
         'Poucher', validators=[
             DataRequired()
-        ],
-        choices=[
-            ('5', 'Line 5'),
-            ('6', 'Line 6'),
-            ('7', 'Line 7'),
-            ('8', 'Line 8'),
-            ('9', 'Line 9')
         ]
     )
-    priority = RadioField(
-        validators=[
+
+    mode = RadioField(
+        'Schedule Method', validators=[
             DataRequired()
         ],
         choices=[
-            ('replace_job', 'Replace current work order'),
-            ('schedule_next', 'Schedule after current work order'),
-            ('schedule_append', 'Schedule after all work orders')
-        ], default='schedule_append'
+            ('append', 'Next Available Time'),
+            ('insert', 'Expedite (After Current)'),
+            ('replace', 'Replace Current Job'),
+            ('custom', 'Specify a Time:')
+        ], default='append'
     )
+
     start_date = DateField(
         'Start Date', validators=[
             DataRequired()
         ],
         default=dt.now().date()
     )
+
     start_time = TimeField(
         'Start Time', validators=[
             DataRequired()
@@ -231,6 +226,18 @@ class LoadWorkOrderForm(FlaskForm):
     )
 
     submit = SubmitField('Load to Poucher')
+
+    def __init__(
+        self: LoadWorkOrderForm,
+        machine_family: str | None,
+        *args, **kwargs
+    ) -> None:
+        if machine_family is None:
+            raise Exception('Machine family not specified.')
+        super().__init__(*args, **kwargs)
+        self.machine.choices = [(None, 'Select Machine')] + [(
+            mach_.short_name, mach_.name
+        ) for mach_ in machine_list(machine_family)]
 
 
 class ConfirmDeleteForm(FlaskForm):

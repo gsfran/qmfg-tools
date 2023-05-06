@@ -12,15 +12,262 @@ from application import app, db
 from application.forms import (ConfirmDeleteForm, LoadWorkOrderForm, LoginForm,
                                NewWorkOrderForm, ProductDetailsForm,
                                RegistrationForm)
-from application.models import User, WorkOrders
-from application.products import products
-from application.schedule import CurrentSchedule, Schedule
+from application.machines import Machine
+from application.models import User, WorkOrder
+from application.products import Product
+from application.schedules import CurrentSchedule, Schedule
 
 
 @app.route('/')
 @app.route('/index')
 def index() -> Response:
-    return redirect(url_for('current_schedule'))
+    return redirect(url_for('current_schedule', machine_type='itrak'))
+
+
+@app.route('/schedule/<string:machine_type>')
+def current_schedule(machine_type: str) -> str:
+    schedule = CurrentSchedule(machine_family=machine_type)
+    schedule._refresh_work_orders()
+
+    return render_template(
+        'schedule.html.jinja', title='Current Schedule',
+        schedule=schedule
+    )
+
+
+@app.route('/schedule/<string:machine_type>/<string:year_week>')
+def view_schedule(machine_type: str, year_week: str) -> str | Response:
+
+    if year_week == dt.strftime(dt.now(), '%G-%V'):
+        return redirect(url_for('current_schedule', machine_type='itrak'))
+
+    schedule = Schedule(year_week=year_week, machine_family=machine_type)
+    schedule._refresh_work_orders()
+    return render_template(
+        'schedule.html.jinja', title='View Schedule',
+        schedule=schedule
+    )
+
+
+@app.route('/view-all-work-orders')
+def view_all_work_orders() -> str:
+    work_orders = db.session.execute(
+        db.select(WorkOrder).order_by(
+            WorkOrder.lot_number.desc()
+        )
+    ).scalars().all()
+    return render_template(
+        'view-all-work-orders.html.jinja', title='All Work Orders',
+        work_orders=work_orders
+    )
+
+
+@app.route('/view-work-order/<int:lot_number>', methods=['GET', 'POST'])
+def view_work_order(lot_number: int) -> str | Response:
+
+    form = ConfirmDeleteForm()
+    work_order = db.session.execute(
+        db.select(
+            WorkOrder
+        ).where(
+            WorkOrder.lot_number == lot_number
+        )
+    ).scalar_one_or_none()
+
+    if work_order is None:
+        flash(f'Work Order #{lot_number} Not Found', 'warning')
+        return redirect(url_for('index'))
+
+    if form.validate_on_submit():
+        return redirect(url_for('delete', lot_number=lot_number))
+
+    return render_template(
+        'view-work-order.html.jinja', title='Work Order Details',
+        form=form, work_order=work_order
+    )
+
+
+@app.route('/add-work-order', methods=['GET', 'POST'])
+@login_required
+def add_work_order() -> str | Response:
+
+    form = NewWorkOrderForm()
+    if form.validate_on_submit():
+        product = Product(form.product.data)
+        lot_number = form.lot_number.data
+        lot_id = form.lot_id.data
+        strip_lot_number = form.strip_lot_number.data
+        strip_qty = form.strip_qty.data
+        standard_time = ceil(
+            int(strip_qty) / int(product.standard_rate)  # type:ignore
+        )
+
+        work_order = WorkOrder(
+            product=product.key_,
+            product_name=product.name,
+            short_name=product.short_name,
+            item_number=product.item_number,
+            standard_rate=product.standard_rate,
+
+            lot_id=lot_id,
+            lot_number=lot_number,
+            strip_lot_number=strip_lot_number,
+
+            strip_qty=strip_qty,
+            remaining_qty=strip_qty,
+            standard_time=standard_time,
+            remaining_time=standard_time
+        )
+
+        db.session.add(work_order)
+        db.session.commit()
+
+        flash(
+            f'{product.short_name} {form.lot_id.data} '
+            f'(Lot {lot_number}) added.',
+            'success'
+        )
+        if product == 'other':
+            return redirect(
+                url_for('edit_work_order', lot_number=lot_number)
+            )
+        return redirect(url_for('current_schedule', machine_type='itrak'))
+
+    return render_template(
+        'add-work-order.html.jinja', title='Add Work Order',
+        form=form
+    )
+
+
+@app.route('/edit-work-order/<int:lot_number>', methods=['GET', 'POST'])
+@login_required
+def edit_work_order(lot_number: int) -> str | Response:
+    work_order = db.session.execute(
+        db.select(WorkOrder).where(
+            WorkOrder.lot_number == lot_number
+        )
+    ).scalar_one_or_none()
+
+    if work_order is None:
+        flash(f'Work Order #{lot_number} Not Found', 'warning')
+        return redirect(url_for('index'))
+
+    form = ProductDetailsForm(obj=work_order)
+
+    if form.validate_on_submit():
+        work_order.product_name = form.product_name.data
+        work_order.short_name = form.short_name.data
+        work_order.item_number = form.item_number.data
+        work_order.standard_rate = form.standard_rate.data
+
+        db.session.commit()
+
+        return redirect(url_for('current_schedule', machine_type='itrak'))
+
+    return render_template('edit-work-order.html.jinja', form=form)
+
+
+@app.route('/delete/<int:lot_number>')
+@login_required
+def delete(lot_number: int) -> Response:
+    work_order = db.session.execute(
+        db.select(WorkOrder).where(
+            WorkOrder.lot_number == lot_number
+        )
+    ).scalar_one_or_none()
+
+    if work_order is None:
+        flash(f'Work Order #{lot_number} Not Found', 'warning')
+        return redirect(url_for('index'))
+
+    db.session.delete(work_order)
+    db.session.commit()
+    flash(
+        f'{work_order.short_name} {work_order.lot_id} '
+        f'(Lot {work_order.lot_number}) deleted.', 'danger'
+    )
+    return redirect(url_for('current_schedule', machine_type='itrak'))
+
+
+@app.route('/load-work-order/<int:lot_number>', methods=['GET', 'POST'])
+@login_required
+def load_work_order(lot_number: int) -> str | Response:
+    work_order = db.session.execute(
+        db.select(WorkOrder).where(
+            WorkOrder.lot_number == lot_number
+        )
+    ).scalar_one_or_none()
+    if work_order is None:
+        raise Exception(f'Error finding lot number: {lot_number}')
+
+    product: Product = Product(work_order.product)
+    machine_family = product.pouch_type
+    form = LoadWorkOrderForm(machine_family)
+
+    if form.validate_on_submit():
+        if form.machine.data:
+            machine = Machine.new_(form.machine.data)
+        else:
+            raise Exception(f'No machine found: {form.machine.data}')
+        mode = form.mode.data
+        if mode:
+            machine.schedule_job(work_order, mode)
+        else:
+            raise Exception(f'No mode found: {form.mode.data}')
+        flash(
+            f'{work_order.short_name} {work_order.lot_id} '
+            f'/ {lot_number} loaded to '
+            f'{machine.name}.',
+            'info'
+        )
+        return redirect(url_for('current_schedule', machine_type='itrak'))
+
+    return render_template(
+        'load-work-order.html.jinja', title='Load Work Order',
+        form=form, work_order=work_order
+    )
+
+
+@app.route('/unload-work-order/<int:lot_number>')
+@login_required
+def unload_work_order(lot_number: int) -> Response:
+    work_order = db.session.execute(
+        db.select(WorkOrder).where(
+            WorkOrder.lot_number == lot_number
+        )
+    ).scalar_one_or_none()
+
+    if work_order.machine:
+        machine = Machine.new_(short_name=work_order.machine)
+    else:
+        raise Exception(f'No machine found: {work_order.machine}')
+
+    if work_order is None:
+        flash(f'Work Order #{lot_number} Not Found', 'warning')
+        return redirect(url_for('index'))
+
+    if work_order.machine == None:
+        flash(f'Work Order #{lot_number} Not Scheduled', 'warning')
+        return redirect(url_for('index'))
+    else:
+        flash(
+            f'{work_order.short_name} {work_order.lot_id} '
+            f'(Lot {work_order.lot_number}) unloaded from '
+            f'{machine.name}.',
+            'warning'
+        )
+        work_order.park()
+        db.session.commit()
+
+    return redirect(url_for('current_schedule', machine_type='itrak'))
+
+
+@app.route('/machine/<string:machine>')
+def view_machine(machine: str) -> str:
+    # pouching = WorkOrders.on_machine(machine=machine)
+    # scheduled = WorkOrders.scheduled_jobs
+    return render_template('machine-status.html.jinja', title=machine,
+                           machine=machine)
 
 
 @app.route('/user-login', methods=['GET', 'POST'])
@@ -92,276 +339,36 @@ def register() -> str | Response:
     )
 
 
-@app.route('/schedule')
-def current_schedule() -> str:
-    schedule = CurrentSchedule()
-    schedule.refresh()
-
-    return render_template(
-        'schedule.html.jinja', title='Current Schedule',
-        schedule=schedule
-    )
-
-
-@app.route('/schedule/<string:year_week>')
-def view_schedule(year_week: str) -> str | Response:
-
-    if year_week == dt.strftime(dt.now(), '%G-%V'):
-        return redirect(url_for('current_schedule'))
-
-    schedule = Schedule(year_week=year_week)
-    schedule.refresh()
-    return render_template(
-        'schedule.html.jinja', title='View Schedule',
-        schedule=schedule
-    )
-
-
-@app.route('/view-all-work-orders')
-def view_all_work_orders() -> str:
-    work_orders = (
-        WorkOrders.query.order_by(WorkOrders.lot_number.desc()).all()
-    )
-    return render_template(
-        'view-all-work-orders.html.jinja', title='All Work Orders',
-        work_orders=work_orders
-    )
-
-
-@app.route('/view-work-order/<int:lot_number>', methods=['GET', 'POST'])
-def view_work_order(lot_number: int) -> str | Response:
-
-    form = ConfirmDeleteForm()
-    work_order = db.session.execute(
-        db.select(WorkOrders).where(
-            WorkOrders.lot_number == lot_number
-        )
-    ).scalar_one_or_none()
-
-    if work_order is None:
-        flash(f'Work Order #{lot_number} Not Found', 'warning')
-        return redirect(url_for('index'))
-
-    if form.validate_on_submit():
-        return redirect(url_for('delete', lot_number=lot_number))
-
-    return render_template(
-        'view-work-order.html.jinja', title='Work Order Details',
-        form=form, work_order=work_order
-    )
-
-
-@app.route('/add-work-order', methods=['GET', 'POST'])
-@login_required
-def add_work_order() -> str | Response:
-
-    form = NewWorkOrderForm()
-    if form.validate_on_submit():
-        product = str(form.product.data)
-        lot_number = form.lot_number.data
-        [product_name, short_name,
-         item_number, standard_rate
-         ] = products[product].values()
-
-        strip_qty = form.strip_qty.data
-        standard_time = ceil(strip_qty / standard_rate)
-
-        work_order = WorkOrders(
-            product=product,
-            product_name=product_name,
-            short_name=short_name,
-            item_number=item_number,
-
-            lot_id=form.lot_id.data,
-            lot_number=lot_number,
-            strip_lot_number=int(form.strip_lot_number.data),
-
-            strip_qty=strip_qty,
-            remaining_qty=strip_qty,
-            standard_rate=standard_rate,
-            standard_time=standard_time,
-            remaining_time=standard_time,
-            add_datetime=dt.now()
-        )
-
-        db.session.add(work_order)
-        db.session.commit()
-
-        flash(
-            f'{short_name} {form.lot_id.data} '
-            f'(Lot {lot_number}) added.',
-            'success'
-        )
-        if product == 'other':
-            return redirect(
-                url_for('edit_work_order', lot_number=lot_number)
-            )
-        return redirect(url_for('current_schedule'))
-
-    return render_template(
-        'add-work-order.html.jinja', title='Add Work Order',
-        form=form
-    )
-
-
-@app.route('/edit-work-order/<int:lot_number>', methods=['GET', 'POST'])
-@login_required
-def edit_work_order(lot_number: int) -> str | Response:
-    work_order = db.session.execute(
-        db.select(WorkOrders).where(
-            WorkOrders.lot_number == lot_number
-        )
-    ).scalar_one_or_none()
-
-    if work_order is None:
-        flash(f'Work Order #{lot_number} Not Found', 'warning')
-        return redirect(url_for('index'))
-
-    form = ProductDetailsForm(obj=work_order)
-
-    if form.validate_on_submit():
-        work_order.product_name = form.product_name.data
-        work_order.short_name = form.short_name.data
-        work_order.item_number = form.item_number.data
-        work_order.standard_rate = form.standard_rate.data
-
-        db.session.commit()
-
-        return redirect(url_for('current_schedule'))
-
-    return render_template('edit-work-order.html.jinja', form=form)
-
-
-@app.route('/delete/<int:lot_number>')
-@login_required
-def delete(lot_number: int) -> Response:
-    work_order = db.session.execute(
-        db.select(WorkOrders).where(
-            WorkOrders.lot_number == lot_number
-        )
-    ).scalar_one_or_none()
-
-    if work_order is None:
-        flash(f'Work Order #{lot_number} Not Found', 'warning')
-        return redirect(url_for('index'))
-
-    db.session.delete(work_order)
-    db.session.commit()
-    flash(
-        f'{work_order.short_name} {work_order.lot_id} '
-        f'(Lot {lot_number}) deleted.', 'danger'
-    )
-    return redirect(url_for('current_schedule'))
-
-
-@app.route('/load-work-order/<int:lot_number>', methods=['GET', 'POST'])
-@login_required
-def load_work_order(lot_number: int) -> str | Response:
-    work_order = db.session.execute(
-        db.select(WorkOrders).where(
-            WorkOrders.lot_number == lot_number
-        )
-    ).scalar_one_or_none()
-    form = LoadWorkOrderForm()
-
-    if form.validate_on_submit():
-        line = form.line.data
-        work_order.line = line
-        if Schedule.on_line(line):
-            work_order.status = 'Queued'
-        else:
-            work_order.status = 'Pouching'
-            work_order.start_datetime = dt.now()
-
-        work_order.log += f'Loaded to {work_order.line}: {dt.now()}\n'
-        work_order.load_datetime = dt.now()
-        db.session.commit()
-
-        flash(
-            f'{work_order.short_name} {work_order.lot_id} '
-            f'(Lot {lot_number}) loaded to '
-            f'Line {work_order.line}.',
-            'info'
-        )
-
-        return redirect(url_for('current_schedule'))
-
-    return render_template(
-        'load-work-order.html.jinja', title='Load Work Order',
-        form=form, work_order=work_order
-    )
-
-
-@app.route('/unload-work-order/<int:lot_number>')
-@login_required
-def unload_work_order(lot_number: int) -> Response:
-    work_order = db.session.execute(
-        db.select(WorkOrders).where(
-            WorkOrders.lot_number == lot_number
-        )
-    ).scalar_one_or_none()
-
-    if work_order is None:
-        flash(f'Work Order #{lot_number} Not Found', 'warning')
-        return redirect(url_for('index'))
-
-    if work_order.status == 'Pouching' or work_order.status == 'Queued':
-        flash(
-            f'{work_order.short_name} {work_order.lot_id} '
-            f'(Lot {lot_number}) unloaded from '
-            f'Line {work_order.line}.',
-            'warning'
-        )
-        work_order.status = 'Parking Lot'
-        work_order.start_datetime = None
-        work_order.end_datetime = None
-        work_order.load_datetime = None
-
-        work_order.log += f'Unloaded from {work_order.line}: {dt.now()}\n'
-        work_order.line = None
-        db.session.commit()
-
-    return redirect(url_for('current_schedule'))
-
-
-@app.route('/machine/<string:machine>')
-def view_machine(machine: str) -> str:
-    # pouching = WorkOrders.on_line(line=line)
-    # scheduled = WorkOrders.scheduled_jobs
-    return render_template('machine-status.html.jinja', title=machine,
-                           machine=machine)
-
-
 @app.route('/performance')
 def performance() -> str:
     type_comparison = (
         db.session.query(
-            db.func.sum(WorkOrders.lot_number),
-            WorkOrders.product
+            db.func.sum(WorkOrder.lot_number),
+            WorkOrder.product
         ).group_by(
-            WorkOrders.product
+            WorkOrder.product
         ).order_by(
-            WorkOrders.product
+            WorkOrder.product
         ).all()
     )
     product_comparison = (
         db.session.query(
-            db.func.sum(WorkOrders.lot_number),
-            WorkOrders.status
+            db.func.sum(WorkOrder.lot_number),
+            WorkOrder.status
         ).group_by(
-            WorkOrders.status
+            WorkOrder.status
         ).order_by(
-            WorkOrders.status
+            WorkOrder.status
         ).all()
     )
     dates = (
         db.session.query(
-            db.func.sum(WorkOrders.lot_number),
-            WorkOrders.add_datetime
+            db.func.sum(WorkOrder.lot_number),
+            WorkOrder.created_dt
         ).group_by(
-            WorkOrders.add_datetime
+            WorkOrder.created_dt
         ).order_by(
-            WorkOrders.add_datetime
+            WorkOrder.created_dt
         ).all()
     )
     income_category = []

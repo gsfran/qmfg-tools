@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime as dt
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -31,56 +32,113 @@ class User(db.Model, UserMixin):
         return f'<User {self.username}>'
 
 
-class WorkOrders(db.Model):
+class WorkOrder(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
     product = db.Column(db.String(30), nullable=False)
     product_name = db.Column(db.String(30), nullable=False)
     short_name = db.Column(db.String(10), nullable=False)
     item_number = db.Column(db.String(30), nullable=False)
 
     lot_id = db.Column(db.String(5), nullable=False)
-    lot_number = db.Column(db.Integer, primary_key=True)
-    strip_lot_number = db.Column(db.Integer, nullable=False, unique=True)
+    lot_number = db.Column(db.Integer, index=True, unique=True)
+    strip_lot_number = db.Column(db.Integer, index=True)
 
-    strip_qty = db.Column(db.Integer, nullable=False)
-    standard_rate = db.Column(db.Integer, nullable=False)
-    standard_time = db.Column(db.Integer, nullable=False)
+    strip_qty = db.Column(db.Integer)
+    standard_rate = db.Column(db.Integer)
+    standard_time = db.Column(db.Integer)
 
-    status = db.Column(db.String(30), nullable=False, default='Parking Lot')
-    add_datetime = db.Column(db.DateTime, nullable=False)
-    load_datetime = db.Column(db.DateTime)
+    status = db.Column(db.String(30), default='Parking Lot')
+    created_dt = db.Column(db.DateTime, default=dt.utcnow)
+    load_dt = db.Column(db.DateTime, default=None)
 
-    line = db.Column(db.Integer)
-    start_datetime = db.Column(db.DateTime)
-    end_datetime = db.Column(db.DateTime)
+    machine = db.Column(db.Integer, default=None)
+    priority = db.Column(db.Integer, default=None)
+    pouching_start_dt = db.Column(db.DateTime, default=None)
+    pouching_end_dt = db.Column(db.DateTime, default=None)
     pouched_qty = db.Column(db.Integer, nullable=False, default=0)
 
     remaining_qty = db.Column(db.Integer, nullable=False)
     remaining_time = db.Column(db.Integer, nullable=False)
 
-    log = db.Column(db.Text, default=f'Created {add_datetime}')
+    log = db.Column(db.Text, default=f'{created_dt}\tCreated.')
 
-    def __repr__(self: WorkOrders) -> str:
-        return f'<WorkOrders object {self.lot_number}>'
+    def park(self: WorkOrder) -> None:
+        """Moves the WorkOrder object to the Parking Lot.
+        """
+        self.machine = None
+        self.priority = None
+        self.status = 'Parking Lot'
+        self.load_dt = None
+        self.pouching_start_dt = None
+        self.pouching_end_dt = None
+        self.log += f'{dt.now()}\tMoved to Parking Lot.'
+
+    def close(self: WorkOrder) -> None:
+        self.priority = None
+        self.status = 'Closed'
+        self.pouching_end_dt = dt.now()
+        self.log += f'{dt.now()}\tClosed.'
+
+    def __str__(self: WorkOrder) -> str:
+        return (
+            f'\n\nWork Order {self.short_name} {self.lot_id}\n'
+            f'Status: {self.status}\n'
+            f'Machine: {self.machine}\n'
+            f'Pouching Started: {self.pouching_start_dt}\n'
+            f'Estimated Completion: {self.pouching_end_dt}'
+        )
+
+    def __repr__(self: WorkOrder) -> str:
+        return f'<WorkOrder object {self.lot_number}>'
 
 
-class WorkWeeks(db.Model):
-    # id = db.Column(db.Integer)
-    year_week = db.Column(db.String(7), primary_key=True)
-
-    # [MON, TUE, WED, THU, FRI, SAT, SUN]
-    prod_days = db.Column(db.Integer, nullable=False, default=0b1111100)
-
-    # [0 - 23] [hr]
-    workday_start_time = db.Column(db.Integer, nullable=False, default=6)
-    workday_end_time = db.Column(db.Integer, nullable=False, default=23)
-
-    # [5, 6, 7, 8, 9, 10, 11, 12]
-    lines = db.Column(db.Integer, nullable=False, default=0b01111100)
-
-    def __repr__(self: WorkWeeks) -> str:
-        return f'<WorkWeeks object {self.year_week}>s'
-
-
-class Line5DataBase(db.Model):
+class WorkWeek(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    pass
+    year_week = db.Column(db.String(7), index=True, nullable=False)
+
+    mon_start_time = db.Column(db.Time, default=None)
+    tue_start_time = db.Column(db.Time, default=None)
+    wed_start_time = db.Column(db.Time, default=None)
+    thu_start_time = db.Column(db.Time, default=None)
+    fri_start_time = db.Column(db.Time, default=None)
+    sat_start_time = db.Column(db.Time, default=None)
+    sun_start_time = db.Column(db.Time, default=None)
+
+    mon_end_time = db.Column(db.Time, default=None)
+    tue_end_time = db.Column(db.Time, default=None)
+    wed_end_time = db.Column(db.Time, default=None)
+    thu_end_time = db.Column(db.Time, default=None)
+    fri_end_time = db.Column(db.Time, default=None)
+    sat_end_time = db.Column(db.Time, default=None)
+    sun_end_time = db.Column(db.Time, default=None)
+
+    # iTrak Lines
+    itrak_5 = db.Column(db.Boolean, default=False)
+    itrak_6 = db.Column(db.Boolean, default=False)
+    itrak_7 = db.Column(db.Boolean, default=False)
+    itrak_8 = db.Column(db.Boolean, default=False)
+    itrak_9 = db.Column(db.Boolean, default=False)
+    itrak_10 = db.Column(db.Boolean, default=False)
+    itrak_11 = db.Column(db.Boolean, default=False)
+
+    # dipstick pouchers
+    dipstick_A = db.Column(db.Boolean, default=False)
+    dipstick_B = db.Column(db.Boolean, default=False)
+    dipstick_C = db.Column(db.Boolean, default=False)
+    dipstick_D = db.Column(db.Boolean, default=False)
+    dipstick_E = db.Column(db.Boolean, default=False)
+    dipstick_F = db.Column(db.Boolean, default=False)
+    dipstick_G = db.Column(db.Boolean, default=False)
+    dipstick_H = db.Column(db.Boolean, default=False)
+
+    # swab pouchers
+    swab_auto = db.Column(db.Boolean, default=False)
+    swab_carousel = db.Column(db.Boolean, default=False)
+
+    # web laminators
+    # web spotters
+    # web dispensers
+    # nitro laminators
+
+    def __repr__(self: WorkWeek) -> str:
+        return f'<WorkWeeks object {self.year_week}>s'
