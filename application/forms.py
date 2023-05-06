@@ -116,7 +116,7 @@ class ProductDetailsForm(FlaskForm):
     standard_rate = IntegerField(
         'Standard Rate [/hr]', validators=[
             DataRequired(),
-            NumberRange(min=500, max=5000)
+            NumberRange(min=500, max=15000)
         ]
     )
 

@@ -127,7 +127,7 @@ def add_work_order() -> str | Response:
             f'(Lot {lot_number}) added.',
             'success'
         )
-        if product == 'other':
+        if product.key_ == 'other':
             return redirect(
                 url_for('edit_work_order', lot_number=lot_number)
             )
@@ -159,6 +159,10 @@ def edit_work_order(lot_number: int) -> str | Response:
         work_order.short_name = form.short_name.data
         work_order.item_number = form.item_number.data
         work_order.standard_rate = form.standard_rate.data
+        work_order.standard_time = ceil(
+            int(work_order.strip_qty) / int(work_order.standard_rate)  # type:ignore
+        )
+        work_order.remaining_time = work_order.standard_time
 
         db.session.commit()
 
