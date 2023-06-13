@@ -1,0 +1,21 @@
+{
+    "itrak": {
+        "line5": true,
+        "line6": true,
+        "line7": true,
+        "line8": true,
+        "line9": true,
+        "line10": true,
+        "line11": true
+    },
+    "dipstick": {
+        "dipstickA": true,
+        "dipstickB": true,
+        "dipstickC": true,
+        "dipstickD": true,
+        "dipstickE": true,
+        "dipstickF": true,
+        "dipstickG": true,
+        "dipstickH": true
+    }
+}

@@ -787,7 +787,7 @@ class ProductInspectData:
         _values = self.all_stats.values()
 
         pd.DataFrame(
-            data=_values, columns=[self.__str__()], index=_keys
+            data=_values, columns=[self.__str__()], index=_keys  # type: ignore
         ).T.to_excel(path_)
 
     def stops_to_xls(self: ProductInspectData) -> None:
