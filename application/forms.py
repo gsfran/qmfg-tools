@@ -254,3 +254,52 @@ class ConfirmDeleteForm(FlaskForm):
     def validate_delete(form: ConfirmDeleteForm, delete: StringField) -> None:
         if delete.data != 'delete':
             raise ValidationError("Type 'delete' in the field to confirm.")
+
+
+class EditDefaultsForm(FlaskForm):
+    #  need to read from JSONs and populate form with existing defaults
+    #  then save user entry to JSONs
+
+    monday = BooleanField(
+        'Monday', 
+    )
+    mon_start = TimeField()
+    mon_end = TimeField()
+
+    tuesday = BooleanField(
+        'Tuesday'
+    )
+    tue_start = TimeField()
+    tue_end = TimeField()
+
+    wednesday = BooleanField(
+        'Wednesday'
+    )
+    wed_start = TimeField()
+    wed_end = TimeField()
+
+    thursday = BooleanField(
+        'Thursday'
+    )
+    thu_start = TimeField()
+    thu_end = TimeField()
+
+    friday = BooleanField(
+        'Friday'
+    )
+    fri_start = TimeField()
+    fri_end = TimeField()
+
+    saturday = BooleanField(
+        'Saturday'
+    )
+    sat_start = TimeField()
+    sat_end = TimeField()
+
+    sunday = BooleanField(
+        'Sunday'
+    )
+    sun_start = TimeField()
+    sun_end = TimeField()
+
+    submit = SubmitField('Save')

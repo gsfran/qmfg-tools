@@ -8,9 +8,12 @@ from typing import Type
 from application import db
 from application.models import WorkOrder
 
-json_file = os.environ['MACHINES_JSON']
-with open(json_file, 'r') as j:
-    machines_dict: dict[str, dict[str, bool]] = json.load(j)
+
+def get_default_machines_from_json() -> dict[str, dict[str, bool]]:
+    json_file = os.environ['MACHINES_JSON']
+    with open(json_file, 'r') as j:
+        default_machines: dict[str, dict[str, bool]] = json.load(j)
+    return default_machines
 
 
 def machine_list(machine_family: str) -> list[Machine]:
@@ -23,8 +26,9 @@ def machine_list(machine_family: str) -> list[Machine]:
     Returns:
         list[Machine]: A list of machines under the given family.
     """
+    machines = get_default_machines_from_json()
     list_: list[Machine] = [
-        Machine.new_(m) for m in machines_dict[machine_family]
+        Machine.new_(m) for m in machines[machine_family]
     ]
     return list_
 
@@ -46,8 +50,9 @@ class Machine:
 
     @staticmethod
     def _get_machine_family(short_name: str) -> str | None:
+        machines = get_default_machines_from_json()
         FAMILY_REVERSE_MAP: dict[str, str] = {}
-        for family, machine_dicts in machines_dict.items():
+        for family, machine_dicts in machines.items():
             for machine in machine_dicts.keys():
                 FAMILY_REVERSE_MAP[machine] = family
         if FAMILY_REVERSE_MAP is None:

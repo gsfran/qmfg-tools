@@ -11,30 +11,29 @@ import pandas as pd
 from sqlalchemy import and_
 
 from application import db
-from application.machines import Machine, machine_list, machines_dict
+from application.machines import Machine, machine_list, get_default_machines_from_json
 from application.models import WorkOrder, WorkWeek
 
 _YEAR_WEEK_FORMAT: str = '%G-%V'
 
 
 def current_year_week() -> str:
-    """Returns the year_week string for the current week
-    as specified in .
+    """Returns the year_week string for the current week.
 
     Returns:
-        str: _description_
+        str: RegEx-like expression encoding year and week.
     """
     return dt.strftime(dt.now(), _YEAR_WEEK_FORMAT)
 
 
-def _get_schedule_times() -> dict[str, str]:
-    """Reads production start and end times from the
+def get_default_schedule_from_json() -> dict[str, str]:
+    """Reads default production start/end times from the
     schedule.json file specified in .env
     """
     json_file = os.environ['SCHEDULE_JSON']
     with open(json_file, 'r') as j:
-        schedule_times = json.load(j)
-    return schedule_times
+        default_schedule = json.load(j)
+    return default_schedule
 
 
 def _dt_now_to_grid() -> dt:
@@ -48,7 +47,7 @@ def _dt_now_to_grid() -> dt:
 
 
 def _snap_dt_to_grid(datetime_: dt) -> dt:
-    """Returns the index of the last last time division
+    """Returns the index of the last time division
     prior to the given datetime.
 
     Args:
@@ -75,13 +74,15 @@ def _create_work_week(year_week: str) -> WorkWeek:
         (specified in application/models.py).
     """
     work_week = WorkWeek(year_week=year_week)
-    schedule_times = _get_schedule_times()
+    schedule_times = get_default_schedule_from_json()
     for day_, time_ in schedule_times.items():
         if time_ is not None:
             work_week.__setattr__(
                 day_, dt.strptime(time_, '%H:%M').time()
             )
-    for machine_, active_ in machines_dict.items():
+
+    machines = get_default_machines_from_json()
+    for machine_, active_ in machines.items():
         work_week.__setattr__(machine_, active_)
     db.session.add(work_week)
     db.session.commit()

@@ -1,0 +1,130 @@
+{% extends 'layout.html.jinja' %}
+{% block content %}
+<div class="card card-style mb-2 col-sm-10 col-md-8 col-lg-6" style="max-width: 540px;">
+    <h3 class="card-title">Default Schedule</h3>
+    <div class="card-body">
+        <form action="" method="POST" novalidate>
+            {{ form.hidden_tag() }}
+            <fieldset class="form-group">
+            <table class="table">
+                <style>
+                    tr.no_border td {
+                        border: 0px solid #000;
+                    }
+                    .left_col {
+                        width: 40%;
+                        font-weight: bolder;
+                    }
+                    .right_col {
+                        text-align: right;
+                    }
+                </style>
+
+                <tbody>
+                    <!-- MONDAY FIELD -->
+                    <tr class="no_border">
+                        <td class="left_col">
+                            {{ form.monday() }}
+                            {{ form.monday.label() }}
+                        </td>
+                        <td class="right_col">
+                            {{ form.mon_start(value=start) }}
+                            - 
+                            {{ form.mon_end() }}
+                        </td>
+                    </tr>
+
+                    <!-- TUESDAY FIELD -->
+                    <tr class="no_border">
+                        <td class="left_col">
+                            {{ form.tuesday() }}
+                            {{ form.tuesday.label() }}
+                        </td>
+                        <td class="right_col">
+                            {{ form.tue_start() }}
+                            - 
+                            {{ form.tue_end() }}
+                        </td>
+                    </tr>
+
+                    <!-- WEDNESDAY FIELD -->
+                    <tr class="no_border">
+                        <td class="left_col">
+                            {{ form.wednesday() }}
+                            {{ form.wednesday.label() }}
+                        </td>
+                        <td class="right_col">
+                            {{ form.wed_start() }}
+                            - 
+                            {{ form.wed_end() }}
+                        </td>
+                    </tr>
+
+                    <!-- THURSDAY FIELD -->
+                    <tr class="no_border">
+                        <td class="left_col">
+                            {{ form.thursday() }}
+                            {{ form.thursday.label() }}
+                        </td>
+                        <td class="right_col">
+                            {{ form.thu_start() }}
+                            - 
+                            {{ form.thu_end() }}
+                        </td>
+                    </tr>
+
+                    <!-- FRIDAY FIELD -->
+                    <tr class="no_border">
+                        <td class="left_col">
+                            {{ form.friday() }}
+                            {{ form.friday.label() }}
+                        </td>
+                        <td class="right_col">
+                            {{ form.fri_start() }}
+                            - 
+                            {{ form.fri_end() }}
+                        </td>
+                    </tr>
+
+                    <!-- SATURDAY FIELD -->
+                    <tr class="no_border">
+                        <td class="left_col">
+                            {{ form.saturday() }}
+                            {{ form.saturday.label() }}
+                        </td>
+                        <td class="right_col">
+                            {{ form.sat_start() }}
+                            - 
+                            {{ form.sat_end() }}
+                        </td>
+                    </tr>
+
+                    <!-- SUNDAY FIELD -->
+                    <tr class="no_border">
+                        <td class="left_col">
+                            {{ form.sunday() }}
+                            {{ form.sunday.label() }}
+                        </td>
+                        <td class="right_col">
+                            {{ form.sun_start() }}
+                            - 
+                            {{ form.sun_end() }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+                <!-- SUBMIT BUTTON -->
+                <div class="form-group border-bottom pb-3" style="margin-top: 50px;">
+                    {{ form.submit(class="btn btn-info", style="width: 100%") }}
+                </div>
+                
+                <div class="form-group" >
+                    <a href="{{ url_for('index') }}"
+                            class="btn btn-outline-secondary" style="width: 100%">Cancel</a>
+                </div>
+            </fieldset>
+        </form>
+    </div>
+</div>
+{% endblock %}

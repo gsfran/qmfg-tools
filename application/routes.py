@@ -1,5 +1,6 @@
 import json
 from datetime import datetime as dt
+from datetime import time
 from math import ceil
 
 from flask import abort, flash, redirect, render_template, request, url_for
@@ -9,9 +10,9 @@ from werkzeug import Response
 from werkzeug.urls import url_parse
 
 from application import app, db
-from application.forms import (ConfirmDeleteForm, LoadWorkOrderForm, LoginForm,
-                               NewWorkOrderForm, ProductDetailsForm,
-                               RegistrationForm)
+from application.forms import (ConfirmDeleteForm, EditDefaultsForm,
+                               LoadWorkOrderForm, LoginForm, NewWorkOrderForm,
+                               ProductDetailsForm, RegistrationForm)
 from application.machines import Machine
 from application.models import User, WorkOrder
 from application.products import Product
@@ -21,12 +22,13 @@ from application.schedules import CurrentSchedule, Schedule
 @app.route('/')
 @app.route('/index')
 def index() -> Response:
-    return redirect(url_for('current_schedule', machine_type='itrak'))
+    return redirect(url_for('current_schedule', machine_family='itrak'))
 
 
-@app.route('/schedule/<string:machine_type>')
-def current_schedule(machine_type: str) -> str:
-    schedule = CurrentSchedule(machine_family=machine_type)
+@app.route('/schedule/<string:machine_family>')
+@app.route('/schedule/<string:machine_family>/current')
+def current_schedule(machine_family: str) -> str:
+    schedule = CurrentSchedule(machine_family=machine_family)
     schedule._refresh_work_orders()
 
     return render_template(
@@ -35,17 +37,33 @@ def current_schedule(machine_type: str) -> str:
     )
 
 
-@app.route('/schedule/<string:machine_type>/<string:year_week>')
-def view_schedule(machine_type: str, year_week: str) -> str | Response:
+@app.route('/schedule/<string:machine_family>/<string:year_week>')
+def view_schedule(machine_family: str, year_week: str) -> str | Response:
 
     if year_week == dt.strftime(dt.now(), '%G-%V'):
-        return redirect(url_for('current_schedule', machine_type='itrak'))
+        return redirect(url_for('current_schedule', machine_family='itrak'))
 
-    schedule = Schedule(year_week=year_week, machine_family=machine_type)
+    schedule = Schedule(year_week=year_week, machine_family=machine_family)
     schedule._refresh_work_orders()
     return render_template(
         'schedule.html.jinja', title='View Schedule',
         schedule=schedule
+    )
+
+
+@app.route('/schedule/edit/default')
+@login_required
+def edit_defaults() -> str | Response:
+
+    form = EditDefaultsForm()
+    # form.monday.data = True  # works
+    # form.mon_start.data = time(6)
+    start_time = time(6)  # works too. need to pass entire schedule to template for rendering
+    # get_schedule_dict() function would be useful
+
+    return render_template(
+        'edit-defaults.html.jinja', title='Edit Default Schedule',
+        form=form, start=start_time
     )
 
 
@@ -131,7 +149,7 @@ def add_work_order() -> str | Response:
             return redirect(
                 url_for('edit_work_order', lot_number=lot_number)
             )
-        return redirect(url_for('current_schedule', machine_type='itrak'))
+        return redirect(url_for('current_schedule', machine_family='itrak'))
 
     return render_template(
         'add-work-order.html.jinja', title='Add Work Order',
@@ -160,13 +178,14 @@ def edit_work_order(lot_number: int) -> str | Response:
         work_order.item_number = form.item_number.data
         work_order.standard_rate = form.standard_rate.data
         work_order.standard_time = ceil(
-            int(work_order.strip_qty) / int(work_order.standard_rate)  # type:ignore
+            int(work_order.strip_qty) /
+            int(work_order.standard_rate)  # type:ignore
         )
         work_order.remaining_time = work_order.standard_time
 
         db.session.commit()
 
-        return redirect(url_for('current_schedule', machine_type='itrak'))
+        return redirect(url_for('current_schedule', machine_family='itrak'))
 
     return render_template('edit-work-order.html.jinja', form=form)
 
@@ -190,7 +209,7 @@ def delete(lot_number: int) -> Response:
         f'{work_order.short_name} {work_order.lot_id} '
         f'(Lot {work_order.lot_number}) deleted.', 'danger'
     )
-    return redirect(url_for('current_schedule', machine_type='itrak'))
+    return redirect(url_for('current_schedule', machine_family='itrak'))
 
 
 @app.route('/load-work-order/<int:lot_number>', methods=['GET', 'POST'])
@@ -224,7 +243,7 @@ def load_work_order(lot_number: int) -> str | Response:
             f'{machine.name}.',
             'info'
         )
-        return redirect(url_for('current_schedule', machine_type='itrak'))
+        return redirect(url_for('current_schedule', machine_family='itrak'))
 
     return render_template(
         'load-work-order.html.jinja', title='Load Work Order',
@@ -263,7 +282,7 @@ def unload_work_order(lot_number: int) -> Response:
         work_order.park()
         db.session.commit()
 
-    return redirect(url_for('current_schedule', machine_type='itrak'))
+    return redirect(url_for('current_schedule', machine_family='itrak'))
 
 
 @app.route('/machine/<string:machine>')
