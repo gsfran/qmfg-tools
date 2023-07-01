@@ -49,9 +49,3 @@ class iTrak:
         self.data_folder = self.machine_info['data_folder']
         self.product_inspect = ProductInspectCamera(self.machine_info)
 
-    @staticmethod
-    def build_lines(line_numbers: list[int]) -> dict[str, str]:
-        lines = {}
-        for line_number in line_numbers:
-            lines[line_number] = iTrak(line_number)
-        return lines
