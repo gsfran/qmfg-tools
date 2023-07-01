@@ -1,16 +1,51 @@
 {
-    "mon_start_time": "6:30",
-    "tue_start_time": "6:30",
-    "wed_start_time": "6:30",
-    "thu_start_time": "6:30",
-    "fri_start_time": "6:30",
-    "sat_start_time": "6:30",
-    "sun_start_time": "6:30",
-    "mon_end_time": "23:30",
-    "tue_end_time": "23:30",
-    "wed_end_time": "23:30",
-    "thu_end_time": "23:30",
-    "fri_end_time": "23:30",
-    "sat_end_time": "23:30",
-    "sun_end_time": "23:30"
+    "monday": {
+        "scheduled": true,
+        "times": {
+            "start": "6:30",
+            "end": "23:30"
+        }
+    },
+    "tuesday": {
+        "scheduled": true,
+        "times": {
+            "start": "6:30",
+            "end": "23:30"
+        }
+    },
+    "wednesday": {
+        "scheduled": true,
+        "times": {
+            "start": "6:30",
+            "end": "23:30"
+        }
+    },
+    "thursday": {
+        "scheduled": true,
+        "times": {
+            "start": "6:30",
+            "end": "23:30"
+        }
+    },
+    "friday": {
+        "scheduled": true,
+        "times": {
+            "start": "6:30",
+            "end": "23:30"
+        }
+    },
+    "saturday": {
+        "scheduled": true,
+        "times": {
+            "start": "6:30",
+            "end": "23:30"
+        }
+    },
+    "sunday": {
+        "scheduled": true,
+        "times": {
+            "start": "6:30",
+            "end": "23:30"
+        }
+    }
 }

@@ -19,7 +19,6 @@
                         text-align: right;
                     }
                 </style>
-
                 <tbody>
                     <!-- MONDAY FIELD -->
                     <tr class="no_border">
@@ -28,9 +27,9 @@
                             {{ form.monday.label() }}
                         </td>
                         <td class="right_col">
-                            {{ form.mon_start(value=start) }}
+                            {{ form.monday_start() }}
                             - 
-                            {{ form.mon_end() }}
+                            {{ form.monday_end() }}
                         </td>
                     </tr>
 
@@ -41,9 +40,9 @@
                             {{ form.tuesday.label() }}
                         </td>
                         <td class="right_col">
-                            {{ form.tue_start() }}
+                            {{ form.tuesday_start() }}
                             - 
-                            {{ form.tue_end() }}
+                            {{ form.tuesday_end() }}
                         </td>
                     </tr>
 
@@ -54,9 +53,9 @@
                             {{ form.wednesday.label() }}
                         </td>
                         <td class="right_col">
-                            {{ form.wed_start() }}
+                            {{ form.wednesday_start() }}
                             - 
-                            {{ form.wed_end() }}
+                            {{ form.wednesday_end() }}
                         </td>
                     </tr>
 
@@ -67,9 +66,9 @@
                             {{ form.thursday.label() }}
                         </td>
                         <td class="right_col">
-                            {{ form.thu_start() }}
+                            {{ form.thursday_start() }}
                             - 
-                            {{ form.thu_end() }}
+                            {{ form.thursday_end() }}
                         </td>
                     </tr>
 
@@ -80,9 +79,9 @@
                             {{ form.friday.label() }}
                         </td>
                         <td class="right_col">
-                            {{ form.fri_start() }}
+                            {{ form.friday_start() }}
                             - 
-                            {{ form.fri_end() }}
+                            {{ form.friday_end() }}
                         </td>
                     </tr>
 
@@ -93,9 +92,9 @@
                             {{ form.saturday.label() }}
                         </td>
                         <td class="right_col">
-                            {{ form.sat_start() }}
+                            {{ form.saturday_start() }}
                             - 
-                            {{ form.sat_end() }}
+                            {{ form.saturday_end() }}
                         </td>
                     </tr>
 
@@ -106,9 +105,9 @@
                             {{ form.sunday.label() }}
                         </td>
                         <td class="right_col">
-                            {{ form.sun_start() }}
+                            {{ form.sunday_start() }}
                             - 
-                            {{ form.sun_end() }}
+                            {{ form.sunday_end() }}
                         </td>
                     </tr>
                 </tbody>
@@ -118,7 +117,8 @@
                 <div class="form-group border-bottom pb-3" style="margin-top: 50px;">
                     {{ form.submit(class="btn btn-info", style="width: 100%") }}
                 </div>
-                
+
+                <!-- CANCEL BUTTON -->
                 <div class="form-group" >
                     <a href="{{ url_for('index') }}"
                             class="btn btn-outline-secondary" style="width: 100%">Cancel</a>

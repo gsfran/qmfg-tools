@@ -13,6 +13,7 @@ from application import db
 from application.machines import machine_list
 from application.models import User
 from application.products import products
+from application.schedules import get_schedule_from_json
 
 
 class LoginForm(FlaskForm):
@@ -257,49 +258,54 @@ class ConfirmDeleteForm(FlaskForm):
 
 
 class EditDefaultsForm(FlaskForm):
-    #  need to read from JSONs and populate form with existing defaults
-    #  then save user entry to JSONs
 
-    monday = BooleanField(
-        'Monday', 
-    )
-    mon_start = TimeField()
-    mon_end = TimeField()
+    monday = BooleanField('Monday')
+    monday_start = TimeField()
+    monday_end = TimeField()
 
-    tuesday = BooleanField(
-        'Tuesday'
-    )
-    tue_start = TimeField()
-    tue_end = TimeField()
+    tuesday = BooleanField('Tuesday')
+    tuesday_start = TimeField()
+    tuesday_end = TimeField()
 
-    wednesday = BooleanField(
-        'Wednesday'
-    )
-    wed_start = TimeField()
-    wed_end = TimeField()
+    wednesday = BooleanField('Wednesday')
+    wednesday_start = TimeField()
+    wednesday_end = TimeField()
 
-    thursday = BooleanField(
-        'Thursday'
-    )
-    thu_start = TimeField()
-    thu_end = TimeField()
+    thursday = BooleanField('Thursday')
+    thursday_start = TimeField()
+    thursday_end = TimeField()
 
-    friday = BooleanField(
-        'Friday'
-    )
-    fri_start = TimeField()
-    fri_end = TimeField()
+    friday = BooleanField('Friday')
+    friday_start = TimeField()
+    friday_end = TimeField()
 
-    saturday = BooleanField(
-        'Saturday'
-    )
-    sat_start = TimeField()
-    sat_end = TimeField()
+    saturday = BooleanField('Saturday')
+    saturday_start = TimeField()
+    saturday_end = TimeField()
 
-    sunday = BooleanField(
-        'Sunday'
-    )
-    sun_start = TimeField()
-    sun_end = TimeField()
+    sunday = BooleanField('Sunday')
+    sunday_start = TimeField()
+    sunday_end = TimeField()
 
     submit = SubmitField('Save')
+
+    def __init__(self: EditDefaultsForm, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        current_defaults = get_schedule_from_json()
+        for day_ in current_defaults:
+
+            scheduled = current_defaults[day_].get('scheduled')
+            times = current_defaults[day_].get('times')
+            if type(scheduled) != bool or type(times) != dict:
+                raise Exception(
+                    'Type mismatch in schedule json, check formatting.'
+                )
+
+            self.__getitem__(day_).__setattr__('data', scheduled)
+            self.__getitem__(f'{day_}_start').__setattr__(
+                'data', dt.strptime(times['start'], '%H:%M')
+            )
+            self.__getitem__(f'{day_}_end').__setattr__(
+                'data', dt.strptime(times['end'], '%H:%M')
+            )

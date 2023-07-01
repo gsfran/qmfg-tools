@@ -11,7 +11,8 @@ import pandas as pd
 from sqlalchemy import and_
 
 from application import db
-from application.machines import Machine, machine_list, get_default_machines_from_json
+from application.machines import (Machine, get_default_machines_from_json,
+                                  machine_list)
 from application.models import WorkOrder, WorkWeek
 
 _YEAR_WEEK_FORMAT: str = '%G-%V'
@@ -26,7 +27,7 @@ def current_year_week() -> str:
     return dt.strftime(dt.now(), _YEAR_WEEK_FORMAT)
 
 
-def get_default_schedule_from_json() -> dict[str, str]:
+def get_schedule_from_json() -> dict[str, dict[str, bool | dict[str, str]]]:
     """Reads default production start/end times from the
     schedule.json file specified in .env
     """
@@ -74,12 +75,16 @@ def _create_work_week(year_week: str) -> WorkWeek:
         (specified in application/models.py).
     """
     work_week = WorkWeek(year_week=year_week)
-    schedule_times = get_default_schedule_from_json()
-    for day_, time_ in schedule_times.items():
-        if time_ is not None:
-            work_week.__setattr__(
-                day_, dt.strptime(time_, '%H:%M').time()
-            )
+    schedule_times = get_schedule_from_json()
+    for day_, dict_ in schedule_times.items():
+        if dict_['scheduled']:
+            if type(dict_['times']) == bool:
+                raise Exception('Error in json, check formatting.')
+            for key_, time_ in dict_['times'].items():
+                work_week.__setattr__(
+                    f'{day_[:3]}_{key_}_time',
+                    dt.strptime(time_, '%H:%M').time()
+                )
 
     machines = get_default_machines_from_json()
     for machine_, active_ in machines.items():
@@ -214,6 +219,7 @@ class Schedule:
         )
         self._refresh_work_orders
 
+    # region properties
     @property
     def dates(self: Schedule) -> pd.DatetimeIndex:
         try:
@@ -279,6 +285,7 @@ class Schedule:
                     'Error encountered while determining week tense.'
                 )
             return self._schedule_tense
+    # endregion
 
     def _get_work_week_from_db(self: Schedule) -> WorkWeek:
         work_week: WorkWeek = db.session.execute(

@@ -16,7 +16,7 @@ from application.forms import (ConfirmDeleteForm, EditDefaultsForm,
 from application.machines import Machine
 from application.models import User, WorkOrder
 from application.products import Product
-from application.schedules import CurrentSchedule, Schedule
+from application.schedules import CurrentSchedule, Schedule, get_schedule_from_json
 
 
 @app.route('/')
@@ -56,14 +56,10 @@ def view_schedule(machine_family: str, year_week: str) -> str | Response:
 def edit_defaults() -> str | Response:
 
     form = EditDefaultsForm()
-    # form.monday.data = True  # works
-    # form.mon_start.data = time(6)
-    start_time = time(6)  # works too. need to pass entire schedule to template for rendering
-    # get_schedule_dict() function would be useful
 
     return render_template(
         'edit-defaults.html.jinja', title='Edit Default Schedule',
-        form=form, start=start_time
+        form=form
     )
 
 
