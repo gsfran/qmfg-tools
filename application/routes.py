@@ -16,7 +16,8 @@ from application.forms import (ConfirmDeleteForm, EditDefaultsForm,
 from application.machines import Machine
 from application.models import User, WorkOrder
 from application.products import Product
-from application.schedules import CurrentSchedule, Schedule, get_schedule_from_json
+from application.schedules import (CurrentSchedule, Schedule,
+                                   write_schedule_to_json)
 
 
 @app.route('/')
@@ -51,11 +52,16 @@ def view_schedule(machine_family: str, year_week: str) -> str | Response:
     )
 
 
-@app.route('/schedule/edit/default')
+@app.route('/schedule/edit/default', methods=['GET', 'POST'])
 @login_required
 def edit_defaults() -> str | Response:
 
     form = EditDefaultsForm()
+    if form.validate_on_submit():
+        dict_ = form.to_dict()
+        print(dict_)
+        # write_schedule_to_json(dict_)
+        return redirect(url_for('index'))
 
     return render_template(
         'edit-defaults.html.jinja', title='Edit Default Schedule',

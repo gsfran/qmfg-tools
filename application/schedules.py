@@ -37,6 +37,16 @@ def get_schedule_from_json() -> dict[str, dict[str, bool | dict[str, str]]]:
     return default_schedule
 
 
+def write_schedule_to_json(schedule: dict) -> None:
+    """Saves default production start/end times to the
+    schedule.json file specified in .env
+    """
+    json_file = os.environ['SCHEDULE_JSON']
+    json_object = json.dumps(schedule, indent=4)
+    with open(json_file, 'w') as j:
+        j.write(json_object)
+
+
 def _dt_now_to_grid() -> dt:
     """Returns the index of the last time division
     prior to the user's current time.
@@ -141,7 +151,6 @@ def _get_first_open_index(_frame_row: pd.Series[str]) -> dt:
     _index = _frame_row.loc[
         _frame_row.isna()
     ].index[0].to_pydatetime()  # type: ignore
-    print(f'{_index=}')
     return _index
 
 
@@ -168,7 +177,6 @@ def _estimate_last_index(
         work_order.remaining_time * COLS_PER_HOUR
     )
     index_num = column_span - 1
-    print(f'{index_num=}')
     if work_order.status == 'Pouching':
         return _frame_row.index[index_num].to_pydatetime()  # type: ignore
     elif work_order.status == 'Queued':
@@ -429,7 +437,6 @@ class Schedule:
                 work_order=work_order, _frame_row=_machine_schedule,
                 COLS_PER_HOUR=Schedule.COLS_PER_HOUR
             )
-            print(work_order.__repr__())
             self._schedule_temp_frame[machine.short_name] = _machine_schedule
 
     @staticmethod
