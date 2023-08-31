@@ -1,9 +1,10 @@
+from copy import deepcopy
 import json
 from datetime import datetime as dt
-from datetime import time
 from math import ceil
 
-from flask import abort, flash, redirect, render_template, request, url_for
+from flask import (abort, flash, jsonify, redirect, render_template, request,
+                   url_for)
 from flask_login import current_user, login_required, login_user, logout_user
 from is_safe_url import is_safe_url
 from werkzeug import Response
@@ -16,8 +17,7 @@ from application.forms import (ConfirmDeleteForm, EditDefaultsForm,
 from application.machines import Machine
 from application.models import User, WorkOrder
 from application.products import Product
-from application.schedules import (CurrentSchedule, Schedule,
-                                   write_schedule_to_json)
+from application.schedules import CurrentSchedule, Schedule, get_schedule_from_json, write_schedule_to_json
 
 
 @app.route('/')
@@ -56,10 +56,32 @@ def view_schedule(machine_family: str, year_week: str) -> str | Response:
 @login_required
 def edit_defaults() -> str | Response:
 
-    form = EditDefaultsForm()
+    form: EditDefaultsForm = EditDefaultsForm()
     if form.validate_on_submit():
-        dict_ = form.to_dict()
-        print(dict_)
+        current_defaults = get_schedule_from_json()
+        new_defaults = deepcopy(current_defaults)
+
+        print(form.monday.data)
+
+        # for day_ in current_defaults:
+        #     scheduled = getattr(getattr(form, day_), 'data')
+        #     times = {
+        #         'start': dt.strftime(
+        #             getattr(getattr(form, f'{day_}_start'), 'data'), '%H:%M'
+        #         ),
+        #         'end': dt.strftime(
+        #             getattr(getattr(form, f'{day_}_end'), 'data'), '%H:%M'
+        #         )
+        #     }
+
+        #     print(f'{scheduled=}')
+        #     print(f'{times=}')
+
+        #     new_defaults['scheduled'] = scheduled
+        #     new_defaults['times'] = times  # type:ignore
+
+        # dict_ = EditDefaultsForm.to_dict(form)
+        # print(dict_)
         # write_schedule_to_json(dict_)
         return redirect(url_for('index'))
 

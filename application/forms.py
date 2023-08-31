@@ -303,39 +303,9 @@ class EditDefaultsForm(FlaskForm):
                     'Type mismatch in schedule json, check formatting.'
                 )
 
-            self.__getitem__(day_).__setattr__('data', scheduled)
-            self.__getitem__(f'{day_}_start').__setattr__(
-                'data', dt.strptime(times['start'], '%H:%M')
-            )
-            self.__getitem__(f'{day_}_end').__setattr__(
-                'data', dt.strptime(times['end'], '%H:%M')
-            )
+            start_time_str = dt.strptime(times['start'], '%H:%M')
+            end_time_str = dt.strptime(times['end'], '%H:%M')
 
-    def to_dict(
-        self: EditDefaultsForm
-    ) -> dict[str, dict[str, bool | dict[str, str]]]:
-        schedule_dict = deepcopy(get_schedule_from_json())
-
-        print(f'{self.monday.data=}')
-
-        # for day_, dict_ in schedule_dict.items():
-        #     scheduled = self.__getitem__(day_).data
-        #     start = self.__getitem__(f'{day_}_start').data
-        #     end = self.__getitem__(f'{day_}_end').data
-        #     times = {
-        #         'start': dt.strftime(start, '%H:%M'),
-        #         'end': dt.strftime(end, '%H:%M')
-        #         }
-
-        #     print(scheduled, times)
-
-        #     dict_['scheduled'] = scheduled
-        # if type(dict_['times']) == bool:
-        #     raise Exception('Type mismatch in json dictionary.')
-        # dict_['times']['start'] = self.__getitem__(
-        #     f'{day_}_start'
-        # ).data
-        # dict_['times']['end'] = self.__getitem__(
-        #     f'{day_}_end'
-        # ).data
-        return schedule_dict
+            setattr(getattr(self, day_), 'data', scheduled)
+            setattr(getattr(self, f'{day_}_start'), 'data', start_time_str)
+            setattr(getattr(self, f'{day_}_end'), 'data', end_time_str)

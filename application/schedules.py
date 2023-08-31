@@ -42,9 +42,8 @@ def write_schedule_to_json(schedule: dict) -> None:
     schedule.json file specified in .env
     """
     json_file = os.environ['SCHEDULE_JSON']
-    json_object = json.dumps(schedule, indent=4)
-    with open(json_file, 'w') as j:
-        j.write(json_object)
+    with open(json_file, 'w') as file:
+        json.dump(schedule, file, indent=4)
 
 
 def _dt_now_to_grid() -> dt:
