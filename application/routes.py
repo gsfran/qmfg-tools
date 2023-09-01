@@ -1,9 +1,10 @@
-from copy import deepcopy
 import json
+from copy import deepcopy
 from datetime import datetime as dt
+from datetime import time
 from math import ceil
 
-from flask import (abort, flash, jsonify, redirect, render_template, request,
+from flask import (abort, flash, redirect, render_template, request,
                    url_for)
 from flask_login import current_user, login_required, login_user, logout_user
 from is_safe_url import is_safe_url
@@ -11,13 +12,15 @@ from werkzeug import Response
 from werkzeug.urls import url_parse
 
 from application import app, db
-from application.forms import (ConfirmDeleteForm, EditDefaultsForm,
+from application.forms import (ConfirmDeleteForm, EditDefaultsForm, EditExistingWeekForm,
                                LoadWorkOrderForm, LoginForm, NewWorkOrderForm,
                                ProductDetailsForm, RegistrationForm)
 from application.machines import Machine
 from application.models import User, WorkOrder
 from application.products import Product
-from application.schedules import CurrentSchedule, Schedule, get_schedule_from_json, write_schedule_to_json
+from application.schedules import (CurrentSchedule, Schedule,
+                                   get_schedule_from_json,
+                                   write_schedule_to_json)
 
 
 @app.route('/')
@@ -52,6 +55,13 @@ def view_schedule(machine_family: str, year_week: str) -> str | Response:
     )
 
 
+@app.route('/schedule/edit/<string:year_week>')
+def edit_existing_week() -> str | Response:
+
+    form: EditExistingWeekForm = EditExistingWeekForm()
+    pass
+
+
 @app.route('/schedule/edit/default', methods=['GET', 'POST'])
 @login_required
 def edit_defaults() -> str | Response:
@@ -61,28 +71,21 @@ def edit_defaults() -> str | Response:
         current_defaults = get_schedule_from_json()
         new_defaults = deepcopy(current_defaults)
 
-        print(form.monday.data)
+        for day_ in current_defaults:
+            scheduled = getattr(getattr(form, day_), 'data')
+            times = {
+                'start': time.strftime(
+                    getattr(getattr(form, f'{day_}_start'), 'data'), '%H:%M'
+                ),
+                'end': time.strftime(
+                    getattr(getattr(form, f'{day_}_end'), 'data'), '%H:%M'
+                )
+            }
 
-        # for day_ in current_defaults:
-        #     scheduled = getattr(getattr(form, day_), 'data')
-        #     times = {
-        #         'start': dt.strftime(
-        #             getattr(getattr(form, f'{day_}_start'), 'data'), '%H:%M'
-        #         ),
-        #         'end': dt.strftime(
-        #             getattr(getattr(form, f'{day_}_end'), 'data'), '%H:%M'
-        #         )
-        #     }
+            new_defaults.get(day_)['scheduled'] = scheduled  # type:ignore
+            new_defaults.get(day_)['times'] = times  # type:ignore
 
-        #     print(f'{scheduled=}')
-        #     print(f'{times=}')
-
-        #     new_defaults['scheduled'] = scheduled
-        #     new_defaults['times'] = times  # type:ignore
-
-        # dict_ = EditDefaultsForm.to_dict(form)
-        # print(dict_)
-        # write_schedule_to_json(dict_)
+        write_schedule_to_json(new_defaults)
         return redirect(url_for('index'))
 
     return render_template(
@@ -293,7 +296,7 @@ def unload_work_order(lot_number: int) -> Response:
         flash(f'Work Order #{lot_number} Not Found', 'warning')
         return redirect(url_for('index'))
 
-    if work_order.machine == None:
+    if work_order.machine is None:
         flash(f'Work Order #{lot_number} Not Scheduled', 'warning')
         return redirect(url_for('index'))
     else:
@@ -338,6 +341,7 @@ def login() -> str | Response:
 
         login_user(user, remember=form.remember_me.data)
         flash('Logged in successfully.', 'success')
+        print(f'{form.remember_me.data=}')
 
         next_page = request.args.get('next')
 

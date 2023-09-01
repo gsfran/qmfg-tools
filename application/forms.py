@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from datetime import datetime as dt
+from datetime import timedelta
 
 from flask_wtf import FlaskForm
 from wtforms import (BooleanField, IntegerField, PasswordField, RadioField,
@@ -14,7 +15,8 @@ from application import db
 from application.machines import machine_list
 from application.models import User
 from application.products import products
-from application.schedules import get_schedule_from_json
+from application.schedules import (_YEAR_WEEK_FORMAT, current_year_week,
+                                   get_schedule_from_json)
 
 
 class LoginForm(FlaskForm):
@@ -288,11 +290,23 @@ class EditDefaultsForm(FlaskForm):
     sunday_start = TimeField()
     sunday_end = TimeField()
 
+    mode_select = RadioField(
+        validators=[
+            DataRequired()
+        ]
+    )
+
     submit = SubmitField('Save')
 
     def __init__(self: EditDefaultsForm, *args, **kwargs) -> None:
+
         super().__init__(*args, **kwargs)
 
+        if not self.submit.data:
+            self._populate_defaults()
+            self._populate_mode_select()
+
+    def _populate_defaults(self: EditDefaultsForm) -> None:
         current_defaults = get_schedule_from_json()
         for day_ in current_defaults:
 
@@ -309,3 +323,26 @@ class EditDefaultsForm(FlaskForm):
             setattr(getattr(self, day_), 'data', scheduled)
             setattr(getattr(self, f'{day_}_start'), 'data', start_time_str)
             setattr(getattr(self, f'{day_}_end'), 'data', end_time_str)
+
+    def _populate_mode_select(self: EditDefaultsForm) -> None:
+        current_week_start_date = dt.strptime(
+            f'{current_year_week()}-Mon', f'{_YEAR_WEEK_FORMAT}-%a'
+        ).date()
+        next_week_start_date = (dt.strptime(
+            f'{current_year_week()}-Mon', f'{_YEAR_WEEK_FORMAT}-%a'
+        ) + timedelta(days=7)).date()
+
+        self.mode_select.choices = [
+            (
+                'start_this_week',
+                f'Effective this week ({current_week_start_date})'
+            ),
+            (
+                'start_next_week',
+                f'Effective next week ({next_week_start_date})'
+            )
+        ]
+
+
+class EditExistingWeekForm(FlaskForm):
+    ...
