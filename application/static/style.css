@@ -54,6 +54,29 @@ h3.sub {
     text-align: right;
 }
 
+.h3-sub-right.week_readout {
+    font-size: 100%;
+    transition: all 200ms;
+    float: right;
+    cursor: default;
+}
+
+.h3-sub-right.week_readout:hover {
+    color: #666;
+}
+
+.h3-sub-right.edit_icon {
+    transition: all 200ms;
+    margin-inline: 15px;
+    height: 0.9em;
+    margin-bottom: 0px;
+    margin-top: auto;
+}
+
+.h3-sub-right.edit_icon:hover {
+    opacity: 40%;
+}
+
 .h3-sub-right.arrows {
     font-size: 100%;
     margin-inline: 25px;
@@ -209,6 +232,7 @@ h3.sub {
     font-weight: bold;
     text-align: center;
     margin-block: 8px;
+    cursor: default;
 }
 
 .parking_lot .add {

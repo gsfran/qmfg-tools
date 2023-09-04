@@ -48,11 +48,23 @@
             </h3>
         </div>
         <div class="h3-sub-right" style="width: 50%;  min-width: fit-content; margin-top: 25px; text-align: right;">
+            
+            <!-- LEFT UPPER ARROW -->
             <a href="/schedule/{{ schedule.machine_family }}/{{ schedule.prior_week }}">
-                <div class="h3-sub-right arrows">
-                    < </div>
+                <div class="h3-sub-right arrows"> < </div>
             </a>
-            <div class="h3-sub-right arrows">{{ schedule }}</div>
+
+            <!-- WEEK INDICATOR -->
+            <div class="h3-sub-right week_readout">{{ schedule }}</div>
+
+            <!-- EDIT ICON -->
+            <a href="/schedule/{{ schedule.machine_family }}/{{ schedule.year_week }}/edit">
+                <div class="h3-sub-right edit_icon">
+                    <img src="/static/edit-icon.png" alt="Edit">
+                </div>
+            </a>
+            
+            <!-- RIGHT UPPER ARROW -->
             <a href="/schedule/{{ schedule.machine_family }}/{{ schedule.next_week }}">
                 <div class="h3-sub-right arrows"> > </div>
             </a>

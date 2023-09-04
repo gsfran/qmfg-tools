@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime as dt
+from datetime import date, datetime as dt
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -29,10 +29,11 @@ class User(db.Model, UserMixin):
         return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
-        return f'<User {self.username}>'
+        return f'<User object {self.username}>'
 
 
 class WorkOrder(db.Model):
+    
     id = db.Column(db.Integer, primary_key=True)
     product = db.Column(db.String(30), nullable=False)
     product_name = db.Column(db.String(30), nullable=False)
@@ -95,6 +96,16 @@ class WorkOrder(db.Model):
 class WorkWeek(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     year_week = db.Column(db.String(7), index=True, nullable=False)
+    start_date = db.Column(db.Date, index=True)
+    customized = db.Column(db.Boolean, default=False)
+
+    mon_scheduled = db.Column(db.Boolean, default=False)
+    tue_scheduled = db.Column(db.Boolean, default=False)
+    wed_scheduled = db.Column(db.Boolean, default=False)
+    thu_scheduled = db.Column(db.Boolean, default=False)
+    fri_scheduled = db.Column(db.Boolean, default=False)
+    sat_scheduled = db.Column(db.Boolean, default=False)
+    sun_scheduled = db.Column(db.Boolean, default=False)
 
     mon_start_time = db.Column(db.Time, default=None)
     tue_start_time = db.Column(db.Time, default=None)
@@ -140,5 +151,13 @@ class WorkWeek(db.Model):
     # web dispensers
     # nitro laminators
 
+    @staticmethod
+    def later_than(date_: date) -> list[WorkWeek] | None:
+        work_weeks = db.session.execute(
+            db.select(WorkWeek).where(
+                WorkWeek.start_date >= date_
+            )).scalars().all()
+        return work_weeks
+
     def __repr__(self: WorkWeek) -> str:
-        return f'<WorkWeeks object {self.year_week}>s'
+        return f'<WorkWeek object {self.year_week}>'

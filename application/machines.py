@@ -8,9 +8,12 @@ from typing import Type
 from application import db
 from application.models import WorkOrder
 
-json_file = os.environ['MACHINES_JSON']
-with open(json_file, 'r') as j:
-    machines_dict: dict[str, dict[str, bool]] = json.load(j)
+
+def get_default_machines_from_json() -> dict[str, dict[str, bool]]:
+    json_file = os.environ['MACHINES_JSON']
+    with open(json_file, 'r') as j:
+        default_machines: dict[str, dict[str, bool]] = json.load(j)
+    return default_machines
 
 
 def machine_list(machine_family: str) -> list[Machine]:
@@ -23,8 +26,9 @@ def machine_list(machine_family: str) -> list[Machine]:
     Returns:
         list[Machine]: A list of machines under the given family.
     """
+    machines = get_default_machines_from_json()
     list_: list[Machine] = [
-        Machine.new_(m) for m in machines_dict[machine_family]
+        Machine.new_(m) for m in machines[machine_family]
     ]
     return list_
 
@@ -46,8 +50,9 @@ class Machine:
 
     @staticmethod
     def _get_machine_family(short_name: str) -> str | None:
+        machines = get_default_machines_from_json()
         FAMILY_REVERSE_MAP: dict[str, str] = {}
-        for family, machine_dicts in machines_dict.items():
+        for family, machine_dicts in machines.items():
             for machine in machine_dicts.keys():
                 FAMILY_REVERSE_MAP[machine] = family
         if FAMILY_REVERSE_MAP is None:
@@ -66,7 +71,10 @@ class Machine:
             WorkOrder.priority
         )).scalars().all()
 
-    def schedule_job(self: Machine, work_order: WorkOrder, mode: str) -> None:
+    def schedule_job(
+        self: Machine, work_order: WorkOrder,
+        mode: str, start_dt: dt | None
+    ) -> None:
         MODE_MAP = {
             'replace': self._job_replace,
             'insert': self._job_insert,
@@ -82,14 +90,14 @@ class Machine:
 
         work_order.load_dt = dt.now()
         work_order.machine = self.short_name
-        MODE_MAP[mode](work_order, jobs)
+        MODE_MAP[mode](work_order, jobs, start_dt)
 
     def _job_replace(
-        self: Machine, work_order: WorkOrder, jobs: list[WorkOrder]
+        self: Machine, work_order: WorkOrder,
+        jobs: list[WorkOrder], start_dt: dt
     ) -> None:
         if jobs:
-            jobs[0].park()
-            jobs.pop(0)
+            jobs.pop(0).park()
 
         jobs.insert(0, work_order)
         work_order.priority = 0
@@ -102,7 +110,8 @@ class Machine:
         db.session.commit()
 
     def _job_insert(
-        self: Machine, work_order: WorkOrder, jobs: list[WorkOrder]
+        self: Machine, work_order: WorkOrder,
+        jobs: list[WorkOrder], start_dt: dt
     ) -> None:
 
         jobs.insert(1, work_order)
@@ -120,7 +129,8 @@ class Machine:
         db.session.commit()
 
     def _job_append(
-        self: Machine, work_order: WorkOrder, jobs: list[WorkOrder]
+        self: Machine, work_order: WorkOrder,
+        jobs: list[WorkOrder], start_dt: dt
     ) -> None:
         jobs.append(work_order)
         work_order.priority = jobs.index(work_order)
@@ -135,9 +145,11 @@ class Machine:
         db.session.commit()
 
     def _job_custom(
-        self: Machine, work_order: WorkOrder, jobs: list[WorkOrder]
+        self: Machine, work_order: WorkOrder,
+        jobs: list[WorkOrder], start_dt: dt
     ) -> None:
-        ...
+        for job in jobs:
+            ...
 
     def __repr__(self: Machine) -> str:
         ...

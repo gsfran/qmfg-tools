@@ -11,30 +11,99 @@ import pandas as pd
 from sqlalchemy import and_
 
 from application import db
-from application.machines import Machine, machine_list, machines_dict
+from application.machines import (Machine, get_default_machines_from_json,
+                                  machine_list)
 from application.models import WorkOrder, WorkWeek
 
 _YEAR_WEEK_FORMAT: str = '%G-%V'
 
 
 def current_year_week() -> str:
-    """Returns the year_week string for the current week
-    as specified in .
+    """Returns the year_week string for the current week.
 
     Returns:
-        str: _description_
+        str: RegEx-like expression encoding year and week.
     """
     return dt.strftime(dt.now(), _YEAR_WEEK_FORMAT)
 
 
-def _get_schedule_times() -> dict[str, str]:
-    """Reads production start and end times from the
+def schedule_json() -> dict[str, dict[str, bool | dict[str, str]]]:
+    """Reads default production start/end times from the
     schedule.json file specified in .env
     """
     json_file = os.environ['SCHEDULE_JSON']
     with open(json_file, 'r') as j:
-        schedule_times = json.load(j)
-    return schedule_times
+        schedule_dict = json.load(j)
+    return schedule_dict
+
+
+def schedule_dict_to_json(schedule_dict: dict) -> None:
+    """Saves default production start/end times to the
+    schedule.json file specified in .env
+    """
+    json_file = os.environ['SCHEDULE_JSON']
+    with open(json_file, 'w') as file:
+        json.dump(schedule_dict, file, indent=4)
+
+
+def get_schedule_dict_from_db(
+    year_week: str
+) -> dict[str, dict[str, bool | dict[str, str]]]:
+    """
+    Returns a dict representing the days and times
+    production is scheduled for the given week.
+
+    Returns:
+        dict: Days and times scheduled for the given week.
+    """
+    schedule_dict = schedule_json()
+    work_week = get_workweek_from_db(year_week)
+
+    for day_, dict_ in schedule_dict.items():
+        d_ = day_[:3].lower()
+        times_ = dict_['times']
+        if type(times_) == bool:
+            raise Exception('Error in json, check formatting.')
+
+        dict_['scheduled'] = getattr(work_week, f'{d_}_scheduled')
+        times_['start'] = time.strftime(
+            getattr(work_week, f'{d_}_start_time'), '%H:%M'
+        )
+        times_['end'] = time.strftime(
+            getattr(work_week, f'{d_}_end_time'), '%H:%M'
+        )
+
+    return schedule_dict
+
+
+def update_db_workweek(
+    schedule_dict: dict[str, dict[str, bool | dict[str, str]]],
+    work_week: WorkWeek
+) -> None:
+
+    for day_, dict_ in schedule_dict.items():
+        d_ = day_[:3].lower()
+        times_ = dict_['times']
+        if type(times_) is bool:
+            raise Exception('Error in schedule_dict')
+        start_time = dt.strptime(times_['start'], '%H:%M').time()
+        end_time = dt.strptime(times_['end'], '%H:%M').time()
+        setattr(work_week, f'{d_}_scheduled', dict_['scheduled'])
+        setattr(work_week, f'{d_}_start_time', start_time)
+        setattr(work_week, f'{d_}_end_time', end_time)
+
+    db.session.commit()
+
+
+def get_workweek_from_db(year_week: str) -> WorkWeek:
+    work_week: WorkWeek = db.session.execute(
+        db.select(WorkWeek).where(
+            WorkWeek.year_week == year_week
+        )
+    ).scalar_one_or_none()
+    if work_week is None:
+        work_week = _create_work_week(year_week=year_week)
+    return work_week
 
 
 def _dt_now_to_grid() -> dt:
@@ -48,7 +117,7 @@ def _dt_now_to_grid() -> dt:
 
 
 def _snap_dt_to_grid(datetime_: dt) -> dt:
-    """Returns the index of the last last time division
+    """Returns the index of the last time division
     prior to the given datetime.
 
     Args:
@@ -74,14 +143,26 @@ def _create_work_week(year_week: str) -> WorkWeek:
         WorkWeek: Instance of the WorkWeek object
         (specified in application/models.py).
     """
-    work_week = WorkWeek(year_week=year_week)
-    schedule_times = _get_schedule_times()
-    for day_, time_ in schedule_times.items():
-        if time_ is not None:
+    start_date = dt.strptime(
+        f'{year_week}-Mon', f'{_YEAR_WEEK_FORMAT}-%a'
+    ).date()
+    work_week = WorkWeek(year_week=year_week, start_date=start_date)
+
+    schedule_dict = schedule_json()
+    for day_, dict_ in schedule_dict.items():
+        if type(dict_['times']) == bool:
+            raise Exception('Error in json, check formatting.')
+        work_week.__setattr__(
+            f'{day_[:3]}_scheduled', dict_['scheduled']
+        )
+        for key_, time_ in dict_['times'].items():
             work_week.__setattr__(
-                day_, dt.strptime(time_, '%H:%M').time()
+                f'{day_[:3]}_{key_}_time',
+                dt.strptime(time_, '%H:%M').time()
             )
-    for machine_, active_ in machines_dict.items():
+
+    machines = get_default_machines_from_json()
+    for machine_, active_ in machines.items():
         work_week.__setattr__(machine_, active_)
     db.session.add(work_week)
     db.session.commit()
@@ -135,7 +216,6 @@ def _get_first_open_index(_frame_row: pd.Series[str]) -> dt:
     _index = _frame_row.loc[
         _frame_row.isna()
     ].index[0].to_pydatetime()  # type: ignore
-    print(f'{_index=}')
     return _index
 
 
@@ -162,7 +242,6 @@ def _estimate_last_index(
         work_order.remaining_time * COLS_PER_HOUR
     )
     index_num = column_span - 1
-    print(f'{index_num=}')
     if work_order.status == 'Pouching':
         return _frame_row.index[index_num].to_pydatetime()  # type: ignore
     elif work_order.status == 'Queued':
@@ -195,7 +274,7 @@ class Schedule:
     def _init_schedule(self: Schedule) -> None:
         self.dates
         self.schedule_tense
-        self.work_week = self._get_work_week_from_db()
+        self.work_week = get_workweek_from_db(self.year_week)
         self.scheduled_days = self._get_scheduled_days_from_db()
 
     def _reinitialize(self: Schedule) -> None:
@@ -213,6 +292,7 @@ class Schedule:
         )
         self._refresh_work_orders
 
+    # region properties
     @property
     def dates(self: Schedule) -> pd.DatetimeIndex:
         try:
@@ -278,16 +358,7 @@ class Schedule:
                     'Error encountered while determining week tense.'
                 )
             return self._schedule_tense
-
-    def _get_work_week_from_db(self: Schedule) -> WorkWeek:
-        work_week: WorkWeek = db.session.execute(
-            db.select(WorkWeek).where(
-                WorkWeek.year_week == self.year_week
-            )
-        ).scalar_one_or_none()
-        if work_week is None:
-            work_week = _create_work_week(year_week=self.year_week)
-        return work_week
+    # endregion
 
     def _get_scheduled_days_from_db(self: Schedule) -> list[date]:
         """
@@ -301,9 +372,9 @@ class Schedule:
 
         for date_ in self.dates:
             scheduled = self.work_week.__getattribute__(
-                f'{date_.strftime("%a").lower()}_start_time'
+                f'{date_.strftime("%a").lower()}_scheduled'
             )
-            if scheduled is None:
+            if scheduled is False:
                 continue
             scheduled_days.append(date_)
         return scheduled_days
@@ -421,7 +492,6 @@ class Schedule:
                 work_order=work_order, _frame_row=_machine_schedule,
                 COLS_PER_HOUR=Schedule.COLS_PER_HOUR
             )
-            print(work_order.__repr__())
             self._schedule_temp_frame[machine.short_name] = _machine_schedule
 
     @staticmethod

@@ -1,0 +1,149 @@
+{% extends 'layout.html.jinja' %}
+{% block content %}
+<div class="card card-style mb-2 col-sm-10 col-md-8 col-lg-6" style="max-width: 540px;">
+    <h3 class="card-title">Confirm New Schedule</h3>
+    <div class="card-body">
+        <form action="" method="POST" novalidate>
+            {{ form.hidden_tag() }}
+            <fieldset class="form-group">
+
+            <table class="table">
+                <style>
+                    tr.no_border td {
+                        border: 0px solid #000;
+                        padding: 6px;
+                    }
+                    .left_col {
+                        width: 40%;
+                        font-weight: bolder;
+                        text-align: left;
+                    }
+                    .right_col {
+                        text-align: right;
+                    }
+                    .mid_col {
+                        width: 100%;
+                    }
+                </style>
+                <tbody>
+                    <!-- MONDAY FIELD -->
+                    <tr class="no_border">
+                        <td class="left_col">
+                            {{ form.monday(style='margin-left: 20px') }}
+                            {{ form.monday.label(style='margin-left: 20px') }}
+                        </td>
+                        <td class="right_col">
+                            {{ form.monday_start(style='margin-left: 20px') }}
+                            - 
+                            {{ form.monday_end(style='margin-left: 20px') }}
+                        </td>
+                    </tr>
+
+                    <!-- TUESDAY FIELD -->
+                    <tr class="no_border">
+                        <td class="left_col">
+                            {{ form.tuesday(style='margin-left: 20px') }}
+                            {{ form.tuesday.label(style='margin-left: 20px') }}
+                        </td>
+                        <td class="right_col">
+                            {{ form.tuesday_start(style='margin-left: 20px') }}
+                            - 
+                            {{ form.tuesday_end(style='margin-left: 20px') }}
+                        </td>
+                    </tr>
+
+                    <!-- WEDNESDAY FIELD -->
+                    <tr class="no_border">
+                        <td class="left_col">
+                            {{ form.wednesday(style='margin-left: 20px') }}
+                            {{ form.wednesday.label(style='margin-left: 20px') }}
+                        </td>
+                        <td class="right_col">
+                            {{ form.wednesday_start(style='margin-left: 20px') }}
+                            - 
+                            {{ form.wednesday_end(style='margin-left: 20px') }}
+                        </td>
+                    </tr>
+
+                    <!-- THURSDAY FIELD -->
+                    <tr class="no_border">
+                        <td class="left_col">
+                            {{ form.thursday(style='margin-left: 20px') }}  
+                            {{ form.thursday.label(style='margin-left: 20px') }}
+                        </td>
+                        <td class="right_col">
+                            {{ form.thursday_start(style='margin-left: 20px') }}
+                            - 
+                            {{ form.thursday_end(style='margin-left: 20px') }}
+                        </td>
+                    </tr>
+
+                    <!-- FRIDAY FIELD -->
+                    <tr class="no_border">
+                        <td class="left_col">
+                            {{ form.friday(style='margin-left: 20px') }}
+                            {{ form.friday.label(style='margin-left: 20px') }}
+                        </td>
+                        <td class="right_col">
+                            {{ form.friday_start(style='margin-left: 20px') }}
+                            - 
+                            {{ form.friday_end(style='margin-left: 20px') }}
+                        </td>
+                    </tr>
+
+                    <!-- SATURDAY FIELD -->
+                    <tr class="no_border">
+                        <td class="left_col">
+                            {{ form.saturday(style='margin-left: 20px') }}
+                            {{ form.saturday.label(style='margin-left: 20px') }}
+                        </td>
+                        <td class="right_col">
+                            {{ form.saturday_start(style='margin-left: 20px') }}
+                            - 
+                            {{ form.saturday_end(style='margin-left: 20px') }}
+                        </td>
+                    </tr>
+
+                    <!-- SUNDAY FIELD -->
+                    <tr class="no_border">
+                        <td class="left_col">
+                            {{ form.sunday(style='margin-left: 20px') }}
+                            {{ form.sunday.label(style='margin-left: 20px') }}
+                        </td>
+                        <td class="right_col">
+                            {{ form.sunday_start(style='margin-left: 20px') }}
+                            - 
+                            {{ form.sunday_end(style='margin-left: 20px') }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+                <!-- MODE SELECT FIELD -->
+                <div class="form-group pb-3" style="margin-top: 20px; border-top: 1px solid rgba(0,0,0,0.125); padding-top: 20px;">
+                    {% if form.mode_select.errors %}
+                        {{ form.mode_select(class="form-control form-control-sm", style="border: none; list-style: none; margin-bottom: 0px; padding-bottom: 0px;") }}
+                        {% for error in form.mode_select.errors %}
+                            <div style="font-size: small; color: red; margin: unset; margin-left: 25px;">
+                                <span>{{ error }}</span>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        {{ form.mode_select(class="form-control form-control-sm", style="border: none; list-style: none;") }}
+                    {% endif %}
+                </div>
+
+                <!-- SUBMIT BUTTON -->
+                <div class="form-group pb-3" style="margin-top: 20px;">
+                    {{ form.submit(class="btn btn-info", style="width: 100%") }}
+                </div>
+
+                <!-- CANCEL BUTTON -->
+                <div class="form-group" >
+                    <a href="{{ url_for('index') }}"
+                            class="btn btn-outline-secondary" style="width: 100%">Cancel</a>
+                </div>
+            </fieldset>
+        </form>
+    </div>
+</div>
+{% endblock %}

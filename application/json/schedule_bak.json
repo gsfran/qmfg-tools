@@ -2,49 +2,49 @@
     "monday": {
         "scheduled": true,
         "times": {
-            "start": "06:30",
+            "start": "6:30",
             "end": "23:30"
         }
     },
     "tuesday": {
         "scheduled": true,
         "times": {
-            "start": "06:30",
+            "start": "6:30",
             "end": "23:30"
         }
     },
     "wednesday": {
         "scheduled": true,
         "times": {
-            "start": "06:30",
+            "start": "6:30",
             "end": "23:30"
         }
     },
     "thursday": {
         "scheduled": true,
         "times": {
-            "start": "06:30",
+            "start": "6:30",
             "end": "23:30"
         }
     },
     "friday": {
         "scheduled": true,
         "times": {
-            "start": "06:30",
+            "start": "6:30",
             "end": "23:30"
         }
     },
     "saturday": {
-        "scheduled": false,
+        "scheduled": true,
         "times": {
-            "start": "06:30",
+            "start": "6:30",
             "end": "23:30"
         }
     },
     "sunday": {
-        "scheduled": false,
+        "scheduled": true,
         "times": {
-            "start": "06:30",
+            "start": "6:30",
             "end": "23:30"
         }
     }

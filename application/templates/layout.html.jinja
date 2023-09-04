@@ -33,7 +33,7 @@
         <header class="mb-4">
           <nav class="navbar navbar-expand-xl navbar-dark p-2" style="background-color: #774def;">
             <a class="navbar-brand" href="{{ url_for('index') }}" style="font-size: 110%;">
-              <img src="/static/logo.png" class="nav-logo" />Production Scheduler</a>
+              <img src="/static/logo.png" class="nav-logo" />Rapids Production Scheduler</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
               aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
               <span class="navbar-toggler-icon"></span>
@@ -46,6 +46,7 @@
                   <a class="nav-item nav-link qmfg-nav-link" href="{{ url_for('logout') }}">Logout</a>
                 {% endif %}
                 <a class="nav-item nav-link qmfg-nav-link" href="{{ url_for('performance') }}">Performance</a>
+                <a class="nav-item nav-link qmfg-nav-link" href="{{ url_for('schedule_change') }}">Settings</a>
               </div>
             </div>
           </nav>
