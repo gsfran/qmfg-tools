@@ -1,7 +1,7 @@
 {% extends 'layout.html.jinja' %}
 {% block content %}
 <div class="card card-style mb-2 col-sm-10 col-md-8 col-lg-6" style="max-width: 540px;">
-    <h3 class="card-title">Edit Default Schedule</h3>
+    <h3 class="card-title">Schedule Change</h3>
     <div class="card-body">
         <form action="" method="POST" novalidate>
             {{ form.hidden_tag() }}
@@ -11,10 +11,12 @@
                 <style>
                     tr.no_border td {
                         border: 0px solid #000;
+                        padding: 6px;
                     }
                     .left_col {
                         width: 40%;
                         font-weight: bolder;
+                        text-align: left;
                     }
                     .right_col {
                         text-align: right;
@@ -27,12 +29,12 @@
                     <!-- MONDAY FIELD -->
                     <tr class="no_border">
                         <td class="left_col">
-                            {{ form.monday() }}
-                            {{ form.monday.label() }}
+                            {{ form.monday(style='margin-left: 20px') }}
+                            {{ form.monday.label(style='margin-left: 20px') }}
                         </td>
                         <td class="right_col">
                             {{ form.monday_start() }}
-                            - 
+                             - 
                             {{ form.monday_end() }}
                         </td>
                     </tr>
@@ -40,12 +42,12 @@
                     <!-- TUESDAY FIELD -->
                     <tr class="no_border">
                         <td class="left_col">
-                            {{ form.tuesday() }}
-                            {{ form.tuesday.label() }}
+                            {{ form.tuesday(style='margin-left: 20px') }}
+                            {{ form.tuesday.label(style='margin-left: 20px') }}
                         </td>
                         <td class="right_col">
                             {{ form.tuesday_start() }}
-                            - 
+                             - 
                             {{ form.tuesday_end() }}
                         </td>
                     </tr>
@@ -53,12 +55,12 @@
                     <!-- WEDNESDAY FIELD -->
                     <tr class="no_border">
                         <td class="left_col">
-                            {{ form.wednesday() }}
-                            {{ form.wednesday.label() }}
+                            {{ form.wednesday(style='margin-left: 20px') }}
+                            {{ form.wednesday.label(style='margin-left: 20px') }}
                         </td>
                         <td class="right_col">
                             {{ form.wednesday_start() }}
-                            - 
+                             - 
                             {{ form.wednesday_end() }}
                         </td>
                     </tr>
@@ -66,12 +68,12 @@
                     <!-- THURSDAY FIELD -->
                     <tr class="no_border">
                         <td class="left_col">
-                            {{ form.thursday() }}
-                            {{ form.thursday.label() }}
+                            {{ form.thursday(style='margin-left: 20px') }}  
+                            {{ form.thursday.label(style='margin-left: 20px') }}
                         </td>
                         <td class="right_col">
                             {{ form.thursday_start() }}
-                            - 
+                             - 
                             {{ form.thursday_end() }}
                         </td>
                     </tr>
@@ -79,12 +81,12 @@
                     <!-- FRIDAY FIELD -->
                     <tr class="no_border">
                         <td class="left_col">
-                            {{ form.friday() }}
-                            {{ form.friday.label() }}
+                            {{ form.friday(style='margin-left: 20px') }}
+                            {{ form.friday.label(style='margin-left: 20px') }}
                         </td>
                         <td class="right_col">
                             {{ form.friday_start() }}
-                            - 
+                             - 
                             {{ form.friday_end() }}
                         </td>
                     </tr>
@@ -92,12 +94,12 @@
                     <!-- SATURDAY FIELD -->
                     <tr class="no_border">
                         <td class="left_col">
-                            {{ form.saturday() }}
-                            {{ form.saturday.label() }}
+                            {{ form.saturday(style='margin-left: 20px') }}
+                            {{ form.saturday.label(style='margin-left: 20px') }}
                         </td>
                         <td class="right_col">
                             {{ form.saturday_start() }}
-                            - 
+                             - 
                             {{ form.saturday_end() }}
                         </td>
                     </tr>
@@ -105,25 +107,39 @@
                     <!-- SUNDAY FIELD -->
                     <tr class="no_border">
                         <td class="left_col">
-                            {{ form.sunday() }}
-                            {{ form.sunday.label() }}
+                            {{ form.sunday(style='margin-left: 20px') }}
+                            {{ form.sunday.label(style='margin-left: 20px') }}
                         </td>
                         <td class="right_col">
                             {{ form.sunday_start() }}
-                            - 
+                             - 
                             {{ form.sunday_end() }}
                         </td>
                     </tr>
                 </tbody>
             </table>
-
-                <!-- MODE SELECT FIELD -->
-                <div class="form-group border-bottom pb-3" style="margin-top: 20px;">
-                    {{ form.mode_select(class="form-control form-control-sm", style="border: none; list-style: none;") }}
+                <!-- EFFECTIVE DATE FIELD -->
+                <div class="form-group pb-3" style="margin-block: 10px; border-top: 1px solid rgba(0,0,0,0.125); padding: 10px;">
+                    {{ form.effective_date.label() }}
+                    {% if form.effective_date.errors %}
+                        {{ form.effective_date(class="form-control form-control-sm", style="border: none; list-style: none; margin-bottom: 0px; padding-bottom: 0px;") }}
+                        {% for error in form.effective_date.errors %}
+                            <div style="font-size: small; color: red; margin: unset; margin-left: 25px;">
+                                <span>{{ error }}</span>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        {{ form.effective_date(class="form-control form-control-sm", style="border: none; list-style: none;") }}
+                    {% endif %}
                 </div>
-                
+
+                <!-- OVERWRITE CUSTOM FIELD -->
+                <div class="form-group pb-3" style="margin-bottom: 0px; padding-bottom: 0px; margin-left: 15px;">
+                    {{ form.overwrite_custom() }} {{ form.overwrite_custom.label(class="form-control-sm", style="width: 90%;") }}
+                </div>
+
                 <!-- SUBMIT BUTTON -->
-                <div class="form-group border-bottom pb-3" style="margin-top: 50px;">
+                <div class="form-group pb-3">
                     {{ form.submit(class="btn btn-info", style="width: 100%") }}
                 </div>
 

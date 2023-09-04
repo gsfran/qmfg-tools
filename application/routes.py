@@ -1,96 +1,118 @@
 import json
-from copy import deepcopy
 from datetime import datetime as dt
-from datetime import time
 from math import ceil
 
-from flask import (abort, flash, redirect, render_template, request,
-                   url_for)
+from flask import abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 from is_safe_url import is_safe_url
 from werkzeug import Response
 from werkzeug.urls import url_parse
 
 from application import app, db
-from application.forms import (ConfirmDeleteForm, EditDefaultsForm, EditExistingWeekForm,
+from application.forms import (ConfirmDeleteForm, EditWeekForm,
                                LoadWorkOrderForm, LoginForm, NewWorkOrderForm,
-                               ProductDetailsForm, RegistrationForm)
+                               ProductDetailsForm, RegistrationForm,
+                               ScheduleChangeForm)
 from application.machines import Machine
-from application.models import User, WorkOrder
+from application.models import User, WorkOrder, WorkWeek
 from application.products import Product
-from application.schedules import (CurrentSchedule, Schedule,
-                                   get_schedule_from_json,
-                                   write_schedule_to_json)
+from application.schedules import (_YEAR_WEEK_FORMAT, CurrentSchedule,
+                                   Schedule, get_workweek_from_db,
+                                   schedule_dict_to_json, update_db_workweek)
 
 
 @app.route('/')
 @app.route('/index')
 def index() -> Response:
-    return redirect(url_for('current_schedule', machine_family='itrak'))
+    return redirect(url_for('current_week', machine_family='itrak'))
 
 
 @app.route('/schedule/<string:machine_family>')
 @app.route('/schedule/<string:machine_family>/current')
-def current_schedule(machine_family: str) -> str:
+def current_week(machine_family: str) -> str:
     schedule = CurrentSchedule(machine_family=machine_family)
     schedule._refresh_work_orders()
 
     return render_template(
-        'schedule.html.jinja', title='Current Schedule',
+        'schedule-view.html.jinja', title='Current Schedule',
         schedule=schedule
     )
 
 
 @app.route('/schedule/<string:machine_family>/<string:year_week>')
-def view_schedule(machine_family: str, year_week: str) -> str | Response:
+def schedule_view(machine_family: str, year_week: str) -> str | Response:
 
-    if year_week == dt.strftime(dt.now(), '%G-%V'):
-        return redirect(url_for('current_schedule', machine_family='itrak'))
+    if year_week == dt.strftime(dt.now(), _YEAR_WEEK_FORMAT):
+        return redirect(url_for('current_week', machine_family='itrak'))
 
-    schedule = Schedule(year_week=year_week, machine_family=machine_family)
+    schedule = Schedule(year_week, machine_family)
     schedule._refresh_work_orders()
     return render_template(
-        'schedule.html.jinja', title='View Schedule',
+        'schedule-view.html.jinja', title='View Schedule',
         schedule=schedule
     )
 
 
-@app.route('/schedule/edit/<string:year_week>')
-def edit_existing_week() -> str | Response:
-
-    form: EditExistingWeekForm = EditExistingWeekForm()
-    pass
-
-
-@app.route('/schedule/edit/default', methods=['GET', 'POST'])
+@app.route('/settings/')  # temp, linking settings directly to this page
+@app.route('/schedule/change', methods=['GET', 'POST'])
 @login_required
-def edit_defaults() -> str | Response:
+def schedule_change() -> str | Response:
 
-    form: EditDefaultsForm = EditDefaultsForm()
+    form: ScheduleChangeForm = ScheduleChangeForm()
     if form.validate_on_submit():
-        current_defaults = get_schedule_from_json()
-        new_defaults = deepcopy(current_defaults)
+        new_schedule = form.to_dict()
 
-        for day_ in current_defaults:
-            scheduled = getattr(getattr(form, day_), 'data')
-            times = {
-                'start': time.strftime(
-                    getattr(getattr(form, f'{day_}_start'), 'data'), '%H:%M'
-                ),
-                'end': time.strftime(
-                    getattr(getattr(form, f'{day_}_end'), 'data'), '%H:%M'
-                )
-            }
+        effective_date_str = form.effective_date.data
+        if effective_date_str is None:
+            raise Exception('Error in effective_date field data.')
 
-            new_defaults.get(day_)['scheduled'] = scheduled  # type:ignore
-            new_defaults.get(day_)['times'] = times  # type:ignore
+        effective_date = dt.strptime(effective_date_str, '%Y-%m-%d').date()
 
-        write_schedule_to_json(new_defaults)
-        return redirect(url_for('index'))
+        #  MACHINE FAMILIES CHECKED HERE WHEN FEATURE IS IMPLEMENTED
+
+        schedule_dict_to_json(new_schedule)
+
+        weeks_to_update = WorkWeek.later_than(effective_date)
+        if weeks_to_update is not None:
+            for work_week in weeks_to_update:
+                if form.overwrite_custom.data or not work_week.customized:
+                    update_db_workweek(new_schedule, work_week)
+
+        return redirect(
+            url_for('current_week', machine_family='itrak')
+        )
 
     return render_template(
-        'edit-defaults.html.jinja', title='Edit Default Schedule',
+        'schedule-change.html.jinja', title='Schedule Change',
         form=form
+    )
+
+
+@app.route('/schedule/<string:machine_family>/<string:year_week>/edit/',
+           methods=['GET', 'POST'])
+@login_required
+def schedule_edit_week(machine_family: str, year_week: str) -> str | Response:
+
+    form: EditWeekForm = EditWeekForm(year_week)
+    schedule = Schedule(year_week, machine_family)
+    work_week = get_workweek_from_db(year_week)
+
+    if form.validate_on_submit():
+        new_schedule = form.to_dict()
+        update_db_workweek(new_schedule, work_week)
+        work_week.customized = True
+        db.session.commit()
+
+        flash(f'Saved edits to Week of {work_week.start_date}.', 'success')
+
+        return redirect(
+            url_for('schedule_view', year_week=year_week,
+                    machine_family='itrak')
+        )
+
+    return render_template(
+        'schedule-edit-week.html.jinja', title='Edit Week',
+        schedule=schedule, form=form
     )
 
 
@@ -176,7 +198,7 @@ def add_work_order() -> str | Response:
             return redirect(
                 url_for('edit_work_order', lot_number=lot_number)
             )
-        return redirect(url_for('current_schedule', machine_family='itrak'))
+        return redirect(url_for('current_week', machine_family='itrak'))
 
     return render_template(
         'add-work-order.html.jinja', title='Add Work Order',
@@ -212,7 +234,7 @@ def edit_work_order(lot_number: int) -> str | Response:
 
         db.session.commit()
 
-        return redirect(url_for('current_schedule', machine_family='itrak'))
+        return redirect(url_for('current_week', machine_family='itrak'))
 
     return render_template('edit-work-order.html.jinja', form=form)
 
@@ -236,7 +258,7 @@ def delete(lot_number: int) -> Response:
         f'{work_order.short_name} {work_order.lot_id} '
         f'(Lot {work_order.lot_number}) deleted.', 'danger'
     )
-    return redirect(url_for('current_schedule', machine_family='itrak'))
+    return redirect(url_for('current_week', machine_family='itrak'))
 
 
 @app.route('/load-work-order/<int:lot_number>', methods=['GET', 'POST'])
@@ -252,16 +274,22 @@ def load_work_order(lot_number: int) -> str | Response:
 
     product: Product = Product(work_order.product)
     machine_family = product.pouch_type
-    form = LoadWorkOrderForm(machine_family)
+    form: LoadWorkOrderForm = LoadWorkOrderForm(machine_family)
 
     if form.validate_on_submit():
+        date_ = form.start_date.data
+        time_ = form.start_time.data
+        if date_ is not None and time_ is not None:
+            start_dt = dt.combine(date_, time_)
+        else:
+            start_dt = None
         if form.machine.data:
             machine = Machine.new_(form.machine.data)
         else:
             raise Exception(f'No machine found: {form.machine.data}')
         mode = form.mode.data
         if mode:
-            machine.schedule_job(work_order, mode)
+            machine.schedule_job(work_order, mode, start_dt)
         else:
             raise Exception(f'No mode found: {form.mode.data}')
         flash(
@@ -270,7 +298,7 @@ def load_work_order(lot_number: int) -> str | Response:
             f'{machine.name}.',
             'info'
         )
-        return redirect(url_for('current_schedule', machine_family='itrak'))
+        return redirect(url_for('current_week', machine_family='itrak'))
 
     return render_template(
         'load-work-order.html.jinja', title='Load Work Order',
@@ -309,7 +337,7 @@ def unload_work_order(lot_number: int) -> Response:
         work_order.park()
         db.session.commit()
 
-    return redirect(url_for('current_schedule', machine_family='itrak'))
+    return redirect(url_for('current_week', machine_family='itrak'))
 
 
 @app.route('/machine/<string:machine>')
@@ -363,6 +391,7 @@ def login() -> str | Response:
 @login_required
 def logout() -> Response:
     logout_user()
+    flash('Signed out.', 'primary')
     return redirect(url_for('index'))
 
 

@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from copy import deepcopy
 from datetime import datetime as dt
-from datetime import timedelta
+from datetime import time, timedelta
 
 from flask_wtf import FlaskForm
 from wtforms import (BooleanField, IntegerField, PasswordField, RadioField,
@@ -16,7 +15,7 @@ from application.machines import machine_list
 from application.models import User
 from application.products import products
 from application.schedules import (_YEAR_WEEK_FORMAT, current_year_week,
-                                   get_schedule_from_json)
+                                   get_schedule_dict_from_db, schedule_json)
 
 
 class LoginForm(FlaskForm):
@@ -216,17 +215,11 @@ class LoadWorkOrderForm(FlaskForm):
     )
 
     start_date = DateField(
-        'Start Date', validators=[
-            DataRequired()
-        ],
-        default=dt.now().date()
+        'Start Date', default=dt.now().date()
     )
 
     start_time = TimeField(
-        'Start Time', validators=[
-            DataRequired()
-        ],
-        default=dt.now().time()
+        'Start Time', default=dt.now().time()
     )
 
     submit = SubmitField('Load to Poucher')
@@ -260,7 +253,7 @@ class ConfirmDeleteForm(FlaskForm):
             raise ValidationError("Type 'delete' in the field to confirm.")
 
 
-class EditDefaultsForm(FlaskForm):
+class EditWeekForm(FlaskForm):
 
     monday = BooleanField('Monday')
     monday_start = TimeField()
@@ -290,59 +283,121 @@ class EditDefaultsForm(FlaskForm):
     sunday_start = TimeField()
     sunday_end = TimeField()
 
-    mode_select = RadioField(
-        validators=[
+    submit = SubmitField('Save')
+
+    def __init__(self: EditWeekForm, year_week: str, *args, **kwargs) -> None:
+
+        self.year_week = year_week
+        super().__init__(*args, **kwargs)
+        
+        if not self.submit.data:
+            self._populate_current_schedule()
+
+    def _populate_current_schedule(self: EditWeekForm) -> None:
+        schedule_dict = self._get_current_schedule_dict()
+        for day_ in schedule_dict:
+            scheduled = schedule_dict[day_].get('scheduled')
+            times = schedule_dict[day_].get('times')
+
+            if type(scheduled) != bool or type(times) != dict:
+                raise Exception(
+                    'Type mismatch in schedule dict, check formatting.'
+                )
+
+            start_time = dt.strptime(times['start'], '%H:%M')
+            end_time = dt.strptime(times['end'], '%H:%M')
+
+            setattr(getattr(self, day_), 'data', scheduled)
+            setattr(getattr(self, f'{day_}_start'), 'data', start_time)
+            setattr(getattr(self, f'{day_}_end'), 'data', end_time)
+
+    def _get_current_schedule_dict(
+        self: EditWeekForm
+    ) -> dict[str, dict[str, bool | dict[str, str]]]:
+        schedule_dict = get_schedule_dict_from_db(self.year_week)
+        return schedule_dict
+
+    def to_dict(
+        self: EditWeekForm
+    ) -> dict[str, dict[str, bool | dict[str, str]]]:
+        new_schedule = schedule_json()
+
+        for day_, dict_ in new_schedule.items():
+            new_times = dict_['times']
+            if type(dict_['scheduled']) != bool or type(new_times) != dict:
+                raise Exception(
+                    'Type mismatch in schedule json, check formatting.')
+
+            scheduled = getattr(getattr(self, day_), 'data')
+            new_times['start'] = time.strftime(
+                getattr(getattr(self, f'{day_}_start'), 'data'), '%H:%M'
+            )
+            new_times['end'] = time.strftime(
+                getattr(getattr(self, f'{day_}_end'), 'data'), '%H:%M'
+            )
+
+            dict_['scheduled'] = scheduled
+            dict_['times'] = new_times
+
+        return new_schedule
+
+
+class ConfirmScheduleChangeForm(FlaskForm):
+
+    submit = SubmitField('Save Schedule')
+
+
+class ScheduleChangeForm(EditWeekForm):
+
+    effective_date = RadioField(
+        'Effective date:', validators=[
             DataRequired()
         ]
     )
+    overwrite_custom = BooleanField(
+        'Overwrite custom weeks'
+    )
 
-    submit = SubmitField('Save')
+    def __init__(self: ScheduleChangeForm, *args, **kwargs) -> None:
 
-    def __init__(self: EditDefaultsForm, *args, **kwargs) -> None:
+        super().__init__(year_week='', *args, **kwargs)
 
-        super().__init__(*args, **kwargs)
+        self._populate_effective_date_choices()
 
-        if not self.submit.data:
-            self._populate_defaults()
-            self._populate_mode_select()
+    def _get_current_schedule_dict(
+        self: ScheduleChangeForm
+    ) -> dict[str, dict[str, bool | dict[str, str]]]:
+        return schedule_json()
 
-    def _populate_defaults(self: EditDefaultsForm) -> None:
-        current_defaults = get_schedule_from_json()
-        for day_ in current_defaults:
-
-            scheduled = current_defaults[day_].get('scheduled')
-            times = current_defaults[day_].get('times')
-            if type(scheduled) != bool or type(times) != dict:
-                raise Exception(
-                    'Type mismatch in schedule json, check formatting.'
-                )
-
-            start_time_str = dt.strptime(times['start'], '%H:%M')
-            end_time_str = dt.strptime(times['end'], '%H:%M')
-
-            setattr(getattr(self, day_), 'data', scheduled)
-            setattr(getattr(self, f'{day_}_start'), 'data', start_time_str)
-            setattr(getattr(self, f'{day_}_end'), 'data', end_time_str)
-
-    def _populate_mode_select(self: EditDefaultsForm) -> None:
-        current_week_start_date = dt.strptime(
+    def _populate_effective_date_choices(self: ScheduleChangeForm) -> None:
+        week0_start_date = dt.strptime(
             f'{current_year_week()}-Mon', f'{_YEAR_WEEK_FORMAT}-%a'
         ).date()
-        next_week_start_date = (dt.strptime(
+        week1_start_date = (dt.strptime(
             f'{current_year_week()}-Mon', f'{_YEAR_WEEK_FORMAT}-%a'
-        ) + timedelta(days=7)).date()
+        ) + timedelta(weeks=1)).date()
+        week2_start_date = (dt.strptime(
+            f'{current_year_week()}-Mon', f'{_YEAR_WEEK_FORMAT}-%a'
+        ) + timedelta(weeks=2)).date()
+        week3_start_date = (dt.strptime(
+            f'{current_year_week()}-Mon', f'{_YEAR_WEEK_FORMAT}-%a'
+        ) + timedelta(weeks=3)).date()
 
-        self.mode_select.choices = [
+        self.effective_date.choices = [
             (
-                'start_this_week',
-                f'Effective this week ({current_week_start_date})'
+                f'{week0_start_date}',
+                f'{week0_start_date} (this week)'
             ),
             (
-                'start_next_week',
-                f'Effective next week ({next_week_start_date})'
+                f'{week1_start_date}',
+                f'{week1_start_date} (next week)'
+            ),
+            (
+                f'{week2_start_date}',
+                f'{week2_start_date} (2 weeks out)'
+            ),
+            (
+                f'{week3_start_date}',
+                f'{week3_start_date} (3 weeks out)'
             )
         ]
-
-
-class EditExistingWeekForm(FlaskForm):
-    ...

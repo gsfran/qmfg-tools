@@ -14,22 +14,22 @@
                     {{ form.machine(class="form-control form-control-md") }}
                 </div>
 
-                <div>
-                    <!-- MODE FIELD -->
-                    <div class="form-group">
-                        {{ form.mode(class="form-control form-control-sm", style="border: none; list-style: none;") }}
-                        <div class="col", style="text-align: right; margin-bottom: 100px;">
-                            <p>
-                                {{ form.start_date }}  {{ form.start_time }}
-                            </p>
-                        </div>
+                <!-- MODE FIELD -->
+                <div class="form-group">
+                    {{ form.mode(class="form-control form-control-sm", style="border: none; list-style: none;") }}
+                    <div class="col", style="text-align: right; margin-bottom: 100px;">
+                        <p>
+                            {{ form.start_date }}  {{ form.start_time }}
+                        </p>
                     </div>
+                </div>
 
                 <!-- SUBMIT BUTTON -->
                 <div class="form-group border-bottom pb-3">
                     {{ form.submit(class="btn btn-outline-info", style="width: 100%")}}
                 </div>
-                
+
+                <!-- CANCEL BUTTON -->
                 <div>
                     <a href="{{ url_for('index') }}"
                             class="btn btn-outline-secondary" style="width: 100%">Cancel</a>

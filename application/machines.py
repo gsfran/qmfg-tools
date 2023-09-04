@@ -71,7 +71,10 @@ class Machine:
             WorkOrder.priority
         )).scalars().all()
 
-    def schedule_job(self: Machine, work_order: WorkOrder, mode: str) -> None:
+    def schedule_job(
+        self: Machine, work_order: WorkOrder,
+        mode: str, start_dt: dt | None
+    ) -> None:
         MODE_MAP = {
             'replace': self._job_replace,
             'insert': self._job_insert,
@@ -87,14 +90,14 @@ class Machine:
 
         work_order.load_dt = dt.now()
         work_order.machine = self.short_name
-        MODE_MAP[mode](work_order, jobs)
+        MODE_MAP[mode](work_order, jobs, start_dt)
 
     def _job_replace(
-        self: Machine, work_order: WorkOrder, jobs: list[WorkOrder]
+        self: Machine, work_order: WorkOrder,
+        jobs: list[WorkOrder], start_dt: dt
     ) -> None:
         if jobs:
-            jobs[0].park()
-            jobs.pop(0)
+            jobs.pop(0).park()
 
         jobs.insert(0, work_order)
         work_order.priority = 0
@@ -107,7 +110,8 @@ class Machine:
         db.session.commit()
 
     def _job_insert(
-        self: Machine, work_order: WorkOrder, jobs: list[WorkOrder]
+        self: Machine, work_order: WorkOrder,
+        jobs: list[WorkOrder], start_dt: dt
     ) -> None:
 
         jobs.insert(1, work_order)
@@ -125,7 +129,8 @@ class Machine:
         db.session.commit()
 
     def _job_append(
-        self: Machine, work_order: WorkOrder, jobs: list[WorkOrder]
+        self: Machine, work_order: WorkOrder,
+        jobs: list[WorkOrder], start_dt: dt
     ) -> None:
         jobs.append(work_order)
         work_order.priority = jobs.index(work_order)
@@ -140,9 +145,11 @@ class Machine:
         db.session.commit()
 
     def _job_custom(
-        self: Machine, work_order: WorkOrder, jobs: list[WorkOrder]
+        self: Machine, work_order: WorkOrder,
+        jobs: list[WorkOrder], start_dt: dt
     ) -> None:
-        ...
+        for job in jobs:
+            ...
 
     def __repr__(self: Machine) -> str:
         ...
