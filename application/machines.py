@@ -73,7 +73,8 @@ class Machine:
 
     def schedule_job(
         self: Machine, work_order: WorkOrder,
-        mode: str, start_dt: dt | None
+        mode: str, start_dt: dt | None, 
+        priority: int = -1
     ) -> None:
         MODE_MAP = {
             'replace': self._job_replace,
@@ -94,7 +95,7 @@ class Machine:
 
     def _job_replace(
         self: Machine, work_order: WorkOrder,
-        jobs: list[WorkOrder], start_dt: dt
+        jobs: list[WorkOrder], start_dt: dt | None
     ) -> None:
         if jobs:
             jobs.pop(0).park()
@@ -111,7 +112,7 @@ class Machine:
 
     def _job_insert(
         self: Machine, work_order: WorkOrder,
-        jobs: list[WorkOrder], start_dt: dt
+        jobs: list[WorkOrder], start_dt: dt | None
     ) -> None:
 
         jobs.insert(1, work_order)
@@ -130,7 +131,7 @@ class Machine:
 
     def _job_append(
         self: Machine, work_order: WorkOrder,
-        jobs: list[WorkOrder], start_dt: dt
+        jobs: list[WorkOrder], start_dt: dt | None
     ) -> None:
         jobs.append(work_order)
         work_order.priority = jobs.index(work_order)

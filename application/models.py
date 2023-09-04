@@ -124,7 +124,6 @@ class WorkWeek(db.Model):
     sun_end_time = db.Column(db.Time, default=None)
 
     # iTrak Lines
-    itrak_5 = db.Column(db.Boolean, default=False)
     itrak_6 = db.Column(db.Boolean, default=False)
     itrak_7 = db.Column(db.Boolean, default=False)
     itrak_8 = db.Column(db.Boolean, default=False)
