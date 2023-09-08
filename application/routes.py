@@ -9,10 +9,10 @@ from werkzeug import Response
 from werkzeug.urls import url_parse
 
 from application import app, db
-from application.forms import (ConfirmDeleteForm, EditWeekForm,
+from application.forms import (ConfirmDeleteForm, ParkWorkOrderForm, WeekConfigForm,
                                LoadWorkOrderForm, LoginForm, NewWorkOrderForm,
                                ProductDetailsForm, RegistrationForm,
-                               ScheduleChangeForm)
+                               ScheduleConfigForm)
 from application.machines import Machine
 from application.models import User, WorkOrder, WorkWeek
 from application.products import Product
@@ -27,8 +27,8 @@ def index() -> Response:
     return redirect(url_for('current_week', machine_family='itrak'))
 
 
-@app.route('/schedule/<string:machine_family>')
-@app.route('/schedule/<string:machine_family>/current')
+@app.route('/week/<string:machine_family>/current')
+@app.route('/week/<string:machine_family>')
 def current_week(machine_family: str) -> str:
     schedule = CurrentSchedule(machine_family=machine_family)
     schedule._refresh_work_orders()
@@ -39,8 +39,8 @@ def current_week(machine_family: str) -> str:
     )
 
 
-@app.route('/schedule/<string:machine_family>/<string:year_week>')
-def schedule_view(machine_family: str, year_week: str) -> str | Response:
+@app.route('/week/<string:machine_family>/<string:year_week>')
+def week_view(machine_family: str, year_week: str) -> str | Response:
 
     if year_week == dt.strftime(dt.now(), _YEAR_WEEK_FORMAT):
         return redirect(url_for('current_week', machine_family='itrak'))
@@ -54,11 +54,11 @@ def schedule_view(machine_family: str, year_week: str) -> str | Response:
 
 
 @app.route('/settings/')  # temp, linking settings directly to this page
-@app.route('/schedule/change', methods=['GET', 'POST'])
+@app.route('/schedule-change', methods=['GET', 'POST'])
 @login_required
-def schedule_change() -> str | Response:
+def schedule_config() -> str | Response:
 
-    form: ScheduleChangeForm = ScheduleChangeForm()
+    form: ScheduleConfigForm = ScheduleConfigForm()
     if form.validate_on_submit():
         new_schedule = form.to_dict()
 
@@ -88,12 +88,12 @@ def schedule_change() -> str | Response:
     )
 
 
-@app.route('/schedule/<string:machine_family>/<string:year_week>/edit/',
+@app.route('/week/<string:machine_family>/<string:year_week>/edit/',
            methods=['GET', 'POST'])
 @login_required
-def schedule_edit_week(machine_family: str, year_week: str) -> str | Response:
+def week_config(machine_family: str, year_week: str) -> str | Response:
 
-    form: EditWeekForm = EditWeekForm(year_week)
+    form: WeekConfigForm = WeekConfigForm(year_week)
     schedule = Schedule(year_week, machine_family)
     work_week = get_workweek_from_db(year_week)
 
@@ -116,7 +116,7 @@ def schedule_edit_week(machine_family: str, year_week: str) -> str | Response:
     )
 
 
-@app.route('/view-all-work-orders')
+@app.route('/wo/all')
 def view_all_work_orders() -> str:
     work_orders = db.session.execute(
         db.select(WorkOrder).order_by(
@@ -129,10 +129,9 @@ def view_all_work_orders() -> str:
     )
 
 
-@app.route('/view-work-order/<int:lot_number>', methods=['GET', 'POST'])
+@app.route('/wo/view/<int:lot_number>', methods=['GET', 'POST'])
 def view_work_order(lot_number: int) -> str | Response:
 
-    form = ConfirmDeleteForm()
     work_order = db.session.execute(
         db.select(
             WorkOrder
@@ -145,16 +144,13 @@ def view_work_order(lot_number: int) -> str | Response:
         flash(f'Work Order #{lot_number} Not Found', 'warning')
         return redirect(url_for('index'))
 
-    if form.validate_on_submit():
-        return redirect(url_for('delete', lot_number=lot_number))
-
     return render_template(
         'view-work-order.html.jinja', title='Work Order Details',
-        form=form, work_order=work_order
+        work_order=work_order
     )
 
 
-@app.route('/add-work-order', methods=['GET', 'POST'])
+@app.route('/wo/add', methods=['GET', 'POST'])
 @login_required
 def add_work_order() -> str | Response:
 
@@ -206,7 +202,7 @@ def add_work_order() -> str | Response:
     )
 
 
-@app.route('/edit-work-order/<int:lot_number>', methods=['GET', 'POST'])
+@app.route('/wo/edit/<int:lot_number>', methods=['GET', 'POST'])
 @login_required
 def edit_work_order(lot_number: int) -> str | Response:
     work_order = db.session.execute(
@@ -239,29 +235,50 @@ def edit_work_order(lot_number: int) -> str | Response:
     return render_template('edit-work-order.html.jinja', form=form)
 
 
-@app.route('/delete/<int:lot_number>')
+@app.route('/wo/park/<int:lot_number>', methods=['GET', 'POST'])
 @login_required
-def delete(lot_number: int) -> Response:
+def park_work_order(lot_number: int) -> str | Response:
+
+    form = ParkWorkOrderForm()
+
     work_order = db.session.execute(
         db.select(WorkOrder).where(
             WorkOrder.lot_number == lot_number
         )
     ).scalar_one_or_none()
 
-    if work_order is None:
-        flash(f'Work Order #{lot_number} Not Found', 'warning')
-        return redirect(url_for('index'))
+    if work_order.machine:
+        machine = Machine.new_(short_name=work_order.machine)
+    else:
+        raise Exception(f'No machine found: {work_order.machine}')
 
-    db.session.delete(work_order)
-    db.session.commit()
-    flash(
-        f'{work_order.short_name} {work_order.lot_id} '
-        f'(Lot {work_order.lot_number}) deleted.', 'danger'
+    if form.validate_on_submit():
+        if work_order is None:
+            flash(f'Work Order #{lot_number} Not Found', 'warning')
+            return redirect(url_for('index'))
+
+        if work_order.machine is None:
+            flash(f'Work Order #{lot_number} Not Scheduled', 'warning')
+            return redirect(url_for('index'))
+        else:
+            flash(
+                f'{work_order.short_name} {work_order.lot_id} '
+                f'/ Lot {work_order.lot_number} unloaded from '
+                f'{machine.name}.',
+                'warning'
+            )
+            work_order.park()
+            db.session.commit()
+
+        return redirect(url_for('current_week', machine_family='itrak'))
+
+    return render_template(
+        'park-work-order.html.jinja', title='Park Work Order',
+        work_order=work_order
     )
-    return redirect(url_for('current_week', machine_family='itrak'))
 
 
-@app.route('/load-work-order/<int:lot_number>', methods=['GET', 'POST'])
+@app.route('/wo/load/<int:lot_number>', methods=['GET', 'POST'])
 @login_required
 def load_work_order(lot_number: int) -> str | Response:
     work_order = db.session.execute(
@@ -306,41 +323,37 @@ def load_work_order(lot_number: int) -> str | Response:
     )
 
 
-@app.route('/unload-work-order/<int:lot_number>')
+@app.route('/wo/delete/<int:lot_number>', methods=['GET', 'POST'])
 @login_required
-def unload_work_order(lot_number: int) -> Response:
+def delete_work_order(lot_number: int) -> str | Response:
+
+    form = ConfirmDeleteForm()
     work_order = db.session.execute(
         db.select(WorkOrder).where(
             WorkOrder.lot_number == lot_number
         )
     ).scalar_one_or_none()
 
-    if work_order.machine:
-        machine = Machine.new_(short_name=work_order.machine)
-    else:
-        raise Exception(f'No machine found: {work_order.machine}')
-
     if work_order is None:
         flash(f'Work Order #{lot_number} Not Found', 'warning')
         return redirect(url_for('index'))
 
-    if work_order.machine is None:
-        flash(f'Work Order #{lot_number} Not Scheduled', 'warning')
-        return redirect(url_for('index'))
-    else:
+    if form.validate_on_submit():
+        db.session.delete(work_order)
+        db.session.commit()
         flash(
             f'{work_order.short_name} {work_order.lot_id} '
-            f'(Lot {work_order.lot_number}) unloaded from '
-            f'{machine.name}.',
-            'warning'
+            f'(Lot {work_order.lot_number}) deleted.', 'danger'
         )
-        work_order.park()
-        db.session.commit()
+        return redirect(url_for('current_week', machine_family='itrak'))
 
-    return redirect(url_for('current_week', machine_family='itrak'))
+    return render_template(
+        'delete-work-order.html.jinja', title='Delete Work Order',
+        form=form, work_order=work_order
+    )
 
 
-@app.route('/machine/<string:machine>')
+@app.route('/machine/view/<string:machine>')
 def view_machine(machine: str) -> str:
     # pouching = WorkOrders.on_machine(machine=machine)
     # scheduled = WorkOrders.scheduled_jobs
@@ -348,7 +361,7 @@ def view_machine(machine: str) -> str:
                            machine=machine)
 
 
-@app.route('/user-login', methods=['GET', 'POST'])
+@app.route('/user/login', methods=['GET', 'POST'])
 def login() -> str | Response:
 
     if current_user.is_authenticated:  # type: ignore[call-arg]
@@ -387,7 +400,7 @@ def login() -> str | Response:
     )
 
 
-@app.route('/logout')
+@app.route('/user/logout')
 @login_required
 def logout() -> Response:
     logout_user()
@@ -395,7 +408,7 @@ def logout() -> Response:
     return redirect(url_for('index'))
 
 
-@app.route('/register-user', methods=['GET', 'POST'])
+@app.route('/user/register', methods=['GET', 'POST'])
 def register() -> str | Response:
 
     if current_user.is_authenticated:  # type: ignore[call-arg]

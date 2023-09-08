@@ -68,7 +68,8 @@ h3.sub {
 .h3-sub-right.edit_icon {
     transition: all 200ms;
     margin-inline: 15px;
-    height: 0.9em;
+    height: 1em;
+    width: 1em;
     margin-bottom: 0px;
     margin-top: auto;
 }
@@ -79,7 +80,7 @@ h3.sub {
 
 .h3-sub-right.arrows {
     font-size: 100%;
-    margin-inline: 25px;
+    margin-inline: 20px;
     transition: all 200ms;
     float: right;
 }

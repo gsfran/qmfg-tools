@@ -3,46 +3,9 @@
 <div class="card card-style mb-2 col-md-12 col-lg-10 col-xl-8" style="max-width: 720px;">
     <h2 class="card-title">{{ work_order.short_name }} {{ work_order.lot_id }}</h2>
     <div class="main-block card-body" style="display: inline-flex;">
-    <form action="" method="POST" style="width: 100%;" novalidate>
-            {{ form.hidden_tag() }}
+    <form action="" style="width: 100%;" novalidate>
             <fieldset class="form-group">
                 <table class="table">
-                    <!-- CONFIRM DELETE MODAL -->
-                    <div id="confirm-delete" class="confirm-modal window">
-                    <div id="confirm-delete" class="modal-bg">
-                        <div style="margin-bottom: 60px;">
-                            <h2>Delete Work Order</h2>
-                        </div>
-                        <div>
-                            <div class="form-group">
-                            {{ form.delete.label(class="form-control-label") }}
-                            {% if form.delete.errors %}
-                                {{ form.delete(class="form-control form-control-sm is-invalid", autocomplete="off") }}
-                                {% for error in form.delete.errors %}
-                                    <div class="invalid-feedback">
-                                        <span>{{ error }}</span>
-                                    </div>
-                                {% endfor %}
-                            {% else %}
-                                {{ form.delete(class="form-control form-control-sm") }}
-                            {% endif %}
-                            <h6 style="margin-top: 45px;">This cannot be undone.</h6>
-                            </div>
-
-                            <!-- SUBMIT -->
-                            <div class="form-group border-bottom pb-3" style="margin-top: 50px;">
-                                {{ form.submit(class="btn btn-danger btn-lg", style="width: 100%") }}
-                            </div>
-                            <!-- CANCEL -->
-                            <a href="#">
-                                <div class="btn btn-outline-dark btn-lg">
-                                    Cancel
-                                </div>
-                            </a>
-                        </div>
-                    </div>
-                    </div>
-                    <!-- END MODAL -->
                     <style>
                         .left_col {
                             width: 40%;
@@ -72,11 +35,6 @@
                             <td class="right_col">{{ work_order.machine }}</td>
                         </tr>
                         <tr>
-                            <tr>
-                                <td class="left_col">Qty. Remaining</td>
-                                <td class="right_col">{{ '{:,}'.format(work_order.remaining_qty) }} ({{ work_order.remaining_time }} hr)</td>
-                            </tr>
-                        <tr>
                             <td class="left_col">Job Started</td>
                             <td class="right_col">{{ work_order.pouching_start_dt.strftime('%I:%M%p %a, %b %d %Y') }}</td>
                         </tr>
@@ -86,8 +44,12 @@
                         </tr>
                         {% endif %}
                         <tr>
-                            <td class="left_col">Qty. Strips Yielded</td>
+                            <td class="left_col">Strips Yielded</td>
                             <td class="right_col">{{ '{:,}'.format(work_order.strip_qty) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="left_col">Qty. Remaining</td>
+                            <td class="right_col">{{ '{:,}'.format(work_order.remaining_qty) }}</td>
                         </tr>
                         <tr>
                             <td class="left_col">Pouch Item Number</td>
@@ -119,13 +81,13 @@
                         {% elif work_order.status == 'Pouching' or work_order.status == 'Queued' %}
                             <tr>
                                 <td colspan="2">
-                                <a href="{{ url_for('unload_work_order', lot_number = work_order.lot_number) }}"
+                                <a href="{{ url_for('park_work_order', lot_number = work_order.lot_number) }}"
                                     class="btn btn-outline-warning" style="width: 100%">Unload Work Order</a></td>
                             </tr>
                         {% endif %}
                         <tr>
                             <td colspan="2">
-                            <a href="#confirm-delete"
+                            <a href="{{ url_for('delete_work_order', lot_number=work_order.lot_number)}}"
                                 class="btn btn-outline-danger" style="width: 100%">Delete Work Order</a></td>
                         </tr>
                         <tr>

@@ -253,7 +253,7 @@ class ConfirmDeleteForm(FlaskForm):
             raise ValidationError("Type 'delete' in the field to confirm.")
 
 
-class EditWeekForm(FlaskForm):
+class WeekConfigForm(FlaskForm):
 
     monday = BooleanField('Monday')
     monday_start = TimeField()
@@ -285,7 +285,7 @@ class EditWeekForm(FlaskForm):
 
     submit = SubmitField('Save')
 
-    def __init__(self: EditWeekForm, year_week: str, *args, **kwargs) -> None:
+    def __init__(self: WeekConfigForm, year_week: str, *args, **kwargs) -> None:
 
         self.year_week = year_week
         super().__init__(*args, **kwargs)
@@ -293,7 +293,7 @@ class EditWeekForm(FlaskForm):
         if not self.submit.data:
             self._populate_current_schedule()
 
-    def _populate_current_schedule(self: EditWeekForm) -> None:
+    def _populate_current_schedule(self: WeekConfigForm) -> None:
         schedule_dict = self._get_current_schedule_dict()
         for day_ in schedule_dict:
             scheduled = schedule_dict[day_].get('scheduled')
@@ -312,13 +312,13 @@ class EditWeekForm(FlaskForm):
             setattr(getattr(self, f'{day_}_end'), 'data', end_time)
 
     def _get_current_schedule_dict(
-        self: EditWeekForm
+        self: WeekConfigForm
     ) -> dict[str, dict[str, bool | dict[str, str]]]:
         schedule_dict = get_schedule_dict_from_db(self.year_week)
         return schedule_dict
 
     def to_dict(
-        self: EditWeekForm
+        self: WeekConfigForm
     ) -> dict[str, dict[str, bool | dict[str, str]]]:
         new_schedule = schedule_json()
 
@@ -342,12 +342,12 @@ class EditWeekForm(FlaskForm):
         return new_schedule
 
 
-class ConfirmScheduleChangeForm(FlaskForm):
+class ParkWorkOrderForm(FlaskForm):
 
-    submit = SubmitField('Save Schedule')
+    submit = SubmitField('Park Work Order')
 
 
-class ScheduleChangeForm(EditWeekForm):
+class ScheduleConfigForm(WeekConfigForm):
 
     effective_date = RadioField(
         'Effective date:', validators=[
@@ -355,21 +355,21 @@ class ScheduleChangeForm(EditWeekForm):
         ]
     )
     overwrite_custom = BooleanField(
-        'Overwrite custom weeks'
+        'Overwrite weeks with customized schedule'
     )
 
-    def __init__(self: ScheduleChangeForm, *args, **kwargs) -> None:
+    def __init__(self: ScheduleConfigForm, *args, **kwargs) -> None:
 
         super().__init__(year_week='', *args, **kwargs)
 
         self._populate_effective_date_choices()
 
     def _get_current_schedule_dict(
-        self: ScheduleChangeForm
+        self: ScheduleConfigForm
     ) -> dict[str, dict[str, bool | dict[str, str]]]:
         return schedule_json()
 
-    def _populate_effective_date_choices(self: ScheduleChangeForm) -> None:
+    def _populate_effective_date_choices(self: ScheduleConfigForm) -> None:
         week0_start_date = dt.strptime(
             f'{current_year_week()}-Mon', f'{_YEAR_WEEK_FORMAT}-%a'
         ).date()

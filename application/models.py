@@ -33,7 +33,7 @@ class User(db.Model, UserMixin):
 
 
 class WorkOrder(db.Model):
-    
+
     id = db.Column(db.Integer, primary_key=True)
     product = db.Column(db.String(30), nullable=False)
     product_name = db.Column(db.String(30), nullable=False)

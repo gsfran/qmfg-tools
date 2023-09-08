@@ -50,7 +50,7 @@
         <div class="h3-sub-right" style="width: 50%;  min-width: fit-content; margin-top: 25px; text-align: right;">
             
             <!-- LEFT UPPER ARROW -->
-            <a href="/schedule/{{ schedule.machine_family }}/{{ schedule.prior_week }}">
+            <a href="{{ url_for('week_view', machine_family=schedule.machine_family, year_week=schedule.prior_week) }}">
                 <div class="h3-sub-right arrows"> < </div>
             </a>
 
@@ -58,14 +58,14 @@
             <div class="h3-sub-right week_readout">{{ schedule }}</div>
 
             <!-- EDIT ICON -->
-            <a href="/schedule/{{ schedule.machine_family }}/{{ schedule.year_week }}/edit">
+            <a href="{{ url_for('week_config', machine_family=schedule.machine_family, year_week=schedule.year_week) }}">
                 <div class="h3-sub-right edit_icon">
                     <img src="/static/edit-icon.png" alt="Edit">
                 </div>
             </a>
             
             <!-- RIGHT UPPER ARROW -->
-            <a href="/schedule/{{ schedule.machine_family }}/{{ schedule.next_week }}">
+            <a href="{{ url_for('week_view', machine_family=schedule.machine_family, year_week=schedule.next_week) }}">
                 <div class="h3-sub-right arrows"> > </div>
             </a>
         </div>
@@ -77,7 +77,7 @@
 
 
             <!--  PREVIOUS WEEK ARROWS  -->
-            <a href="/schedule/{{ schedule.machine_family }}/{{ schedule.prior_week }}">
+            <a href="{{ url_for('week_view', machine_family=schedule.machine_family, year_week=schedule.prior_week) }}">
                 <div class="corner">
                     << </div>
             </a>
@@ -91,7 +91,7 @@
             {% endfor %}
 
             <!-- FOLLOWING WEEK ARROWS -->
-            <a href="/schedule/{{ schedule.machine_family }}/{{ schedule.next_week }}">
+            <a href="{{ url_for('week_view', machine_family=schedule.machine_family, year_week=schedule.next_week) }}">
                 <div class="corner">
                     >> </div>
             </a>
@@ -145,7 +145,7 @@
                 {% set end_col = schedule_offset + schedule.COLS_PER_WEEK - 1 %}
                 <div id="sched_{{ work_order.lot_number }}" style="grid-column-start: {{ start_col }};
                             grid-column-end: {{ end_col }}; grid-row: {{ work_order.machine }};">
-                    <a href="/view-work-order/{{ work_order.lot_number }}">
+                    <a href="{{ url_for('view_work_order', lot_number=work_order.lot_number) }}">
                         <li class="work_order {{ work_order.product }} week_span" style="grid-column-start: {{ start_col }}; grid-column-end: {{ end_col }};
                                     grid-row: {{ work_order.machine }};">
                             {{ work_order.short_name }} {{ work_order.lot_id }}
@@ -159,7 +159,7 @@
                      + (work_order.pouching_end_dt.hour * schedule.COLS_PER_HOUR) + 1 %}
                     <div id="sched_{{ work_order.lot_number }}" style="grid-column-start: {{ start_col }};
                             grid-column-end: {{ end_col }}; grid-row: {{ work_order.machine }};">
-                        <a href="/view-work-order/{{ work_order.lot_number }}">
+                        <a href="{{ url_for('view_work_order', lot_number=work_order.lot_number) }}">
                             <li class="work_order {{ work_order.product }} week_start" style="grid-column-start: {{ start_col }}; grid-column-end: {{ end_col }};
                                     grid-row: {{ work_order.machine }};">
                                 {{ work_order.short_name }} {{ work_order.lot_id }}
@@ -173,7 +173,7 @@
                     {% set end_col = (schedule_offset + schedule.COLS_PER_WEEK) %}
                     <div id="sched_{{ work_order.lot_number }}" style="grid-column-start: {{ start_col }};
                             grid-column-end: {{ end_col }}; grid-row: {{ work_order.machine }};">
-                        <a href="/view-work-order/{{ work_order.lot_number }}">
+                        <a href="{{ url_for('view_work_order', lot_number=work_order.lot_number) }}">
                             <li class="work_order {{ work_order.product }} week_end" style="grid-column-start: {{ start_col }}; grid-column-end: {{ end_col }};
                                     grid-row: {{ work_order.machine }};">
                                 {{ work_order.short_name }} {{ work_order.lot_id }}
@@ -188,7 +188,7 @@
                      + (work_order.pouching_end_dt.hour * schedule.COLS_PER_HOUR) + schedule.COLS_PER_HOUR + 1 %}
                     <div id="sched_{{ work_order.lot_number }}" style="grid-column-start: {{ start_col }};
                             grid-column-end: {{ end_col }}; grid-row: {{ work_order.machine }};">
-                        <a href="/view-work-order/{{ work_order.lot_number }}">
+                        <a href="{{ url_for('view_work_order', lot_number=work_order.lot_number) }}">
                             <li class="work_order {{ work_order.product }}" style="grid-column-start: {{ start_col }}; grid-column-end: {{ end_col }};
                                     grid-row: {{ work_order.machine }};">
                                 {{ work_order.short_name }} {{ work_order.lot_id }}
@@ -204,13 +204,13 @@
             <div class="parking_lot_header">Parking Lot</div>
 
             <div class="parking_lot">
-                <a href="/add-work-order">
+                <a href="{{ url_for('add_work_order') }}">
                     <div class="add" id="add_work_order">
                         +
                     </div>
                 </a>
                 {% for work_order in schedule.parking_lot() %}
-                <a href="/view-work-order/{{ work_order.lot_number }}">
+                <a href="{{ url_for('view_work_order', lot_number=work_order.lot_number) }}">
                     <div class="work_order {{ work_order.product }}" id="{{ work_order.lot_number }}" draggable="true">
                         {{ work_order.short_name }} {{ work_order.lot_id }}
                     </div>

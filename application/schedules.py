@@ -22,7 +22,7 @@ def current_year_week() -> str:
     """Returns the year_week string for the current week.
 
     Returns:
-        str: RegEx-like expression encoding year and week.
+        str: RegEx-like expression encoding a year and week.
     """
     return dt.strftime(dt.now(), _YEAR_WEEK_FORMAT)
 

@@ -73,7 +73,7 @@ class Machine:
 
     def schedule_job(
         self: Machine, work_order: WorkOrder,
-        mode: str, start_dt: dt | None, 
+        mode: str, start_dt: dt | None,
         priority: int = -1
     ) -> None:
         MODE_MAP = {

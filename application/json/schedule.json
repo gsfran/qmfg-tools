@@ -3,49 +3,49 @@
         "scheduled": true,
         "times": {
             "start": "06:30",
-            "end": "23:30"
+            "end": "23:00"
         }
     },
     "tuesday": {
         "scheduled": true,
         "times": {
             "start": "06:30",
-            "end": "23:30"
+            "end": "23:00"
         }
     },
     "wednesday": {
         "scheduled": true,
         "times": {
             "start": "06:30",
-            "end": "23:30"
+            "end": "23:00"
         }
     },
     "thursday": {
         "scheduled": true,
         "times": {
             "start": "06:30",
-            "end": "23:30"
+            "end": "23:00"
         }
     },
     "friday": {
         "scheduled": true,
         "times": {
             "start": "06:30",
-            "end": "23:30"
+            "end": "23:00"
         }
     },
     "saturday": {
-        "scheduled": false,
+        "scheduled": true,
         "times": {
             "start": "06:30",
-            "end": "23:30"
+            "end": "23:00"
         }
     },
     "sunday": {
         "scheduled": false,
         "times": {
             "start": "06:30",
-            "end": "23:30"
+            "end": "23:00"
         }
     }
 }

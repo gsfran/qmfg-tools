@@ -17,9 +17,9 @@
         <table class="table table-striped" style="text-align: center;">
             <thead style="background-color: #333; color: #ffffff;">
                 <tr>
-                    <th scope="col">Pouch Lot #</th>
-                    <th scope="col">Product</th>
+                    <th scope="col" style="text-align: left;">Product</th>
                     <th scope="col">Lot ID</th>
+                    <th scope="col">Pouch Lot #</th>
                     <th scope="col">Status</th>
                     <th scope="col"></th>
                 </tr>
@@ -28,9 +28,9 @@
                 {% if work_orders is defined %}
                     {% for work_order in work_orders %}
                     <tr>
-                        <th scope="row">{{ work_order.lot_number }}</th>
-                        <td>{{ work_order.short_name }}</td>
+                        <td style="text-align: left; padding-left: 20px;">{{ work_order.short_name }}</td>
                         <td>{{ work_order.lot_id }}</td>
+                        <th scope="row">{{ work_order.lot_number }}</th>
                         <td>
                             {{ work_order.status }}{% if work_order.machine %}:
                             {{ work_order.machine }}
@@ -39,10 +39,13 @@
                         <td style="text-align: right;">
                             {% if work_order.status == 'Parking Lot' %}
                             <a href="{{ url_for('load_work_order', lot_number = work_order.lot_number) }}"
-                                class="btn btn-outline-info btn-sm">Load to Poucher</a>
+                                class="btn btn-outline-info btn-sm">Send to Poucher</a>
+                            {% elif work_order.status == 'Pouching' %}
+                            <a href="{{ url_for('park_work_order', lot_number = work_order.lot_number) }}"
+                                class="btn btn-outline-warning btn-sm">Park</a>
                             {% endif %}
                             <a href="{{ url_for('view_work_order', lot_number = work_order.lot_number) }}"
-                                class="btn btn-outline-dark btn-sm">View Details</a>
+                                class="btn btn-outline-dark btn-sm">View</a>
                         </td>
                     </tr>
                     {% endfor %}

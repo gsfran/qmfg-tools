@@ -1,0 +1,88 @@
+{% extends 'layout.html.jinja' %}
+{% block content %}
+<div class="card card-style mb-2 col-md-12 col-lg-10 col-xl-8" style="max-width: 720px;">
+    <h2 class="card-title">Delete Work Order</h2>
+    <div class="main-block card-body" style="display: inline-flex;">
+    <form action="" method="POST" style="width: 100%;" novalidate>
+            {{ form.hidden_tag() }}
+            <fieldset class="form-group">
+                <table class="table">
+                    <style>
+                        .left_col {
+                            width: 40%;
+                            font-weight: bolder;
+                        }
+                        .right_col {
+                            text-align: right;
+                        }
+                    </style>
+                    <tbody>
+                        <!-- DELETE -->
+                        <div class="form-group">
+                            {{ form.delete.label(class="form-control-label") }}
+                            {% if form.delete.errors %}
+                                {{ form.delete(class="form-control form-control-sm is-invalid", autocomplete="off") }}
+                                {% for error in form.delete.errors %}
+                                    <div class="invalid-feedback">
+                                        <span>{{ error }}</span>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                {{ form.delete(class="form-control form-control-sm") }}
+                            {% endif %}
+                            <h6>This cannot be undone.</h6>
+                            </div>
+                        <tr>
+                            <td class="left_col">
+                                <!-- CANCEL -->
+                                <a href="{{ url_for('view_work_order', lot_number=work_order.lot_number) }}">
+                                    <div class="btn btn-outline-dark btn-lg" style="width: 100%;">
+                                        Cancel
+                                    </div>
+                                </a>
+                            </td>
+                            <td class="right_col">
+                                <!-- SUBMIT -->    
+                                {# <div class="form-group border-bottom pb-3" style="margin-top: 50px;"> #}
+                                    {{ form.submit(class="btn btn-danger btn-lg", style="width: 100%") }}
+                                {# </div> #}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div style="margin-block: 60px;">
+                                    <h2>{{ work_order.short_name }} {{ work_order.lot_id }}</h2>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr style="height: 32px; background-color: var(--{{ work_order.product }}); border-radius: 15px;">
+                            <td class="right_col"></td>
+                            <td style="color: #fff; text-align: right; font-weight: bold;">{{ work_order.product_name }}</td>
+                        </tr>
+                        <tr style="height: 32px">    
+                            <td class="left_col"></td>
+                            <td class="right_col">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="left_col">Status</td>
+                            <td class="right_col">{{ work_order.status }}</td>
+                        </tr>
+                        <tr>
+                            <td class="left_col">Strip / Pouch Lot #</td>
+                            <td class="right_col">{{ work_order.strip_lot_number }} / {{ work_order.lot_number }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="left_col">Created</td>
+                            <td class="right_col">
+                                {{ work_order.created_dt.strftime('%I:%M%p %a, %b %d %Y') }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </fieldset>
+        </form>
+    </div>
+</div>
+{% endblock %}
