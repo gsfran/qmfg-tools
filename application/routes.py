@@ -9,16 +9,16 @@ from werkzeug import Response
 from werkzeug.urls import url_parse
 
 from application import app, db
-from application.forms import (ConfirmDeleteForm, ParkWorkOrderForm, WeekConfigForm,
-                               LoadWorkOrderForm, LoginForm, NewWorkOrderForm,
+from application.forms import (DeleteWorkOrderForm, LoadWorkOrderForm, LoginForm,
+                               NewWorkOrderForm, ParkWorkOrderForm,
                                ProductDetailsForm, RegistrationForm,
-                               ScheduleConfigForm)
+                               ScheduleConfigForm, WeekConfigForm)
 from application.machines import Machine
 from application.models import User, WorkOrder, WorkWeek
 from application.products import Product
 from application.schedules import (_YEAR_WEEK_FORMAT, CurrentSchedule,
                                    Schedule, get_workweek_from_db,
-                                   schedule_dict_to_json, update_db_workweek)
+                                   save_schedule_dict_to_json, update_db_workweek)
 
 
 @app.route('/')
@@ -27,8 +27,8 @@ def index() -> Response:
     return redirect(url_for('current_week', machine_family='itrak'))
 
 
-@app.route('/week/<string:machine_family>/current')
-@app.route('/week/<string:machine_family>')
+@app.route('/wk/<string:machine_family>/current')
+@app.route('/wk/<string:machine_family>')
 def current_week(machine_family: str) -> str:
     schedule = CurrentSchedule(machine_family=machine_family)
     schedule._refresh_work_orders()
@@ -39,7 +39,7 @@ def current_week(machine_family: str) -> str:
     )
 
 
-@app.route('/week/<string:machine_family>/<string:year_week>')
+@app.route('/wk/<string:machine_family>/<string:year_week>')
 def week_view(machine_family: str, year_week: str) -> str | Response:
 
     if year_week == dt.strftime(dt.now(), _YEAR_WEEK_FORMAT):
@@ -65,18 +65,30 @@ def schedule_config() -> str | Response:
         effective_date_str = form.effective_date.data
         if effective_date_str is None:
             raise Exception('Error in effective_date field data.')
-
         effective_date = dt.strptime(effective_date_str, '%Y-%m-%d').date()
+        
+        overwrite = form.overwrite_custom.data
 
         #  MACHINE FAMILIES CHECKED HERE WHEN FEATURE IS IMPLEMENTED
 
-        schedule_dict_to_json(new_schedule)
+        save_schedule_dict_to_json(new_schedule)
 
         weeks_to_update = WorkWeek.later_than(effective_date)
         if weeks_to_update is not None:
             for work_week in weeks_to_update:
-                if form.overwrite_custom.data or not work_week.customized:
+                if overwrite or not work_week.customized:
                     update_db_workweek(new_schedule, work_week)
+
+        if overwrite:
+            flash(
+                f'Schedule changed effective {effective_date} '
+                '(modified weeks overwritten)', 'success'
+            )
+        else:
+            flash(
+                f'Schedule changed effective {effective_date} '
+                '(modified weeks preserved)', 'success'
+            )
 
         return redirect(
             url_for('current_week', machine_family='itrak')
@@ -88,7 +100,7 @@ def schedule_config() -> str | Response:
     )
 
 
-@app.route('/week/<string:machine_family>/<string:year_week>/edit/',
+@app.route('/wk/<string:machine_family>/<string:year_week>/edit/',
            methods=['GET', 'POST'])
 @login_required
 def week_config(machine_family: str, year_week: str) -> str | Response:
@@ -103,10 +115,13 @@ def week_config(machine_family: str, year_week: str) -> str | Response:
         work_week.customized = True
         db.session.commit()
 
-        flash(f'Saved edits to Week of {work_week.start_date}.', 'success')
+        flash(
+            f'Saved edits to the week starting {work_week.start_date}',
+            'success'
+        )
 
         return redirect(
-            url_for('schedule_view', year_week=year_week,
+            url_for('week_view', year_week=year_week,
                     machine_family='itrak')
         )
 
@@ -247,34 +262,29 @@ def park_work_order(lot_number: int) -> str | Response:
         )
     ).scalar_one_or_none()
 
-    if work_order.machine:
-        machine = Machine.new_(short_name=work_order.machine)
-    else:
-        raise Exception(f'No machine found: {work_order.machine}')
+    if work_order is None:
+        flash(f'Work Order #{lot_number} not found', 'warning')
+        return redirect(url_for('index'))
+
+    if work_order.machine is None:
+        flash(f'Work Order #{lot_number} not scheduled', 'warning')
+        return redirect(url_for('index'))
 
     if form.validate_on_submit():
-        if work_order is None:
-            flash(f'Work Order #{lot_number} Not Found', 'warning')
-            return redirect(url_for('index'))
 
-        if work_order.machine is None:
-            flash(f'Work Order #{lot_number} Not Scheduled', 'warning')
-            return redirect(url_for('index'))
-        else:
-            flash(
-                f'{work_order.short_name} {work_order.lot_id} '
-                f'/ Lot {work_order.lot_number} unloaded from '
-                f'{machine.name}.',
-                'warning'
-            )
-            work_order.park()
-            db.session.commit()
+        flash(
+            f'{work_order.short_name} {work_order.lot_id} '
+            f'/ {work_order.lot_number} moved to Parking Lot',
+            'warning'
+        )
+        work_order.park()
+        db.session.commit()
 
         return redirect(url_for('current_week', machine_family='itrak'))
 
     return render_template(
         'park-work-order.html.jinja', title='Park Work Order',
-        work_order=work_order
+        form=form, work_order=work_order
     )
 
 
@@ -312,7 +322,7 @@ def load_work_order(lot_number: int) -> str | Response:
         flash(
             f'{work_order.short_name} {work_order.lot_id} '
             f'/ {lot_number} loaded to '
-            f'{machine.name}.',
+            f'{machine.name}',
             'info'
         )
         return redirect(url_for('current_week', machine_family='itrak'))
@@ -327,7 +337,7 @@ def load_work_order(lot_number: int) -> str | Response:
 @login_required
 def delete_work_order(lot_number: int) -> str | Response:
 
-    form = ConfirmDeleteForm()
+    form = DeleteWorkOrderForm()
     work_order = db.session.execute(
         db.select(WorkOrder).where(
             WorkOrder.lot_number == lot_number
@@ -343,7 +353,7 @@ def delete_work_order(lot_number: int) -> str | Response:
         db.session.commit()
         flash(
             f'{work_order.short_name} {work_order.lot_id} '
-            f'(Lot {work_order.lot_number}) deleted.', 'danger'
+            f'/ {work_order.lot_number} deleted', 'danger'
         )
         return redirect(url_for('current_week', machine_family='itrak'))
 
@@ -381,7 +391,7 @@ def login() -> str | Response:
             return redirect(url_for('login'))
 
         login_user(user, remember=form.remember_me.data)
-        flash('Logged in successfully.', 'success')
+        flash('Logged in successfully', 'success')
         print(f'{form.remember_me.data=}')
 
         next_page = request.args.get('next')
@@ -404,7 +414,7 @@ def login() -> str | Response:
 @login_required
 def logout() -> Response:
     logout_user()
-    flash('Signed out.', 'primary')
+    flash('User logged out', 'primary')
     return redirect(url_for('index'))
 
 

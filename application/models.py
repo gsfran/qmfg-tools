@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-from datetime import date, datetime as dt
+from datetime import date
+from datetime import datetime as dt
+
 from flask_login import UserMixin
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from application import db, login
 

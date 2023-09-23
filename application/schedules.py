@@ -37,7 +37,7 @@ def schedule_json() -> dict[str, dict[str, bool | dict[str, str]]]:
     return schedule_dict
 
 
-def schedule_dict_to_json(schedule_dict: dict) -> None:
+def save_schedule_dict_to_json(schedule_dict: dict) -> None:
     """Saves default production start/end times to the
     schedule.json file specified in .env
     """

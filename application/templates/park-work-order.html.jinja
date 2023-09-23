@@ -1,28 +1,22 @@
 {% extends 'layout.html.jinja' %}
 {% block content %}
 <div class="card card-style mb-2 col-md-12 col-lg-10 col-xl-8" style="max-width: 720px;">
-    <h2 class="card-title">Delete Work Order</h2>
+    <h2 class="card-title">Park Work Order</h2>
     <div class="main-block card-body" style="display: inline-flex;">
     <form action="" method="POST" style="width: 100%;" novalidate>
             {{ form.hidden_tag() }}
             <fieldset class="form-group">
                 <table class="table">
+                    <style>
+                        .left_col {
+                            width: 40%;
+                            font-weight: bolder;
+                        }
+                        .right_col {
+                            text-align: right;
+                        }
+                    </style>
                     <tbody>
-                        <!-- DELETE -->
-                        <div class="form-group">
-                            {{ form.delete.label(class="form-control-label") }}
-                            {% if form.delete.errors %}
-                                {{ form.delete(class="form-control form-control-sm is-invalid", autocomplete="off") }}
-                                {% for error in form.delete.errors %}
-                                    <div class="invalid-feedback">
-                                        <span>{{ error }}</span>
-                                    </div>
-                                {% endfor %}
-                            {% else %}
-                                {{ form.delete(class="form-control form-control-sm", autocomplete="off") }}
-                            {% endif %}
-                            <h6>This cannot be undone.</h6>
-                            </div>
                         <tr>
                             <td class="left_col no_border">
                                 <!-- CANCEL -->
@@ -34,13 +28,12 @@
                             </td>
                             <td class="right_col no_border">
                                 <!-- SUBMIT -->    
-                                {# <div class="form-group border-bottom pb-3" style="margin-top: 50px;"> #}
-                                    {{ form.submit(class="btn btn-danger btn-lg", style="width: 100%") }}
+                                    {{ form.submit(class="btn btn-warning btn-lg", style="width: 100%") }}
                                 {# </div> #}
                             </td>
                         </tr>
                         <tr>
-                            <td colspan="2">
+                            <td>
                                 <div style="margin-top: 60px;">
                                     <h2>{{ work_order.short_name }} {{ work_order.lot_id }}</h2>
                                 </div>

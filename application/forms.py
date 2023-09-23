@@ -237,7 +237,12 @@ class LoadWorkOrderForm(FlaskForm):
         ) for mach_ in machine_list(machine_family)]
 
 
-class ConfirmDeleteForm(FlaskForm):
+class ParkWorkOrderForm(FlaskForm):
+
+    submit = SubmitField('Park Work Order')
+
+
+class DeleteWorkOrderForm(FlaskForm):
 
     delete = StringField(
         "Type 'delete' to confirm: ", validators=[
@@ -248,7 +253,9 @@ class ConfirmDeleteForm(FlaskForm):
     submit = SubmitField('Delete')
 
     @staticmethod
-    def validate_delete(form: ConfirmDeleteForm, delete: StringField) -> None:
+    def validate_delete(
+        form: DeleteWorkOrderForm, delete: StringField
+    ) -> None:
         if delete.data != 'delete':
             raise ValidationError("Type 'delete' in the field to confirm.")
 
@@ -289,7 +296,7 @@ class WeekConfigForm(FlaskForm):
 
         self.year_week = year_week
         super().__init__(*args, **kwargs)
-        
+
         if not self.submit.data:
             self._populate_current_schedule()
 
@@ -340,11 +347,6 @@ class WeekConfigForm(FlaskForm):
             dict_['times'] = new_times
 
         return new_schedule
-
-
-class ParkWorkOrderForm(FlaskForm):
-
-    submit = SubmitField('Park Work Order')
 
 
 class ScheduleConfigForm(WeekConfigForm):

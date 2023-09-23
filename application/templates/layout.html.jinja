@@ -30,7 +30,7 @@
   <div class="container-fluid">
     <div class="row">
       <div class="col-md-12 p-0">
-        <header class="mb-4">
+        <header class="mb-4" style="margin-bottom: 0px !important;">
           <nav class="navbar navbar-expand-xl navbar-dark p-2" style="background-color: #774def;">
             <a class="navbar-brand" href="{{ url_for('index') }}" style="font-size: 110%;">
               <img src="/static/logo.png" class="nav-logo" />Rapids Production Scheduler</a>
@@ -53,23 +53,28 @@
         </header>
       </div>
     </div>
-
-    <div class="row justify-content-center">
-      <div class="col-lg-10">
-        {% with messages = get_flashed_messages(with_categories = True) %}
-        {% if messages %}
-        {% for category, message in messages %}
-        <div class="alert alert-{{ category }}">
-          {{ message }}
-        </div>
-        {% endfor %}
-        {% endif %}
-        {% endwith %}
+    
+  <div class="row justify-content-center">
+    <div class="col-lg-12" style="margin-inline: 0px; padding-inline: 0px;">
+      {% with messages = get_flashed_messages(with_categories = True) %}
+      {% if messages %}
+      {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-custom">
+        {{ message }}
       </div>
+      {% endfor %}
+      {% else %}
+      <div class="alert-custom blank">
+        
+      </div>
+      {% endif %}
+      {% endwith %}
     </div>
-    <div class="row justify-content-center">
-      {% block content %}
-      {% endblock %}
+  </div>
+
+  <div class="row justify-content-center">
+    {% block content %}
+    {% endblock %}
   </div>
   <div class="row dev-banner">DEVELOPMENT ONLY -- NOT FOR OFFICIAL USE</div>
   </div>

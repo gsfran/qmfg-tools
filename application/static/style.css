@@ -33,6 +33,18 @@ a:hover {
     text-decoration: unset;
 }
 
+.alert-custom {
+    height: 1.6em;
+    padding-block: 1px;
+    margin-bottom: 0px;
+    text-align: center;
+    font-size: 80%;
+}
+
+.alert-custom.blank {
+    opacity: 0;
+}
+
 .card-title {
     margin-top: 20px;
     margin-left: 20px;
@@ -428,4 +440,18 @@ h3.sub {
 .work_order.other {
     background-color: var(--other);
     border: 2px solid var(--other);
+}
+
+
+td.left_col {
+    width: 40%;
+    font-weight: bolder;
+}
+
+td.right_col {
+    text-align: right;
+}
+
+td.no_border {
+    border: 0px solid #000;
 }

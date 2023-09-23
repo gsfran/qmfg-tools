@@ -42,7 +42,7 @@
         }
     },
     "sunday": {
-        "scheduled": false,
+        "scheduled": true,
         "times": {
             "start": "06:30",
             "end": "23:00"
