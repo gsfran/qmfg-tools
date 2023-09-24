@@ -1,10 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import and_, or_
-
 from application.vision.product_inspect import ProductInspectCamera
-from application import db
-from application.models import WorkOrder
 
 
 class iTrak:
@@ -48,4 +44,3 @@ class iTrak:
         self.machine_info = iTrak.ITRAK_DICT[self.name]
         self.data_folder = self.machine_info['data_folder']
         self.product_inspect = ProductInspectCamera(self.machine_info)
-
