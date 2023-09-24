@@ -9,8 +9,8 @@ from werkzeug import Response
 from werkzeug.urls import url_parse
 
 from application import app, db
-from application.forms import (DeleteWorkOrderForm, LoadWorkOrderForm, LoginForm,
-                               NewWorkOrderForm, ParkWorkOrderForm,
+from application.forms import (DeleteWorkOrderForm, LoadWorkOrderForm,
+                               LoginForm, NewWorkOrderForm, ParkWorkOrderForm,
                                ProductDetailsForm, RegistrationForm,
                                ScheduleConfigForm, WeekConfigForm)
 from application.machines import Machine
@@ -18,7 +18,8 @@ from application.models import User, WorkOrder, WorkWeek
 from application.products import Product
 from application.schedules import (_YEAR_WEEK_FORMAT, CurrentSchedule,
                                    Schedule, get_workweek_from_db,
-                                   save_schedule_dict_to_json, update_db_workweek)
+                                   save_schedule_dict_to_json,
+                                   update_db_workweek)
 
 
 @app.route('/')
@@ -66,7 +67,7 @@ def schedule_config() -> str | Response:
         if effective_date_str is None:
             raise Exception('Error in effective_date field data.')
         effective_date = dt.strptime(effective_date_str, '%Y-%m-%d').date()
-        
+
         overwrite = form.overwrite_custom.data
 
         #  MACHINE FAMILIES CHECKED HERE WHEN FEATURE IS IMPLEMENTED
@@ -80,15 +81,14 @@ def schedule_config() -> str | Response:
                     update_db_workweek(new_schedule, work_week)
 
         if overwrite:
-            flash(
-                f'Schedule changed effective {effective_date} '
-                '(modified weeks overwritten)', 'success'
-            )
+            modified_str = 'OVERWRITTEN'
         else:
-            flash(
-                f'Schedule changed effective {effective_date} '
-                '(modified weeks preserved)', 'success'
-            )
+            modified_str = 'PRESERVED'
+
+        flash(
+            f'Schedule changed effective {effective_date} '
+            f'(modified weeks {modified_str})', 'success'
+        )
 
         return redirect(
             url_for('current_week', machine_family='itrak')
@@ -100,8 +100,10 @@ def schedule_config() -> str | Response:
     )
 
 
-@app.route('/wk/<string:machine_family>/<string:year_week>/edit/',
-           methods=['GET', 'POST'])
+@app.route(
+    '/wk/<string:machine_family>/<string:year_week>/edit/',
+    methods=['GET', 'POST']
+)
 @login_required
 def week_config(machine_family: str, year_week: str) -> str | Response:
 
