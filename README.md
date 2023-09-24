@@ -1,8 +1,19 @@
+<<<<<<< HEAD
 # qmfg
 
 ## Overview
 
 QMFG is a web application created to facilitate operations in my role as an engineer in medical device manufacturing. It seeks to provide helpful and easy-to-use tools for managing production and coordinating business needs across functional groups. This is not intended to be used externally, however modularity has been inbuilt and classes could certainly be developed for any process and integrated with minimal refactorization.
+=======
+# qmfg-tools
+# readme.txt
+
+# QMFG
+
+## Overview
+
+QMFG is a web application created to facilitate operations in my current role as an engineer in medical device manufacturing. It seeks to provide helpful and easy-to-use tools for managing production and coordinating business needs across functional groups. This is not intended to be used externally, however modules could certainly be developed for any process and integrated with minimal refactorization.
+>>>>>>> origin/main
 
 ## Features
 
@@ -46,6 +57,7 @@ After becoming aware that the machine's many inspection cameras could output dat
 ## Key Technologies
 
 QMFG is written almost entirely in python. Notable libraries include:
+<<<<<<< HEAD
 * **Flask** -- web app framework with useful extensions:
     * **Flask-SQLAlchemy** -- ORM support via SQLAlchemy
     * **Flask-WTF** -- form validation and security via WTForms
@@ -58,6 +70,20 @@ QMFG is written almost entirely in python. Notable libraries include:
 * **python-dotenv** -- environment variable handling
 * **venv** -- virtual environment handling
 * **bokeh**, **matplotlib** -- data visualization
+=======
+* *Flask* -- web app framework with useful extensions:
+    * *Flask-SQLAlchemy* -- ORM support via SQLAlchemy
+    * *Flask-WTF* -- form validation and security via WTForms
+    * *Flask-Migrate* -- CLI tools for database migration via Alembic
+    * *Flask-Login* --  user access control and session handling
+* *Jinja2* -- endpoint templating/dynamic styling
+* *pandas* -- Data analysis/manipulation
+    * Production performance and reporting
+    * Scheduling logic done entirely within datetime-indexed dataframes
+* *python-dotenv* -- environment variable handling
+* *venv* -- virtual environment handling
+* *bokeh*, *matplotlib* -- data visualization
+>>>>>>> origin/main
 
 SQLite provided a simple and easy SQL deployment during development, for production deployment a dedicated MySQL server would be best.
 
@@ -71,11 +97,16 @@ Considerable time was spent re-familiarizing myself with HTML/CSS and creating a
 ## Dependencies
 
 HTTP Server -- production-grade web server (Apache, Nginx)
+<<<<<<< HEAD
 
 WSGI Server -- interface between the web server and the python backend (mod_wsgi, Gunicorn)
 
 MySQL Server -- better scalability than the SQLite currently implemented, not required but certainly close
 
+=======
+WSGI Server -- interface between the web server and the python backend (mod_wsgi, Gunicorn)
+MySQL Server -- better scalability than the SQLite currently implemented, not required but certainly close
+>>>>>>> origin/main
 SSO Integration -- inbuilt login functionality is minimal and not intended for production use
 
 run `pip install -r requirements.txt` to install python dependencies
