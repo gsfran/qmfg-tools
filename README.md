@@ -29,7 +29,7 @@ Planned feature updates:
 
 To learn, first and foremost. The requirements for supporting this in any official capacity are well outside my experience as a software developer and my role as an engineer, and many trusted and validated market solutions exist to address the very needs I've attempted to with this project.
 
-I enjoy programming and saw an opportunity to apply it to a real-world need. Though that need is no longer there, I continue to develop this project because it's something I enjoy doing for the sake of learning. It naturally led me on a path to learn many different skills, all of which were necessary to achieve the outcome I'd first set out on, and that has been a huge motivating factor. Never did I anticipate building a web application, but I really enjoyed that part of it too!
+I enjoy programming and saw an opportunity to apply it to a real-world need. Though that need is no longer there, I continue to develop this project because it's something I enjoy doing for the sake of learning. It naturally led me on a path to acquire many new skills -- all of which were necessary to achieve the outcome I'd first set out on -- and that has been a huge motivating factor. Never did I anticipate building a fully-fledged web application, but I've ended up really enjoying it!
 
 If you're reading this README it's likely you're a potential employer I've linked to my github, in which case you're a very close 2nd reason.
 
@@ -38,11 +38,11 @@ If you're reading this README it's likely you're a potential employer I've linke
 
 Originally started to pull production data from spreadsheets, my first python scripts were what you'd expect -- basic but functional. My job was to report this data, and identify ways to improve productivity. The data was user-input and prone to misentries, so automated analysis and reporting was a difficult thing to implement reliably. Still, I was curious if any trends could be identified with manual data cleaning, and certainly there was some useful information there anyway.
 
-Some time later, the height of plastic injection-molded parts on a conveyor became a figure of great concern. There was a sensor hooked up to LabView which had already been measuring and recording this data, outputting it to a shared network folder automatically. It was very noisy, and impossible to correlate with the machine's actual speed, but again there was some useful data to extract from that sensor's output. I learned to use *bokeh* to visualize it, and attempted to correlate the data with that of the spreadsheet to varying degrees of success. 
+Some time later, a dimension of purchased raw material became a figure of great concern. There was a sensor hooked up to LabView which had already been measuring and recording this data, outputting it to a shared network folder automatically. It was very noisy, and impossible to correlate with the machine output, but again there was some useful data to extract there. I learned to use *bokeh* to visualize the data, and attempted to correlate it with that of the spreadsheet to varying degrees of success. 
 
-After becoming aware that the machines' many inspection cameras could output via FTP, I finally had an objective data source for which to develop tools to analyze and report production performance. I spent some time making beautiful charts and graphs with a script over 1000 lines long, only to realize I'd hardcoded everything in. Nobody else could use this program, and turning it into an interactive dashboard would never work with the way it was structured. So the project was refactored into a custom library, intended to be imported into some to-be-developed user-facing application.
+After becoming aware that the many inspection cameras already in use could write to file via FTP, I finally had an objective data source for which to develop tools to analyze and report production performance. I spent some time making beautiful charts and graphs with a script over 1000 lines long, only to realize I'd hardcoded in basically everything. Nobody else could really use this program, and turning it into an interactive dashboard would never work with the way it was structured. So the project was refactored, first with an OOP approach but still within a single file (spaghetti.py), then eventually into a custom library intended to be imported into some to-be-developed generic user application.
 
-Researching deployment methods, I realized a standalone GUI was never going to be practical and also that a centralized data source required a centralized data server. A web app satisfied all of these requirements, could very easily manage the necessary database, and could be accessed by anyone with access to the internal intranet.
+Around this time, a major opportunity for my organization was in scheduling work orders, receiving and communicating progress updates, and coordinating critical actions across different departments. I had the idea to recreate the years-old Excel-based schedule that was causing so much headache into a live dashboard that anyone could access. Researching deployment methods, I realized a standalone package or program was not going to be practical, and also that a centralized data source required a centralized data server. A web app satisfied all of these requirements, could very easily manage and interact with a centralized database, and could be accessed by anyone with access to the internal intranet.
 
 
 ## Key Technologies
@@ -73,11 +73,18 @@ Considerable time was spent re-familiarizing myself with HTML/CSS and creating a
 ## Dependencies
 
 HTTP Server -- production-grade web server (Apache, Nginx)
+
 WSGI Server -- interface between the web server and the python backend (mod_wsgi, Gunicorn)
+
 MySQL Server -- better scalability than the SQLite currently implemented, not required but certainly close
+
 SSO Integration -- inbuilt login functionality is minimal and not intended for production use
 
+
+
 run `pip install -r requirements.txt` to install python dependencies
+
+`.env` file -- see `.env.example` for required fields and datatypes
 
 
 ## Lessons Learned
