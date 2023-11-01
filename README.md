@@ -3,7 +3,8 @@
 
 ## Overview
 
-QMFG is a web application created to facilitate daily operations in my current role as an engineer in medical device manufacturing. It seeks to provide helpful and easy-to-use tools for managing production and coordinating business needs across functional groups. This is not intended to be used externally, however modules could certainly be developed for any process and integrated with minimal refactorization.
+QMFG is a web application created to facilitate daily operations in my current role as an engineer in medical device manufacturing. It seeks to provide helpful and easy-to-use tools for managing production and coordinating business needs across functional groups. This is not intended to be used externally, however it has been built to be extensible and could support many different applications.
+
 ## Live Demo
 * [PythonAnywhere](https://gsfran.pythonanywhere.com/)
 
