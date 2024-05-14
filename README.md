@@ -1,9 +1,9 @@
-# Rapids Production Scheduler
+# Rapids Production Dashboard
 
 
 ## Overview
 
-Rapids Production Scheduler is a web application created to facilitate daily operations in my current role as an engineer in medical device manufacturing. It seeks to provide helpful and easy-to-use tools for managing production and coordinating business needs across functional groups. This is not intended to be used externally, however it has been built to be extensible and could support many different applications.
+Rapids Production Dashboard is a web application created to facilitate daily operations in my current role as an engineer in medical device manufacturing. It seeks to provide helpful and easy-to-use tools for managing production and coordinating business needs across functional groups. This is not intended to be used externally, however it has been built to be extensible and could support many different applications.
 
 ## Live Demo
 * [PythonAnywhere](https://gsfran.pythonanywhere.com/)
@@ -29,15 +29,6 @@ Planned feature updates:
 * Automated real-time monitoring and predictive maintenance service
 * Implement automated testing and further adoption of TDD principles
 * Additional sensor types for each production line w/ comparative analysis
-
-
-## Why?
-
-To learn, first and foremost. The requirements for supporting this in any official capacity are well outside my experience as a software developer and my role as an engineer, and many trusted and validated market solutions exist to address the very needs I've attempted to with this project.
-
-I enjoy programming and saw an opportunity to apply it to a real-world need. Though that need is no longer there, I continue to develop this project because it's something I enjoy doing for the sake of learning. It naturally led me on a path to acquire many new skills -- all of which were necessary to achieve the outcome I'd first set out on, which has been a huge motivating factor.
-
-If you're reading this README it's likely you're a potential employer, in which case you're a very close 2nd reason.
 
 
 ## Conception
