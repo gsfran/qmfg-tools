@@ -1,12 +1,27 @@
-# Rapids Production Dashboard
+# Quidel Manufacturing Tools
 
 
 ## Overview
 
-Rapids Production Dashboard is a web application created to facilitate daily operations in my current role as an engineer in medical device manufacturing. It seeks to provide helpful and easy-to-use tools for managing production and coordinating business needs across functional groups. This is not intended to be used externally, however it has been built to be extensible and could support many different applications.
+This repository contains software tools I developed in my free time to facilitate my primary role as a Manufacturing Equipment Engineer overseeing the production of Rapid Antigen tests during the Covid-19 pandemic.
+
+It consists of two main componentst: Rapids Data Analytics and Rapids Production Dashboard.
+
+**Rapids Data Analytics** was my solution to the lack of existing infrastructure to accurately track production performance and calculate the Overall Equipment Effectiveness (OEE). A Python script takes raw CSV data from a machine vision inspection system and outputs Excel spreadsheets containing various analytics, along with a high-res PNG image of basic visualizations characterizing the production day.
+
+**Rapids Production Dashboard** is a Flask web application which allows scheduling and tracking of work order progress, allowing better interdepartmental coordination and increasing operational efficiency. It was designed to be updated with production data from Rapids Data Analytics running as a scheduled task in order to accurately predict lot changeover times, quality control inspections, managerial sign-offs, etc.
+
 
 ## Live Demo
-* [PythonAnywhere](https://gsfran.pythonanywhere.com/)
+* [Rapids Production Dashboard on PythonAnywhere](https://gsfran.pythonanywhere.com/)
+
+
+## Visualization Examples
+
+![Full Visualization Preview](./media/Data_Analytics/Full_Image.png)
+
+![Rate Graph Visualization Preview](./media/Data_Analytics/Zoom_RateStops.png)
+
 
 ## Features
 
@@ -21,7 +36,7 @@ Rapids Production Dashboard is a web application created to facilitate daily ope
 * Automated and purpose-built ETL microprocess
 * Configurable Overall Equipment Effectiveness (OEE) analysis metrics
 
-Planned feature updates:
+Possible future updates:
 * E-mail alerts to stakeholders/other parties of interest
 * Option to forecast using a standard rate vs. an extrapolated rate
 * Operator utilization input via webform to replace use of MS Excel
@@ -33,13 +48,17 @@ Planned feature updates:
 
 ## Conception
 
-Originally started to pull production data from spreadsheets, my first python scripts were what you'd expect -- basic but functional. My job was to report this data, and identify ways to improve productivity. The data was user-input and prone to misentries, so automated analysis and reporting was a difficult thing to implement reliably. Still, I was curious if any trends could be identified after some manual data cleaning and indeed it was interesting. 
+**Rapids Data Analytics**
 
-Soon after, the dimensions of some purchased material became of great concern. A sensor hooked up to LabView was already measuring and recording this data, outputting it to a shared network drive. The data was noisy, and nigh impossible to correlate with the actual machine output in any meaningful sense, but there was some useful information to gain from it. I learned to use *bokeh* to visualize the data on scatterplots and histograms, attempting to correlate it with the issues facing production with varying degrees of success. 
+I originally began learning Python to automate the collection of production data from Excel spreadsheets stored on my company's network drive, to analyze production trends week over week. These operator-input utilization logs were not a very realiable source of data from an engineering perspective, having poor temporal resolution and a fair amount of subjectivity.
 
-Some time later I learned the vision systems in use could write to file via FTP. Finally, I had an objective data source which directly correlated to production output. I spent some time generating nice charts and graphs with a script 1k+ lines long, but eventually realized the trap I'd fallen into. Everything was hard-coded, very little was commented, and nobody else could really use this program without installing a bunch of python libraries on their work computer. Turning what I had into an interactive dashboard was going to take some work. So the project was refactored, first with an OOP approach but still within a single file (spaghetti.py), then eventually into a fully-fledged library intended to be imported into a future user-facing application.
+Eventually I discovered that the inspection data from our machine vision systems could be logged via FTP, so I quickly set up a server and started collecting a much more reliable source of data. I used *pandas* to build useful analytics, for the first time ever accurately characterizing the factory's performance. I also spend some time learning *matplotlib* to make a few basic visualizations -- simple charts and graphs I could analyze on-demand if needed to characterize production issues and maximize the output of important Covid-19 diagnostics tests.
 
-Around this time, a major opportunity for my organization was in scheduling work orders, receiving and communicating progress updates, and coordinating critical actions across different departments. I had the idea to recreate the years-old Excel-based schedule that was causing so much headache into a live dashboard that anyone could access. Researching deployment methods, I realized a standalone package or program was not going to be practical, and also that a centralized data source required a centralized data server. A web app satisfied all of these requirements, could very easily manage and interact with a centralized database, and could be accessed by anyone with access to the internal intranet.
+**Rapids Production Dashboard**
+
+Around this time, a major source of inefficiency for the organization was scheduling work orders, receiving and communicating progress updates, and coordinating critical actions across different functional groups. Operators and product would sometimes sit at the production line for hours because of a delay in Quality testing, for example. I had the idea to recreate the Excel-based schedule that was causing so much headache into a live dashboard that everyone could view.
+
+Researching deployment methods, I realized a standalone program was not going to be practical; also, a centralized data source requires a centralized server. A web application satisfies all of these requirements, so I got to work learning the *Flask* web framework, *SQLAlchemy* ORM, database management and deployment, HTML templating, authorization and web security, along with so much more. 
 
 
 ## Key Technologies
@@ -52,11 +71,11 @@ This project is written almost entirely in python. Notable libraries include:
     * *Flask-Login* --  user access control and session handling
 * *Jinja2* -- endpoint templating/dynamic styling
 * *pandas* -- Data analysis/manipulation
-    * Production performance and reporting
+    * Production performance analytics and reporting
     * Scheduling logic done entirely within datetime-indexed dataframes
 * *python-dotenv* -- environment variable handling
 * *venv* -- virtual environment handling
-* *bokeh*, *matplotlib* -- data visualization
+* *matplotlib* -- data visualization
 
 SQLite provided a simple and easy SQL deployment during development, for production deployment a dedicated MySQL server would be best.
 
@@ -64,7 +83,7 @@ This repository also includes custom python ETL tools for acquiring data:
 * Plaintext csv generated by equipment sensors
 * Operator reports saved in Excel format (.xlsx)
 
-Considerable time was spent re-familiarizing myself with HTML/CSS and creating a UI/UX that was functional and pleasing. While not the main focus of this project, I still wanted the front-end to express my initial vision accurately -- and eventually it did!
+Considerable time was spent re-familiarizing myself with HTML/CSS and creating a UI/UX that was functional and pleasing. While not the main focus of this project, I still wanted the front-end to express my initial vision accurately and adhere to user experience best practices.
 
 
 ## Dependencies and Deployment
