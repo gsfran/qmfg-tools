@@ -7,7 +7,7 @@ This repository contains software tools I developed in my free time to facilitat
 
 It consists of two main componentst: Rapids Data Analytics and Rapids Production Dashboard.
 
-**Rapids Data Analytics** was my solution to the lack of existing infrastructure to accurately track production performance and calculate the Overall Equipment Effectiveness (OEE). A Python script takes raw CSV data from a machine vision inspection system and outputs Excel spreadsheets containing various analytics, along with a high-res PNG image of basic visualizations characterizing the production day.
+**Rapids Data Analytics** was my solution to the lack of existing infrastructure to accurately track production performance and calculate KPI's such as Overall Equipment Effectiveness (OEE). A Python script takes raw CSV data from a machine vision inspection system and outputs Excel spreadsheets containing various analytics, along with a high-res PNG image of basic visualizations characterizing the production day.
 
 **Rapids Production Dashboard** is a Flask web application which allows scheduling and tracking of work order progress, allowing better interdepartmental coordination and increasing operational efficiency. It was designed to be updated with production data from Rapids Data Analytics running as a scheduled task in order to accurately predict lot changeover times, quality control inspections, managerial sign-offs, etc.
 
