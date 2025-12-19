@@ -3,13 +3,15 @@
 
 ## Overview
 
-This repository contains software tools I developed in my free time to facilitate my primary role as a Manufacturing Equipment Engineer overseeing the production of Rapid Antigen tests during the Covid-19 pandemic.
+This repository contains software tools I developed in my free time to facilitate my primary role as a Manufacturing Equipment Engineer overseeing the production of Rapid Antigen tests during the Covid-19 pandemic. It consists of two main components:
 
-It consists of two main componentst: Rapids Data Analytics and Rapids Production Dashboard.
+**Rapids Data Analytics**
 
-**Rapids Data Analytics** was my solution to the lack of existing infrastructure to accurately track production performance and calculate KPI's such as Overall Equipment Effectiveness (OEE). A Python script takes raw CSV data from a machine vision inspection system and outputs Excel spreadsheets containing various analytics, along with a high-res PNG image of basic visualizations characterizing the production day.
+My solution to the lack of existing infrastructure to accurately track production performance and calculate KPI's such as Overall Equipment Effectiveness (OEE). A Python script takes raw CSV data from a machine vision inspection system and outputs Excel spreadsheets containing various analytics, along with a high-res PNG image of basic visualizations characterizing the production day.
 
-**Rapids Production Dashboard** is a Flask web application which allows scheduling and tracking of work order progress, allowing better interdepartmental coordination and increasing operational efficiency. It was designed to be updated with production data from Rapids Data Analytics running as a scheduled task in order to accurately predict lot changeover times, quality control inspections, managerial sign-offs, etc.
+**Rapids Production Dashboard**
+
+A Flask web application which allows scheduling and tracking of work order progress, allowing better interdepartmental coordination and increasing operational efficiency. It was designed to be updated with real-time production data from Rapids Data Analytics in order to accurately predict lot changeover times, quality control inspections, managerial sign-offs, etc.
 
 
 ## Live Demo
@@ -63,19 +65,21 @@ Researching deployment methods, I realized a standalone program was not going to
 
 ## Key Technologies
 
-This project is written almost entirely in python. Notable libraries include:
+This project is written almost entirely in Python, along with HTML/CSS for creating the web application front end.
+
+Notable libraries include:
+* *pandas* -- Data analysis/manipulation
+    * Production performance analytics and reporting
+    * Scheduling logic done entirely within datetime-indexed dataframes
+* *matplotlib* -- data visualization
 * *Flask* -- web app framework with useful extensions:
     * *Flask-SQLAlchemy* -- ORM support via SQLAlchemy
     * *Flask-WTF* -- form validation and security via WTForms
     * *Flask-Migrate* -- CLI tools for database migration via Alembic
     * *Flask-Login* --  user access control and session handling
 * *Jinja2* -- endpoint templating/dynamic styling
-* *pandas* -- Data analysis/manipulation
-    * Production performance analytics and reporting
-    * Scheduling logic done entirely within datetime-indexed dataframes
 * *python-dotenv* -- environment variable handling
 * *venv* -- virtual environment handling
-* *matplotlib* -- data visualization
 
 SQLite provided a simple and easy SQL deployment during development, for production deployment a dedicated MySQL server would be best.
 
