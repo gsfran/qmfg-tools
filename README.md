@@ -20,9 +20,12 @@ A Flask web application which allows scheduling and tracking of work order progr
 
 ## Visualization Examples
 
-![Full Visualization Preview](./media/Data_Analytics/Full_Image.png)
+![Full Chart Image](./media/Data_Analytics/Full_Image.png)
+Full visualization, which includes a chart showing the machine's production yield (blue) vs. the expected yield (red). Below the yield chart are two bars representing the machine's run rate and the frequency/duration of stops the machine encountered during the production day. This information helps greatly in characterizing issues on the production line and provides an objective view of the line's performance throughout the day in great detail.
 
-![Rate Graph Visualization Preview](./media/Data_Analytics/Zoom_RateStops.png)
+
+![Zoomed View of Rate and Stops Graphs](./media/Data_Analytics/Zoom_RateStops.png)
+A zoomed view of the lower bars, showing the fine detail of information that can be extracted at a glance.
 
 
 ## Features
