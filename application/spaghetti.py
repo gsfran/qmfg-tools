@@ -1,6 +1,7 @@
 import copy
 import datetime
 import json
+import os
 from warnings import filterwarnings
 
 import matplotlib.dates as mdates
@@ -351,10 +352,10 @@ class iTrakPoucher:
 
         # get stats labels from json file
         # stats_labels = Machine.get_labels(self.PROCESS_ID, 'stats')
-        
+
         stats_labels = ['first_cycle', 'last_cycle', 'all_cycle_time',
                         'cycle_count', 'part_count', 'first_part',
-                          'last_part', 'productive_time']
+                        'last_part', 'productive_time']
         # stats_labels = []
 
         db = self.workday
@@ -396,32 +397,35 @@ class iTrakPoucher:
         print(f'{datetime.datetime.now()}: Getting stops.')
 
         # minimum size for each stop bin [s]
-        self.ss_min = 1.2
-        self.ms_min = 12
-        self.ls_min = 120
-        self.xls_min = 600
+        self.ss_min_length = 1.1
+        self.ms_min_length = 12
+        self.ls_min_length = 60
+        self.xls_min_length = 300
 
         # set mode to slice or full workday
         db = self.workday
 
         # # finds short stops
         db.shortstops = db.data.loc[
-            (db.data['dt'] > self.ss_min) & (db.data['dt'] < self.ms_min)
+            (db.data['dt'] > self.ss_min_length) & (
+                db.data['dt'] < self.ms_min_length)
         ].drop(['Hz', 'upm'], axis=1)
 
         # finds medium stops
         db.mediumstops = db.data.loc[
-            (db.data['dt'] > self.ms_min) & (db.data['dt'] < self.ls_min)
+            (db.data['dt'] > self.ms_min_length) & (
+                db.data['dt'] < self.ls_min_length)
         ].drop(['Hz', 'upm'], axis=1)
 
         # finds long stops
         db.longstops = db.data.loc[
-            (db.data['dt'] > self.ls_min) & (db.data['dt'] < self.xls_min)
+            (db.data['dt'] > self.ls_min_length) & (
+                db.data['dt'] < self.xls_min_length)
         ].drop(['Hz', 'upm'], axis=1)
 
         # finds extra-long stops
         db.xlongstops = db.data.loc[
-            db.data['dt'] > self.xls_min
+            db.data['dt'] > self.xls_min_length
         ].drop(['Hz', 'upm'], axis=1)
 
         # combine stop bins into single dataframe
@@ -448,7 +452,8 @@ class iTrakPoucher:
 
         # stop parameters
         db.stats[['ss_min', 'ms_min', 'ls_min', 'xls_min']] = [
-            self.ss_min, self.ms_min, self.ls_min, self.xls_min
+            self.ss_min_length, self.ms_min_length,
+            self.ls_min_length, self.xls_min_length
         ]
 
         # stops - occurrences
@@ -550,7 +555,7 @@ class iTrakPoucher:
         #         db.parts[db.parts.index < x].__len__(), i * self.STD_RATE
         #     ) for i, x in enumerate(db.yields.index)
         # ]
-        
+
         datetime_range = pd.date_range(
             self.startup, self.shutdown, freq='s'
         )
@@ -559,12 +564,13 @@ class iTrakPoucher:
         #         db.parts[db.parts.index < x].__len__(), i * self.STD_RATE
         #     ) for i, x in enumerate(db.yields.index)
         # ]
-        
+
         db.yields['count'] = db.parts['part_present'].cumsum().sort_index().reindex_like(
-                datetime_range.to_series(), method='ffill'
-            ).fillna(0)
-        
-        db.yields['standard'] = [i * self.STD_RATE for i, _ in enumerate(db.yields.index)]
+            datetime_range.to_series(), method='ffill'
+        ).fillna(0)
+
+        db.yields['standard'] = [i * self.STD_RATE for i,
+                                 _ in enumerate(db.yields.index)]
 
         db.yields['upm'] = 60 * db.yields['count'].diff()
         db.yields['upm_rolling2s'] = db.yields['upm'].rolling(2).mean()
@@ -591,65 +597,65 @@ class iTrakPoucher:
 
         """
         # status output to terminal
-        print(f'{datetime.datetime.now()}: Exporting to .csv')
+        print(f'{datetime.datetime.now()}: Exporting to Excel')
 
-        self.rates_to_excel()
-        self.stops_to_excel()
-        self.stats_to_excel()
-        self.yields_to_excel()
+        # self.rates_to_excel()
+        # self.stops_to_excel()
+        # self.stats_to_excel()
+        # self.yields_to_excel()
 
     def rates_to_excel(self):
         """
         Exports machine cycle rates to Excel file.
 
         """
-        # self.workday.data.to_excel(
-        #     f'./xls/rates/{self.MACHINE_ID}/'
-        #     f'{self.date:%Y-%m-%d}_{self.MACHINE_ID}_Poucher_Rates.xlsx'
-        # )
+        self.workday.data.to_excel(
+            f'./xls/rates/{self.MACHINE_ID}/'
+            f'{self.date:%Y-%m-%d}_{self.MACHINE_ID}_Poucher_Rates.xlsx'
+        )
 
     def stops_to_excel(self):
         """
         Exports machine stops to Excel file.
 
         """
-        # self.workday.stops.to_excel(
-        #     f'./xls/stops/{self.MACHINE_ID}/'
-        #     f'{self.date:%Y-%m-%d}_{self.MACHINE_ID}_Poucher_Stops.xlsx'
-        # )
+        self.workday.stops.to_excel(
+            f'./xls/stops/{self.MACHINE_ID}/'
+            f'{self.date:%Y-%m-%d}_{self.MACHINE_ID}_Poucher_Stops.xlsx'
+        )
 
     def stats_to_excel(self):
         """
         Exports machine runtime stats to Excel file.
 
         """
-        # self.workday.stats.to_excel(
-        #     f'./xls/stats/{self.date:%Y-%b}_'
-        #     f'{self.MACHINE_ID}-{date}_Poucher_Stats.xlsx'
-        # )
+        self.workday.stats.to_excel(
+            f'./xls/stats/{self.date:%Y-%b}_'
+            f'{self.MACHINE_ID}-{date}_Poucher_Stats.xlsx'
+        )
 
-        # path = (
-        #     f'./xls/stats/{self.date:%Y-%b}_'
-        #     f'Poucher_Stats.xlsx'
-        # )
+        path = (
+            f'./xls/stats/{self.date:%Y-%b}_'
+            f'Poucher_Stats.xlsx'
+        )
 
-        # if not os.path.exists(path):
-        #     return None
+        if not os.path.exists(path):
+            return None
 
-        # book = load_workbook(path)
-        # sheetname = f'{self.MACHINE_ID}'
-        # # with pd.ExcelWriter(
-        # #         path, engine='openpyxl', mode='a', if_sheet_exists='overlay'
-        # #         ) as writer:
-        # writer = pd.ExcelWriter(
-        #     path, engine='openpyxl', mode='a', if_sheet_exists='overlay'
-        #     )
-        # writer.book = book
-        # startrow = self.date.day
-        # self.workday.stats.to_excel(
-        #     writer, sheet_name=sheetname, startrow=startrow
-        #     )
-        # writer.save()
+        book = load_workbook(path)
+        sheetname = f'{self.MACHINE_ID}'
+        # with pd.ExcelWriter(
+        #         path, engine='openpyxl', mode='a', if_sheet_exists='overlay'
+        #         ) as writer:
+        writer = pd.ExcelWriter(
+            path, engine='openpyxl', mode='a', if_sheet_exists='overlay'
+        )
+        writer.book = book
+        startrow = self.date.day
+        self.workday.stats.to_excel(
+            writer, sheet_name=sheetname, startrow=startrow
+        )
+        writer.save()
 
     def create_stats_file(self):
         """
@@ -663,11 +669,11 @@ class iTrakPoucher:
         Exports machine yield vs. time to Excel file.
 
         """
-        # self.workday.yields.to_excel(
-        #     f'./xls/yields/{self.MACHINE_ID}/'
-        #     f'{self.date:%Y-%m-%d}_{self.MACHINE_ID}_Poucher_'
-        #     f'Yield_vs_Time.xlsx'
-        # )
+        self.workday.yields.to_excel(
+            f'./xls/yields/{self.MACHINE_ID}/'
+            f'{self.date:%Y-%m-%d}_{self.MACHINE_ID}_Poucher_'
+            f'Yield_vs_Time.xlsx'
+        )
 
     def make_plots(self, date, mode='day'):
         """
@@ -686,14 +692,14 @@ class iTrakPoucher:
 
         # main 3 plots
         gs_main = fig.add_gridspec(
-            nrows=3, ncols=1, hspace=0,
-            height_ratios=[27, 2, 1], left=0.15, right=0.80
+            nrows=3, ncols=1, hspace=0, wspace=0,
+            height_ratios=[27, 2, 1]
         )
 
-        # overlay to display au
+        # overlay to display auxilary charts
         gs_overlay = fig.add_gridspec(
-            nrows=3, ncols=5, wspace=0,
-            width_ratios=[2, 4, 1, 4, 20], height_ratios=[2, 8, 13]
+            nrows=5, ncols=7, wspace=0, hspace=0,
+            width_ratios=[2, 8, 1, 8, 1, 8, 28], height_ratios=[1, 3, 3, 3, 10]
         )
 
         # set mode to slice or full workday
@@ -733,10 +739,22 @@ class iTrakPoucher:
             db.t_start, db.t_end, self.shift_change, mode
         )
 
+        # stop duration pie chart
+        db.ax4 = fig.add_subplot(gs_overlay[1:3, 1])
+        self.draw_duration_pie_chart(
+            db.ax4, db.stats
+        )
+
+        # stop count pie chart
+        db.ax5 = fig.add_subplot(gs_overlay[1:3, 3])
+        self.draw_count_pie_chart(
+            db.ax5, db.stats
+        )
+
         fig.savefig(
             f'{date}_{self.MACHINE_ID}_'
             f'performance({NOW_TS}).png',
-            dpi=1200
+            dpi=600
         )
 
     def draw_yield_plot(
@@ -824,7 +842,7 @@ class iTrakPoucher:
 
         # draw plot of rate
         plt.fill_between(
-            yields.index, yields['upm_rolling3s'], lw=0.01, color='xkcd:cerulean'
+            yields.index, yields['upm_rolling15s'], lw=0.01, color='xkcd:cerulean'
         )
 
         # plot grid
@@ -944,6 +962,85 @@ class iTrakPoucher:
                 x[0], x[1], color=color, lw=line_width, alpha=alpha_value
             ) for i, x in enumerate(rect_coords)
         ]
+
+    def draw_duration_pie_chart(self, ax, stats):
+        """
+        Draw pie chart for machine stops by duration.
+
+        """
+        plt.axes = ax
+        
+        sizes = [
+            stats['ss_time'].iloc[0],
+            stats['ms_time'].iloc[0],
+            stats['ls_time'].iloc[0],
+            stats['xls_time'].iloc[0]
+        ]
+        colors = [
+            'xkcd:yellowish',
+            'tab:orange',
+            'tab:red',
+            'darkred'
+        ]
+        labels = ['S', 'M', 'L', 'XL']
+        radius = 1
+        textprops = {
+            # 'size': 'large',
+            'weight': 'bold'
+        }
+
+        plt.pie(sizes,
+                labels=labels,
+                autopct='%1.0f%%',
+                colors=colors,
+                radius=radius,
+                textprops=textprops,
+                startangle=180,
+                counterclock=False
+
+                )
+
+        plt.title("Stops by\nTotal Duration", fontdict={'fontweight': 'bold'})
+        plt.draw()
+
+    def draw_count_pie_chart(self, ax, stats):
+        """
+        Draw pie chart for machine stops by count.
+
+        """
+        plt.axes = ax
+        sizes = [
+            stats['ss_count'].iloc[0],
+            stats['ms_count'].iloc[0],
+            stats['ls_count'].iloc[0],
+            stats['xls_count'].iloc[0]
+        ]
+        colors = [
+            'xkcd:yellowish',
+            'tab:orange',
+            'tab:red',
+            'darkred'
+        ]
+        labels = ['S', 'M', 'L', 'XL']
+        radius = 1
+        textprops = {
+            # 'size': 'large',
+            'weight': 'bold'
+        }
+
+        plt.pie(sizes,
+                labels=labels,
+                autopct='%1.0f%%',
+                colors=colors,
+                radius=radius,
+                textprops=textprops,
+                startangle=180,
+                counterclock=False
+
+                )
+
+        plt.title("Stops by\nTotal Count", fontdict={'fontweight': 'bold'})
+        plt.draw()
 
 
 class DataBlock:
@@ -1070,9 +1167,11 @@ class ProductionDay:
 ###########
 print(f'\n\n{datetime.datetime.now()}: Initiated.')
 start_date = datetime.date(2022, 10, 11)
-end_date = datetime.date(2022, 10, 13)
+# end_date = datetime.date(2022, 10, 13)
+end_date = datetime.date(2022, 10, 11)
 dates = pd.date_range(start_date, end_date, freq='d')
-lines = ['Line 7', 'Line 8']
+# lines = ['Line 7', 'Line 8']
+lines = ['Line 8']
 
 for date in dates:
     date = date.date()
