@@ -2,9 +2,11 @@ import copy
 import datetime
 import json
 import os
+from math import pi
 from warnings import filterwarnings
 
 import matplotlib.dates as mdates
+import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -514,6 +516,12 @@ class iTrakPoucher:
             db.stats['ar'] * db.stats['pr']
         )
 
+        # quality rate and final oee
+        db.stats['qr'] = (
+            1 - db.stats['rework_perc']
+        )
+        db.stats['oee'] = db.stats['ar'] * db.stats['pr'] * db.stats['qr']
+
         # total run time
         db.stats['total_run_time'] = db.total_run_time = (
             db.total_time - total_stop_time
@@ -698,8 +706,8 @@ class iTrakPoucher:
 
         # overlay to display auxilary charts
         gs_overlay = fig.add_gridspec(
-            nrows=5, ncols=7, wspace=0, hspace=0,
-            width_ratios=[2, 8, 1, 8, 1, 8, 28], height_ratios=[1, 3, 3, 3, 10]
+            nrows=5, ncols=6, wspace=0, hspace=0,
+            width_ratios=[1, 4, 4, 4, 4, 18], height_ratios=[1, 8, 8, 8, 13]
         )
 
         # set mode to slice or full workday
@@ -714,7 +722,7 @@ class iTrakPoucher:
             db = self.workday
             fig.suptitle(
                 f'{self.name} Performance\nFull Workday {date:%b-%d-%y}',
-                fontsize=16
+                fontsize=16, fontweight='bold'
             )
         else:
             raise Exception(f'Invalid mode specified.')
@@ -740,16 +748,52 @@ class iTrakPoucher:
         )
 
         # stop duration pie chart
-        db.ax4 = fig.add_subplot(gs_overlay[1:3, 1])
+        db.ax4 = fig.add_subplot(gs_overlay[2:4, 1:3])
         self.draw_duration_pie_chart(
             db.ax4, db.stats
         )
 
         # stop count pie chart
-        db.ax5 = fig.add_subplot(gs_overlay[1:3, 3])
-        self.draw_count_pie_chart(
-            db.ax5, db.stats
+        # db.ax5 = fig.add_subplot(gs_overlay[2:3, 3:4])
+        # self.draw_count_pie_chart(
+        #     db.ax5, db.stats
+        # )
+
+        # oee visualization
+
+        ar = db.stats['ar'].iloc[0] * 100
+        pr = db.stats['pr'].iloc[0] * 100
+        qr = db.stats['qr'].iloc[0] * 100
+
+        oee = db.stats['oee'].iloc[0] * 100
+
+        db.ax6 = fig.add_subplot(gs_overlay[1, 1], projection="polar")
+        self.draw_oee_gauge(
+            db.ax6, oee, "Overall Equipment\nEffectiveness"
         )
+
+        db.ax7 = fig.add_subplot(gs_overlay[1, 2], projection="polar")
+        self.draw_oee_gauge(
+            db.ax7, ar, "Availability\nRate"
+        )
+
+        db.ax8 = fig.add_subplot(gs_overlay[1, 3], projection="polar")
+        self.draw_oee_gauge(
+            db.ax8, pr, "Performance\nRate"
+        )
+
+        db.ax9 = fig.add_subplot(gs_overlay[1, 4], projection="polar")
+        self.draw_oee_gauge(
+            db.ax9, qr, "Quality\nRate"
+        )
+
+        # multiple gauges in gridspec
+        # db.gs0 = gs_overlay[1:3, 1].subgridspec(
+        #     nrows=4, ncols=1, hspace=0, wspace=0
+        # )
+        # self.draw_oee_visualization(
+        #     db.gs0, db.stats
+        # )
 
         fig.savefig(
             f'{date}_{self.MACHINE_ID}_'
@@ -886,7 +930,7 @@ class iTrakPoucher:
 
         # add plot style
         plt.axes = ax
-        plt.axes.set_facecolor('xkcd:true green')
+        plt.axes.set_facecolor('#4dab6d')
         plt.ylabel('Stops', rotation=90, labelpad=47, fontsize=10)
 
         # defines axis limits
@@ -969,7 +1013,7 @@ class iTrakPoucher:
 
         """
         plt.axes = ax
-        
+
         sizes = [
             stats['ss_time'].iloc[0],
             stats['ms_time'].iloc[0],
@@ -982,11 +1026,16 @@ class iTrakPoucher:
             'tab:red',
             'darkred'
         ]
-        labels = ['S', 'M', 'L', 'XL']
+        labels = ['<12s', '12s-1m', '1-5m', '>5m']
         radius = 1
         textprops = {
             # 'size': 'large',
             'weight': 'bold'
+        }
+        explode = (0.01, 0.01, 0.01, 0.01)
+        
+        wedgeprops = {
+            "edgecolor": "black"
         }
 
         plt.pie(sizes,
@@ -996,11 +1045,13 @@ class iTrakPoucher:
                 radius=radius,
                 textprops=textprops,
                 startangle=180,
-                counterclock=False
+                counterclock=False,
+                # explode=explode,
+                wedgeprops=wedgeprops
 
                 )
 
-        plt.title("Stops by\nTotal Duration", fontdict={'fontweight': 'bold'})
+        plt.title("Stops by Duration", fontdict={'fontweight': 'bold'})
         plt.draw()
 
     def draw_count_pie_chart(self, ax, stats):
@@ -1041,6 +1092,64 @@ class iTrakPoucher:
 
         plt.title("Stops by\nTotal Count", fontdict={'fontweight': 'bold'})
         plt.draw()
+
+    def draw_oee_gauge(self, ax, oee_val, title):
+        """
+        Draw OEE Gauge
+
+        """
+
+        plt.axes = ax
+        plt.axes.set_facecolor('lightgrey')
+        plt.axes.patch.set_alpha(1.0)
+
+        colors = [
+            '#4dab6d', "#f6ee54", "#f36d54", "#ee4d55"
+        ]
+
+        values = [100, 75, 50, 25, 0]
+
+        # label locations - flips list(values) and converts to radians
+        x_axis_vals = [value * pi / 100 for value in values[::-1]]
+
+        # oee value in radians
+        x_axis_oee_val = pi - (oee_val * pi / 100)
+
+        plt.bar(x=x_axis_vals[:-1], width=0.8, height=0.5, bottom=2,
+                linewidth=1, edgecolor="black",
+                color=colors, align="edge")
+
+        if oee_val >= 75:
+            facecolor = colors[0]
+        elif oee_val >= 50:
+            facecolor = colors[1]
+        elif oee_val >= 25:
+            facecolor = colors[2]
+        else:
+            facecolor = colors[3]
+
+        bbox = {
+            'boxstyle': 'round',
+            'facecolor': facecolor,
+            'linewidth': 0.5
+        }
+
+        arrowprops = {
+            'arrowstyle': 'wedge, tail_width=0.5',
+            'color': 'black',
+            'shrinkA': 0
+        }
+
+        xytext = (pi * 0.5, 0.15)
+        xy = (x_axis_oee_val, 2.0)
+
+        plt.annotate(
+            f'{oee_val:.1f}%', xytext=xytext, xy=xy, arrowprops=arrowprops,
+            bbox=bbox, fontsize=10, color="black", ha="center", fontweight="bold"
+        )
+
+        plt.title(title, fontdict={'fontweight': 'bold'})
+        ax.set_axis_off()
 
 
 class DataBlock:
