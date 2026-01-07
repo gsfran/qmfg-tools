@@ -21,7 +21,9 @@ A Flask web application which allows scheduling and tracking of work order progr
 ## Visualization Examples
 
 ![Full Chart Image](./media/Data_Analytics/Full_Image.png)
-Full visualization, which includes a chart showing the machine's production yield (blue) vs. the expected yield (red). Below the yield chart are two bars representing the machine's run rate and the frequency/duration of stops the machine encountered during the production day. This information helps greatly in characterizing issues on the production line and provides an objective view of the line's performance throughout the day in great detail.
+Full visualization, which includes a chart showing the machine's production yield (blue) vs. the expected yield (red), along with visualizations for the machine's Overall Equipment Effectiveness (OEE), and the 3 components that make up OEE, Availability Rate, Performance Rate, and Quality Rate. There is also a pie chart which displays a breakdown of stops grouped by duration.
+
+Below the yield chart are two bars representing the machine's run rate and the frequency/duration of stops the machine encountered during the production day. These bars, along with the yield chart, share a common x-axis allowing the three plots to be cross-referenced. This information helps greatly in characterizing issues on the production line and provides an objective view of the line's performance throughout the day in great detail.
 
 
 ![Zoomed View of Rate and Stops Graphs](./media/Data_Analytics/Zoom_RateStops.png)
